@@ -1,4 +1,6 @@
 
+picker to pick static marks  http://stackoverflow.com/questions/11298603/how-can-i-put-an-image-in-this-uipickerview
+
 TEST app archive:
 http://developer.apple.com/library/ios/#documentation/ToolsLanguages/Conceptual/YourFirstAppStoreSubmission/TestYourApponManyDevicesandiOSVersions/TestYourApponManyDevicesandiOSVersions.html
     For Now, start from "Create an iOS App Store Package" because we already has others ready
