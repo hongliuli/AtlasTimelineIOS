@@ -2,6 +2,43 @@
 
 Version History
 ---------------
+3.1 (2014-06-06)
+    - Display Event List View on map, an important improvement
+    - for tableview select bug, used self.tableView addGesture。 Modified include:
+        . photo scroll view select
+        . Time Wheel double tap to zoom
+        . Event list view tap gesture
+3.0  (2014-05)
+    - Share Episode and invite friend
+    - localize for chinese
+    - fix NSDate era bug which hard code AD/BC and cause issue in other country format
+    - Fixed a crash issue: alwats save nsdate to En local when save to json, otherwise upload/download with different region setting will cause nil eventDate
+
+2.17     (Markers from http://mapicons.nicolasmollet.com/category/markers/)
+
+- Be excited - Now you can choose various icons to display event on map - Star, Museum, Scenary, Hotel, Transportation etc.
+(Tap Star button in Event Editor to pick icons. The metadata will be appended to description box, do not remove it manually)
+- More improvement on the looking-and-feel of zooming time behavous. Sorry for some confusion before, this version should be clear.
+
+Other enhancements:
+1) Add an option to zoom in at week level, may be helpful when plan a short trip
+2) Enlarge description text box size in full event editor mode
+3) add chinese metadata in App Store search
+3) Tap text icon to start event editor
+4) Time Wheel simi-transparent to compatible to iOS7 standard
+
+Share events set
+pick events and create a event set stored locally, then can export to server, or share to a user by entering user's email to upload user's event collection with name myEmail~name, so user can import it in onlne content.
+All event set, except myEvents, can not add new. (just encorage user have my events in one, not many)
+
+Design: enable Create Set Mode in Settings, display an step by step view:
+    1. Pick events by click [icon] on interested events
+    2. After finish picking events, tap following button:
+            Create Event Set
+    3. prompt to enter set name, (how to ensure the unique of the name offline/online)
+    4. upload right away or just save to offline first?
+
+
 Version 2.16
 
     1. Re-structured time wheel zooming levels. Learn more from in-app help.
