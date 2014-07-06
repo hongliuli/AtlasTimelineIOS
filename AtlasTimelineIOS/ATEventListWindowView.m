@@ -133,6 +133,11 @@ BOOL isAtLeast7;
     [mapView setNewFocusedDateAndUpdateMapWithNewCenter : evt :-1]; //do not change map zoom level
     [mapView showTimeLinkOverlay];
     [self.tableView reloadData]; //so show checkIcon for selected row
+    
+    //bookmark selected event
+    NSUserDefaults* userDefault = [NSUserDefaults standardUserDefaults];
+    int idx = [appDelegate.eventListSorted indexOfObject:evt];
+    [userDefault setObject:[NSString stringWithFormat:@"%d",idx ] forKey:@"BookmarkEventIdx"];
 }
 - (void) refresh:(NSMutableArray*)eventList //called by mapview::refreshEventListView()
 {
