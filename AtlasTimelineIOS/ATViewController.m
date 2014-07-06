@@ -477,9 +477,22 @@
     NSArray * eventList = appDelegate.eventListSorted;
     if ([eventList count] > 0)
     {
-        ATEventDataStruct* entStruct = eventList[0];
-        
-        [self setMapCenter:entStruct :[ATConstants defaultZoomLevel]];
+        NSUserDefaults* userDefault = [NSUserDefaults standardUserDefaults];
+        NSString* bookmarkIdxStr = [userDefault valueForKey:@"BookmarkEventIdx"];
+        int eventListSize = [eventList count];
+        ATEventDataStruct* entStruct = eventList[eventListSize -1]; //if no bookmark, always use earlist
+        if (bookmarkIdxStr != nil)
+        {
+            int bookmarkIdx = [bookmarkIdxStr intValue];
+            if (bookmarkIdx >= eventListSize)
+                bookmarkIdx = eventListSize - 1;
+            entStruct = eventList[bookmarkIdx];
+        }
+        appDelegate.focusedDate = entStruct.eventDate;
+        appDelegate.focusedEvent = entStruct;  //appDelegate.focusedEvent is added when implement here
+        [self setNewFocusedDateAndUpdateMapWithNewCenter : entStruct :-1]; //do not change map zoom level
+        //[self showOverlays];
+
     }
     
     //add annotation. ### this is the loop where we can adding NSLog to print individual items
@@ -1397,6 +1410,10 @@
         appDelegate.focusedEvent = ent;
         [self showTimeLinkOverlay];
         [self refreshEventListView];
+        //bookmark selected event
+        NSUserDefaults* userDefault = [NSUserDefaults standardUserDefaults];
+        int idx = [appDelegate.eventListSorted indexOfObject:ent];
+        [userDefault setObject:[NSString stringWithFormat:@"%d",idx ] forKey:@"BookmarkEventIdx"];
     }
 }
 
