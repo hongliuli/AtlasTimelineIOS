@@ -186,7 +186,7 @@ BOOL isAtLeast7;
         ATEventDataStruct* firstEvt = internalEventList[1];
         int globalIdx = [appDelegate.eventListSorted indexOfObject:firstEvt];
         evt = appDelegate.eventListSorted[globalIdx + 1]; //no need to check range here
-        
+        [mapView showTimeLinkOverlay];
         [mapView setNewFocusedDateAndUpdateMapWithNewCenter : evt :-1]; //do not change map zoom level
         [mapView refreshEventListView];
     }
@@ -196,7 +196,7 @@ BOOL isAtLeast7;
         ATEventDataStruct* lastEvt = internalEventList[[internalEventList count] -2];//Minus 2 because the -1 is a dummy row for arrow
         int globalIdx = [appDelegate.eventListSorted indexOfObject:lastEvt];
         evt = appDelegate.eventListSorted[globalIdx -1]; //no need to check range here
-        
+        [mapView showTimeLinkOverlay];
         [mapView setNewFocusedDateAndUpdateMapWithNewCenter : evt :-1]; //do not change map zoom level
         [mapView refreshEventListView];
     }
@@ -205,6 +205,7 @@ BOOL isAtLeast7;
         appDelegate.focusedEvent = evt;  //appDelegate.focusedEvent is added when implement here
         [mapView setNewFocusedDateAndUpdateMapWithNewCenter : evt :-1]; //do not change map zoom level
         [self.tableView reloadData]; //so show checkIcon for selected row
+        [mapView showTimeLinkOverlay];
         //bookmark selected event
         NSUserDefaults* userDefault = [NSUserDefaults standardUserDefaults];
         int idx = [appDelegate.eventListSorted indexOfObject:evt];

@@ -490,8 +490,8 @@
         }
         appDelegate.focusedDate = entStruct.eventDate;
         appDelegate.focusedEvent = entStruct;  //appDelegate.focusedEvent is added when implement here
-        [self setNewFocusedDateAndUpdateMapWithNewCenter : entStruct :-1]; //do not change map zoom level
-        //[self showOverlays];
+        [self setNewFocusedDateAndUpdateMapWithNewCenter : entStruct :4]; //do not change map zoom level
+        [self showTimeLinkOverlay];
 
     }
     
@@ -1414,6 +1414,7 @@
         NSUserDefaults* userDefault = [NSUserDefaults standardUserDefaults];
         int idx = [appDelegate.eventListSorted indexOfObject:ent];
         [userDefault setObject:[NSString stringWithFormat:@"%d",idx ] forKey:@"BookmarkEventIdx"];
+        [userDefault synchronize];
     }
 }
 
