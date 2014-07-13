@@ -2502,6 +2502,8 @@
     NSDate* scaleStartDay;
     NSDate* scaleEndDay;
     
+    int offset = 35;
+    
     NSDate* focusedDate = appDelegate.focusedDate;
     int periodIndays = appDelegate.selectedPeriodInDays;
     if (periodIndays == 7)
@@ -2552,7 +2554,7 @@
         scaleEndDay = self.endDate;
     //NSLog(@" === scaleStartDate = %@,  scaleEndDay = %@", scaleStartDay, scaleEndDay);
     NSArray* allEventSortedList = appDelegate.eventListSorted;
-    CGRect newFrame = CGRectMake(0,35,0,0);
+    CGRect newFrame = CGRectMake(0,offset,0,0);
     int numOfCellOnScreen = 0;
     
     NSMutableArray* eventListViewList = [[NSMutableArray alloc] init];
@@ -2599,13 +2601,13 @@
         numOfCellOnScreen = cnt;
         if (cnt > [ATConstants eventListViewCellNum])
             numOfCellOnScreen = [ATConstants eventListViewCellNum];
-        int offset = 35;
+        
         if (UI_USER_INTERFACE_IDIOM() == UIUserInterfaceIdiomPhone)
         {
             if (UIDeviceOrientationIsPortrait([UIDevice currentDevice].orientation))
-                offset = 32;
+                offset = offset -3;
             else
-                offset = 26;
+                offset = offset - 9;
         }
         int extra = 0;
         if (cnt == 1)
@@ -2624,10 +2626,9 @@
     
     //important Tricky: bottom part of event list view is not clickable, thuse down arrow button always not clickable, add some height will works
     CGRect aaa = newFrame;
-    aaa.size.height = aaa.size.height + 40; //Very careful: if add too much such as 200, it seems work, but left side of timewheel will click through when event list view is long. Even add 40, my big ipad 2 still has issue
+    aaa.size.height = aaa.size.height + 40; //Very careful: if add too much such as 500, it seems work, but left side of timewheel will click through when event list view is long. adjust this value to test down arrow button and left side of timewheel
     [eventListView setFrame:aaa];
-    
-    [eventListView setFrame:newFrame];
+
     [eventListView.tableView setFrame:newFrame];
     [eventListView refresh: eventListViewList];
 }
