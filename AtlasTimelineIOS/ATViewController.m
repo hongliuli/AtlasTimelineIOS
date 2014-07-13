@@ -2615,10 +2615,18 @@
         else if (cnt == 3 && UIDeviceOrientationIsPortrait([UIDevice currentDevice].orientation))
             extra = 120;
         if (UI_USER_INTERFACE_IDIOM() == UIUserInterfaceIdiomPad)
-            extra = 0;
+            extra = 40; //previouse it was 0, now change to 40 after add up/down arrow, so have extra space to show partial arrow button
         newFrame = CGRectMake(0,offset,[ATConstants eventListViewCellWidth],numOfCellOnScreen * [ATConstants eventListViewCellHeight] + extra);
     }
     eventListView.hidden = false;
+    
+    //##### TODO  FOllowing aaa part works in reader version, but not in this version
+    
+    //important Tricky: bottom part of event list view is not clickable, thuse down arrow button always not clickable, add some height will works
+    CGRect aaa = newFrame;
+    aaa.size.height = aaa.size.height + 40; //Very careful: if add too much such as 200, it seems work, but left side of timewheel will click through when event list view is long. Even add 40, my big ipad 2 still has issue
+    [eventListView setFrame:aaa];
+    
     [eventListView setFrame:newFrame];
     [eventListView.tableView setFrame:newFrame];
     [eventListView refresh: eventListViewList];
