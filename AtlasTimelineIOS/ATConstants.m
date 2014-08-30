@@ -103,7 +103,7 @@
 + (int) screenHeight
 {
     UIInterfaceOrientation orientation = [UIApplication sharedApplication].statusBarOrientation;
-
+    
     if (orientation == UIInterfaceOrientationLandscapeLeft || orientation == UIInterfaceOrientationLandscapeRight) {
         return [[UIScreen mainScreen] bounds].size.width;
     }
@@ -136,11 +136,11 @@
     if (UI_USER_INTERFACE_IDIOM() == UIUserInterfaceIdiomPad)
     {
         UIInterfaceOrientation orientation = [UIApplication sharedApplication].statusBarOrientation;
-        if (orientation == UIInterfaceOrientationLandscapeLeft || orientation == UIInterfaceOrientationLandscapeRight) 
+        if (orientation == UIInterfaceOrientationLandscapeLeft || orientation == UIInterfaceOrientationLandscapeRight)
             return 900;
         else
             return 700;
-
+        
     }
     else
         return 460;
@@ -150,7 +150,7 @@
     UIInterfaceOrientation orientation = [UIApplication sharedApplication].statusBarOrientation;
     if (UI_USER_INTERFACE_IDIOM() == UIUserInterfaceIdiomPad)
     {
-        if (orientation == UIInterfaceOrientationLandscapeLeft || orientation == UIInterfaceOrientationLandscapeRight) 
+        if (orientation == UIInterfaceOrientationLandscapeLeft || orientation == UIInterfaceOrientationLandscapeRight)
             return 70;
         
         else
@@ -270,7 +270,7 @@
         return 12;
 }
 + (int) timeScrollBigDateFont{
-    if (UI_USER_INTERFACE_IDIOM() == UIUserInterfaceIdiomPad) 
+    if (UI_USER_INTERFACE_IDIOM() == UIUserInterfaceIdiomPad)
         return 17;
     else
         return 15;
@@ -278,7 +278,7 @@
 //Constants for Event List View
 + (int) eventListViewCellWidth{
     if (UI_USER_INTERFACE_IDIOM() == UIUserInterfaceIdiomPad)
-        return 220;
+        return 270;
     else
         return 160;
 }
@@ -286,33 +286,33 @@
     if (UI_USER_INTERFACE_IDIOM() == UIUserInterfaceIdiomPad)
         return 120;
     else
-        return 80;
+        return 100;
 }
 + (int) eventListViewCellNum{
     if (UI_USER_INTERFACE_IDIOM() == UIUserInterfaceIdiomPad)
     {
         if (UIDeviceOrientationIsPortrait([UIDevice currentDevice].orientation))
-            return 7;
+            return 6;
         else
-            return 5;
+            return 4;
     }
     else
     {
         if (UIDeviceOrientationIsPortrait([UIDevice currentDevice].orientation))
-            return 5;
+            return 4;
         else
-            return 3;
+            return 2;
     }
 }
 + (int) eventListViewPhotoWidht{
     if (UI_USER_INTERFACE_IDIOM() == UIUserInterfaceIdiomPad)
-        return 80;
+        return 100;
     else
         return 60;
 }
 + (int) eventListViewPhotoHeight{
     if (UI_USER_INTERFACE_IDIOM() == UIUserInterfaceIdiomPad)
-        return 57;
+        return 70;
     else
         return 40;
 }

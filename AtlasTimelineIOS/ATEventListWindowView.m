@@ -23,6 +23,8 @@
 NSArray* internalEventList;
 BOOL isAtLeast7;
 
+NSDateFormatter *dateFormatter;
+
 - (id)initWithFrame:(CGRect)frame
 {
     if (self == [super initWithFrame:frame])
@@ -41,7 +43,12 @@ BOOL isAtLeast7;
         UITapGestureRecognizer *tap = [[UITapGestureRecognizer alloc] initWithTarget:self action:@selector(handleTapGesture:)];
         tap.numberOfTapsRequired =1;
         [self.tableView addGestureRecognizer:tap]; //IMPORTANT: I used [self addGest..] which cause sometime tap on a row does not react. After chage to self.tableView addGest.., it works much better
-
+        
+        dateFormatter = [[NSDateFormatter alloc] init];
+        [dateFormatter setDateStyle:NSDateFormatterMediumStyle];
+        [dateFormatter setTimeStyle:NSDateFormatterNoStyle];
+        [dateFormatter setLocale:[NSLocale currentLocale]];
+        
     }
     return self;
 }
@@ -63,9 +70,9 @@ BOOL isAtLeast7;
 - (UITableViewCell *)tableView:(UITableView *)tableView cellForRowAtIndexPath:(NSIndexPath *)indexPath
 {
     //NSLog(@" ===== cellForRow %d  internalList count %d ",indexPath.row, [internalEventList count]);
-
+    
     ATEventDataStruct* evt = internalEventList[indexPath.row];
-    //REMEMBER internalEventList has added row to first and last for arrow button
+    //REMEMBER internalEventList has added row to first and last for arrow button (code
     if (indexPath.row == 0) // first one is up arrow
     {
         UITableViewCell* cell = [[UITableViewCell alloc] initWithFrame:CGRectMake(0, 0, [ATConstants eventListViewCellWidth], 40)];
@@ -75,7 +82,7 @@ BOOL isAtLeast7;
         CGRect imageFrame = CGRectMake([ATConstants eventListViewCellWidth]/2 - 50, 10, 100, 40);
         UIImageView* upArrow = [[UIImageView alloc] initWithFrame:imageFrame];
         [upArrow setImage:[UIImage imageNamed:@"arrow-up-icon.png"]];
-        [cell.contentView addSubview:upArrow];
+        [cell.contentView addSubview:upArrow]; //gotoPrevEventAction is hadled by didSelected...
         cell.contentView.backgroundColor = [UIColor clearColor];
         cell.backgroundColor= [UIColor clearColor];
         return cell;
@@ -101,33 +108,48 @@ BOOL isAtLeast7;
     {
         cell = [[ATEventListViewCell alloc] initWithFrame:CGRectMake(0, 0, [ATConstants eventListViewCellWidth], [ATConstants eventListViewCellHeight])];
         cell.eventDescView.font = [UIFont fontWithName:@"Arial" size:13];
-
+        
         cell.selectionStyle = UITableViewCellStyleDefault;
         [cell.layer setCornerRadius:7.0f];
         [cell.layer setMasksToBounds:YES];
         [cell.layer setBorderWidth:1.0f];
+        cell.contentView.backgroundColor = [UIColor colorWithRed:1 green:1 blue:1 alpha:0.7];
+        //cell.backgroundColor = [UIColor colorWithRed:1 green:1 blue:1 alpha:0.7];
         //[cell.layer setBorderColor:(__bridge CGColorRef)([UIColor lightGrayColor])];
     }
-
-    NSDateFormatter *dateFormatter = [[NSDateFormatter alloc] init];
-    [dateFormatter setDateStyle:NSDateFormatterMediumStyle];
-    [dateFormatter setTimeStyle:NSDateFormatterNoStyle];
-    [dateFormatter setLocale:[NSLocale currentLocale]];
-
+    
     NSString* dateStr = [dateFormatter stringFromDate:evt.eventDate];
+    NSString* descStr = evt.eventDesc;
+    if ([descStr length] > 150)
+    {
+        descStr = [evt.eventDesc substringToIndex:150];
+    }
+    NSString* titleStr = @"";
+    NSString* descToDisplay = [NSString stringWithFormat:@"%@\n%@",dateStr, descStr ];
+    
+    int titleEndLocation = [descStr rangeOfString:@"\n"].location;
+    if (titleEndLocation < 60) //title is in file as [Desc]xxx yyy zzzz\n
+    {
+        titleStr = [descStr substringToIndex:titleEndLocation];
+        descStr = [descStr substringFromIndex:titleEndLocation];
+        descToDisplay = [NSString stringWithFormat:@"%@\n%@\n%@", dateStr,titleStr, descStr ];
+    }
+    
     //dateStr = [dateStr substringToIndex:10];
-    cell.eventDescView.text = [NSString stringWithFormat:@"%@:\n%@",dateStr, evt.eventDesc ];
+    cell.eventDescView.text = descToDisplay;
     ATAppDelegate *appDelegate = (ATAppDelegate *)[[UIApplication sharedApplication] delegate];
     ATEventDataStruct* focusedEvent = appDelegate.focusedEvent;
     if (focusedEvent != nil && [focusedEvent.uniqueId isEqual:evt.uniqueId])
     {
         [cell.checkIcon setHidden:false];
+        cell.backgroundColor = [UIColor redColor];
     }
     else
     {
         [cell.checkIcon setHidden:true];
+        cell.backgroundColor = [UIColor clearColor];
     }
-        
+    
     if (evt.eventType == EVENT_TYPE_HAS_PHOTO && isAtLeast7) //excusionPaths is available only after 7
     {
         CGRect imageFrame = CGRectMake(0, 0, [ATConstants eventListViewPhotoWidht] - 2,[ATConstants eventListViewPhotoHeight] - 5);
@@ -149,7 +171,7 @@ BOOL isAtLeast7;
             return 40;
     }
     else
-        return 120;
+        return [ATConstants eventListViewCellHeight];
 }
 
 - (BOOL) shouldHideArrowButtonRow:(int)row
@@ -162,7 +184,6 @@ BOOL isAtLeast7;
     return ((globalIdxFirst == [appDelegate.eventListSorted count] - 1 &&  row == 0) ||
             (globalIdxLast == 0 && row == [internalEventList count] - 1));
 }
-
 //have tap gesture achive two thing: prevent call tapGesture on parent mapView and process select a row action without a TableViewController
 - (void)handleTapGesture:(UIGestureRecognizer *)gestureRecognizer
 {
@@ -203,7 +224,10 @@ BOOL isAtLeast7;
     else{ //Do not change focused event for up/down arrow cause
         appDelegate.focusedDate = evt.eventDate;
         appDelegate.focusedEvent = evt;  //appDelegate.focusedEvent is added when implement here
-        [mapView setNewFocusedDateAndUpdateMapWithNewCenter : evt :-1]; //do not change map zoom level
+        int zoomLeve = -1;
+        if ([mapView zoomLevel] < 5)
+            zoomLeve = 5;
+        [mapView setNewFocusedDateAndUpdateMapWithNewCenter : evt :zoomLeve]; //do not change map zoom level
         [self.tableView reloadData]; //so show checkIcon for selected row
         [mapView showTimeLinkOverlay];
         //bookmark selected event
@@ -226,7 +250,7 @@ BOOL isAtLeast7;
     if (appDelegate.focusedEvent == nil)
         return;
     int selectedEventIdx = 1; //previouse is 0. after add Up/Down arrow cell, change to 1 is better
-    for (int i=0; i< [eventList count]; i++)
+    for (int i=1; i< [eventList count] - 1; i++)
     {
         ATEventDataStruct* evt = eventList[i];
         if ([evt.uniqueId isEqual:appDelegate.focusedEvent.uniqueId])
@@ -240,52 +264,52 @@ BOOL isAtLeast7;
                               atScrollPosition:UITableViewScrollPositionMiddle animated:YES];
 }
 /*
-// Override to support conditional editing of the table view.
-- (BOOL)tableView:(UITableView *)tableView canEditRowAtIndexPath:(NSIndexPath *)indexPath
-{
-    // Return NO if you do not want the specified item to be editable.
-    return YES;
-}
-*/
+ // Override to support conditional editing of the table view.
+ - (BOOL)tableView:(UITableView *)tableView canEditRowAtIndexPath:(NSIndexPath *)indexPath
+ {
+ // Return NO if you do not want the specified item to be editable.
+ return YES;
+ }
+ */
 
 /*
-// Override to support editing the table view.
-- (void)tableView:(UITableView *)tableView commitEditingStyle:(UITableViewCellEditingStyle)editingStyle forRowAtIndexPath:(NSIndexPath *)indexPath
-{
-    if (editingStyle == UITableViewCellEditingStyleDelete) {
-        // Delete the row from the data source
-        [tableView deleteRowsAtIndexPaths:@[indexPath] withRowAnimation:UITableViewRowAnimationFade];
-    } else if (editingStyle == UITableViewCellEditingStyleInsert) {
-        // Create a new instance of the appropriate class, insert it into the array, and add a new row to the table view
-    }   
-}
-*/
+ // Override to support editing the table view.
+ - (void)tableView:(UITableView *)tableView commitEditingStyle:(UITableViewCellEditingStyle)editingStyle forRowAtIndexPath:(NSIndexPath *)indexPath
+ {
+ if (editingStyle == UITableViewCellEditingStyleDelete) {
+ // Delete the row from the data source
+ [tableView deleteRowsAtIndexPaths:@[indexPath] withRowAnimation:UITableViewRowAnimationFade];
+ } else if (editingStyle == UITableViewCellEditingStyleInsert) {
+ // Create a new instance of the appropriate class, insert it into the array, and add a new row to the table view
+ }
+ }
+ */
 
 /*
-// Override to support rearranging the table view.
-- (void)tableView:(UITableView *)tableView moveRowAtIndexPath:(NSIndexPath *)fromIndexPath toIndexPath:(NSIndexPath *)toIndexPath
-{
-}
-*/
+ // Override to support rearranging the table view.
+ - (void)tableView:(UITableView *)tableView moveRowAtIndexPath:(NSIndexPath *)fromIndexPath toIndexPath:(NSIndexPath *)toIndexPath
+ {
+ }
+ */
 
 /*
-// Override to support conditional rearranging of the table view.
-- (BOOL)tableView:(UITableView *)tableView canMoveRowAtIndexPath:(NSIndexPath *)indexPath
-{
-    // Return NO if you do not want the item to be re-orderable.
-    return YES;
-}
-*/
+ // Override to support conditional rearranging of the table view.
+ - (BOOL)tableView:(UITableView *)tableView canMoveRowAtIndexPath:(NSIndexPath *)indexPath
+ {
+ // Return NO if you do not want the item to be re-orderable.
+ return YES;
+ }
+ */
 
 /*
-#pragma mark - Navigation
-
-// In a storyboard-based application, you will often want to do a little preparation before navigation
-- (void)prepareForSegue:(UIStoryboardSegue *)segue sender:(id)sender
-{
-    // Get the new view controller using [segue destinationViewController].
-    // Pass the selected object to the new view controller.
-}
-*/
+ #pragma mark - Navigation
+ 
+ // In a storyboard-based application, you will often want to do a little preparation before navigation
+ - (void)prepareForSegue:(UIStoryboardSegue *)segue sender:(id)sender
+ {
+ // Get the new view controller using [segue destinationViewController].
+ // Pass the selected object to the new view controller.
+ }
+ */
 
 @end

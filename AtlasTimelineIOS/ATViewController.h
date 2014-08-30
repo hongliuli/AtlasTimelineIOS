@@ -60,6 +60,6 @@
 - (void) loadEpisode:(NSString*)episodeName;
 - (void) cancelPreference;
 - (void) refreshEventListView;
-
+- (int) zoomLevel;
 
 @end
