@@ -156,6 +156,9 @@
 "Please swipe right"="请用手指右刷";
 "Please try again!"="请再试试!";
 "Please update from App Store"="请在苹果Ｓｔｏｒｅ更新";
+"Photo backup has started!"="照片备份已经开始！";
+"Photos will be uploaded to your Dropbox account one by one, please watch for the decreasing number.\n\nThe upload is done if number is decreased to 0."="照片会一个一个地被上载到你的Dropbox，请关注正在变小的数字！\n\n当数字变为 0 后， 上载结束。";
+"Photo upload started and [New] number is decreasing.\n If number reach 0 then full back up is done.\n If number stop at non-zero, then tap [Photo Backup] row to continue."="全上载已开始，[New]数字应该在变小。\n如果数字减到 0，则上载完成。\n如果数字停止变化到0，则点击上行[Photo Backup]继续.";
 "Purchase Full Version"="购买完全版本";
 "Quit w/o save"="不保存退出";
 "Reached the max Zoom-In level Month!"="已经到达最高放大级别-月!";
@@ -212,7 +215,7 @@
 "Verify Failed!"="验证代码失败!";
 "Video Tutorial and FAQ"="教程和 FAQ";
 "Wrong Date Format"="错误日期格式";
-"WARNING: All photoes on your dropbox:/ChoronicleMap/%@ will be deleted and replaced by %d photos from this device!"="警告: 在你的 Dropbox:/ChoronicleMap/%@ 中的所有照片将被删除，而被设备APP上的%d 照片所代替!";
+"WARNING: All photoes on your dropbox:/ChronicleMap/%@ will be deleted and replaced by %d photos from this device!"="警告: 在你的 Dropbox:/ChoronicleMap/%@ 中的所有照片将被删除，而被设备APP上的%d 照片所代替!";
 "WARNING: Export will replace existing %@ event data on server."="警告: 上载将替换服务器上的 %@ 事件数据.";
 "WARNING: Local %@'s %@ events will be replaced!"="警告: 设备上 %@ 的 %@ 事件将被代替!";
 "%@ was downloaded before"="%@ 以前被下载过";
