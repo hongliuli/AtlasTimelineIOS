@@ -193,16 +193,28 @@ forRowAtIndexPath: (NSIndexPath*)indexPath
         [customView addSubview:label];
         
         UIButton *shareButton = [UIButton buttonWithType:UIButtonTypeCustom];
-        shareButton.frame = CGRectMake(240, 0, 40, 30);
+        shareButton.frame = CGRectMake(310, 0, 40, 30);
         [shareButton setImage:[UIImage imageNamed:@"share.png"] forState:UIControlStateNormal];
         [shareButton addTarget:self action:@selector(shareButtonAction:) forControlEvents:UIControlEventTouchUpInside];
         [customView addSubview:shareButton];
+        
+        UIButton *sizeButton = [UIButton buttonWithType:UIButtonTypeCustom];
+        sizeButton.frame = CGRectMake(170, 0, 30, 30);
+        BOOL fullFlag = [ATHelper getOptionEditorFullScreen];
+        if (fullFlag)
+            [sizeButton setImage:[UIImage imageNamed:@"window_minimize.png"] forState:UIControlStateNormal];
+        else
+            [sizeButton setImage:[UIImage imageNamed:@"window_maximize.png"] forState:UIControlStateNormal];
+        
+        [sizeButton addTarget:self action:@selector(sizeButtonAction:) forControlEvents:UIControlEventTouchUpInside];
+        if (UI_USER_INTERFACE_IDIOM() == UIUserInterfaceIdiomPad)
+            [customView addSubview:sizeButton];
         
         ATAppDelegate *appDelegate = (ATAppDelegate *)[[UIApplication sharedApplication] delegate];
         if ([appDelegate.sourceName isEqual:@"myEvents"]) //can create episode on myEvents only
         {
             UIButton *episodeButton = [UIButton buttonWithType:UIButtonTypeCustom];
-            episodeButton.frame = CGRectMake(170, 0, 40, 30);
+            episodeButton.frame = CGRectMake(240, 0, 40, 30);
             if ([self.delegate isInEpisode])
                 [episodeButton setImage:[UIImage imageNamed:@"add-to-episode-folder-reverse.png"] forState:UIControlStateNormal];
             else
@@ -342,6 +354,14 @@ forRowAtIndexPath: (NSIndexPath*)indexPath
     //Use Modal with Done button is good for both iPad/iPhone
     //[self presentModalViewController:imagePicker animated:YES];
     [self presentViewController:imagePicker animated:YES completion:nil];
+}
+- (IBAction)sizeButtonAction:(id)sender {
+    //xxxx
+    BOOL fullFlag = [ATHelper getOptionEditorFullScreen];
+    [ATHelper setOptionEditorFullScreen:!fullFlag];
+    [self.delegate cancelEvent];
+    [self dismissViewControllerAnimated:NO completion:nil]; //for iPhone case
+    [self.delegate restartEditor];
 }
 - (IBAction)shareButtonAction:(id)sender {
     NSString *version = [[UIDevice currentDevice] systemVersion];

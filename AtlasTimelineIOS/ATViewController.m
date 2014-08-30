@@ -119,6 +119,11 @@
     UIButton *btnLess;
     ATEventListWindowView* eventListView;
     
+    MKAnnotationView* viewForEditorSizeChange;
+    
+    ATEventDataStruct* currentSelectedEvent;
+    MKAnnotationView* currentSelectedEventAnn;
+    
 }
 
 @synthesize mapView = _mapView;
@@ -196,7 +201,7 @@
     if (eventListView == nil) //viewDidAppear will be called when navigate back (such as from timeline/search view and full screen event editor, so need to check. Always be careful of viewDidAppear to not duplicate instances
     {
         eventListView = [[ATEventListWindowView alloc] initWithFrame:CGRectMake(0,20, 0, 0)];
-        [eventListView.tableView setBackgroundColor:[UIColor colorWithRed:1 green:1 blue:1 alpha:0.7]];
+        [eventListView.tableView setBackgroundColor:[UIColor clearColor] ];// colorWithRed:1 green:1 blue:1 alpha:0.7]];
         [self.mapView addSubview:eventListView];
     }
     [self refreshEventListView];
@@ -1093,6 +1098,13 @@
          }
          */
         //annView.hidden = false;
+        if (currentSelectedEvent != nil)
+        {
+            if ([currentSelectedEvent.uniqueId isEqualToString:ann.uniqueId])
+            {
+                currentSelectedEventAnn = annView;
+            }
+        }
         return annView;
     }
     else if ([annotation isKindOfClass:[ATAnnotationFocused class]]) //Focused annotation is added when tab focused
@@ -1196,6 +1208,22 @@
     regionChangeTimeStart = [[NSDate alloc] init];
     [self showDescriptionLabelViews:mapView];
     [self.mapView bringSubviewToFront:eventListView]; //so eventListView will always cover map marker photo/txt icon (tmpLbl)
+    
+    //show annotation info window programmatically, especially for when select on event list view
+    if (currentSelectedEventAnn != nil)
+    {
+        [self.mapView selectAnnotation:currentSelectedEventAnn.annotation animated:YES];
+        
+        self.timeScrollWindow.hidden=false;
+        eventListView.hidden = false;
+        self.timeZoomLine.hidden = false;
+        [self showDescriptionLabelViews:self.mapView];
+        self.navigationController.navigationBarHidden = false;
+        
+        
+        currentSelectedEventAnn = nil;
+        currentSelectedEvent = nil;
+    }
     
 }
 - (void) showDescriptionLabelViews:(MKMapView*)mapView
@@ -1302,7 +1330,7 @@
     
 }
 
-- (NSUInteger) zoomLevel {
+- (int) zoomLevel {
     MKCoordinateRegion region = self.mapView.region;
     
     double centerPixelX = [self longitudeToPixelSpaceX: region.center.longitude];
@@ -1420,6 +1448,7 @@
 
 - (void) startEventEditor:(MKAnnotationView*)view
 {
+    viewForEditorSizeChange = view;
     ATEventAnnotation* ann = [view annotation];
     selectedEventAnnotation = ann;
     self.selectedAnnotation = ann;
@@ -1789,6 +1818,8 @@
 //I could not explain, but for tap left annotation button to focuse date, have to to do focusedRow++ in ATTimeScrollWindowNew
 - (void) setNewFocusedDateAndUpdateMap:(ATEventDataStruct*) ent needAdjusted:(BOOL)needAdjusted
 {
+    if (!needAdjusted)
+        currentSelectedEvent = ent;
     ATAppDelegate *appDelegate = (ATAppDelegate *)[[UIApplication sharedApplication] delegate];
     appDelegate.focusedDate = ent.eventDate;
     [self.timeScrollWindow setNewFocusedDateFromAnnotation:ent.eventDate needAdjusted:needAdjusted];
@@ -1945,6 +1976,10 @@
 - (void)cancelEvent{
     if (self.eventEditorPopover != nil)
         [self.eventEditorPopover dismissPopoverAnimated:true];
+}
+- (void)restartEditor{
+    [self cancelEvent];
+    [self startEventEditor:viewForEditorSizeChange];
 }
 - (void)cancelPreference{
     if (self.preferencePopover != nil)
@@ -2497,64 +2532,20 @@
 {
     ATAppDelegate *appDelegate = (ATAppDelegate *)[[UIApplication sharedApplication] delegate];
     
-    //following logic is same in ATTimeZoomLine to get colored range
-    NSDateComponents *dateComponent = [[NSDateComponents alloc] init];
-    NSCalendar* calendar = [NSCalendar currentCalendar];
-    NSDate* scaleStartDay;
-    NSDate* scaleEndDay;
+    NSDictionary* scaleDateDic = [ATHelper getScaleStartEndDate:appDelegate.focusedDate];
+    NSDate* scaleStartDay = [scaleDateDic objectForKey:@"START"];
+    NSDate* scaleEndDay = [scaleDateDic objectForKey:@"END"];
     
-    int offset = 35;
+    int offset = 60;
     
-    NSDate* focusedDate = appDelegate.focusedDate;
-    int periodIndays = appDelegate.selectedPeriodInDays;
-    if (periodIndays == 7)
-    {
-        dateComponent.day = -5;
-        scaleStartDay = [calendar dateByAddingComponents:dateComponent toDate:focusedDate options:0];
-        dateComponent.day = 5;
-        scaleEndDay = [calendar dateByAddingComponents:dateComponent toDate:focusedDate options:0];
-    }
-    if (periodIndays == 30)
-    {
-        dateComponent.day = -15;
-        scaleStartDay = [calendar dateByAddingComponents:dateComponent toDate:focusedDate options:0];
-        dateComponent.day = 15;
-        scaleEndDay = [calendar dateByAddingComponents:dateComponent toDate:focusedDate options:0];
-    }
-    else if (periodIndays == 365)
-    {
-        dateComponent.month = -5;
-        scaleStartDay = [calendar dateByAddingComponents:dateComponent toDate:focusedDate options:0];
-        dateComponent.month = 5;
-        scaleEndDay = [calendar dateByAddingComponents:dateComponent toDate:focusedDate options:0];
-    }
-    else if (periodIndays == 3650)
-    {
-        dateComponent.year = -5;
-        scaleStartDay = [calendar dateByAddingComponents:dateComponent toDate:focusedDate options:0];
-        dateComponent.year = 5;
-        scaleEndDay = [calendar dateByAddingComponents:dateComponent toDate:focusedDate options:0];
-    }
-    else if (periodIndays == 36500)
-    {
-        dateComponent.year = -50;
-        scaleStartDay = [calendar dateByAddingComponents:dateComponent toDate:focusedDate options:0];
-        dateComponent.year = 50;
-        scaleEndDay = [calendar dateByAddingComponents:dateComponent toDate:focusedDate options:0];
-    }
-    else if (periodIndays == 365000)
-    {
-        dateComponent.year = -500;
-        scaleStartDay = [ATHelper dateByAddingComponentsRegardingEra:dateComponent toDate:focusedDate options:0];
-        dateComponent.year = 500;
-        scaleEndDay = [ATHelper dateByAddingComponentsRegardingEra:dateComponent toDate:focusedDate options:0];
-    }
     if ([self.startDate compare:scaleStartDay] == NSOrderedDescending)
         scaleStartDay = self.startDate;
     if ([self.endDate compare:scaleEndDay] == NSOrderedAscending)
         scaleEndDay = self.endDate;
     //NSLog(@" === scaleStartDate = %@,  scaleEndDay = %@", scaleStartDay, scaleEndDay);
     NSArray* allEventSortedList = appDelegate.eventListSorted;
+    //try to move evetlistview to right side screenWidht - eventListViewCellWidth, but a lot of trouble, not know why
+    //  even make x to 30, it will move more than 30, besides, not left side tap works
     CGRect newFrame = CGRectMake(0,offset,0,0);
     int numOfCellOnScreen = 0;
     
@@ -2596,7 +2587,7 @@
         }
     }
     //above logic will remain startDateIdx/endDateIdx to be -1 if no events
-    cnt = [eventListViewList count];
+    cnt = [eventListViewList count]; //Inside ATEventListWindow, this will add two rows for arrow button, one at top, one at bottom
     if (cnt > 0)
     {
         numOfCellOnScreen = cnt;
@@ -2606,33 +2597,37 @@
         if (UI_USER_INTERFACE_IDIOM() == UIUserInterfaceIdiomPhone)
         {
             if (UIDeviceOrientationIsPortrait([UIDevice currentDevice].orientation))
-                offset = offset -3;
+                offset = offset - 10;
             else
-                offset = offset - 9;
+                offset = offset - 20;
         }
         int extra = 0;
         if (cnt == 1)
-            extra = 40;
+            extra = 60;
         else if (cnt == 2)
             extra = 80;
         else if (cnt == 3 && UIDeviceOrientationIsPortrait([UIDevice currentDevice].orientation))
             extra = 120;
         if (UI_USER_INTERFACE_IDIOM() == UIUserInterfaceIdiomPad)
-            extra = 40; //previouse it was 0, now change to 40 after add up/down arrow, so have extra space to show partial arrow button
+            extra = 60; //previouse it was 0, now change to 40 after add up/down arrow, so have extra space to show partial arrow button
         newFrame = CGRectMake(0,offset,[ATConstants eventListViewCellWidth],numOfCellOnScreen * [ATConstants eventListViewCellHeight] + extra);
     }
-    eventListView.hidden = false;
     
-    //##### TODO  FOllowing aaa part works in reader version, but not in this version
+    self.timeScrollWindow.hidden=false;
+    eventListView.hidden = false;
+    self.timeZoomLine.hidden = false;
+    [self showDescriptionLabelViews:self.mapView];
+    self.navigationController.navigationBarHidden = false;
     
     //important Tricky: bottom part of event list view is not clickable, thuse down arrow button always not clickable, add some height will works
     CGRect aaa = newFrame;
-    aaa.size.height = aaa.size.height + 40; //Very careful: if add too much such as 500, it seems work, but left side of timewheel will click through when event list view is long. adjust this value to test down arrow button and left side of timewheel
+    aaa.size.height = aaa.size.height + 100; //Very careful: if add too much such as 500, it seems work, but left side of timewheel will click through when event list view is long. adjust this value to test down arrow button and left side of timewheel
     [eventListView setFrame:aaa];
-
+    
     [eventListView.tableView setFrame:newFrame];
     [eventListView refresh: eventListViewList];
 }
+
 - (BOOL)date:(NSDate*)date isBetweenDate:(NSDate*)beginDate andDate:(NSDate*)endDate
 {
     if ([date compare:beginDate] == NSOrderedAscending)

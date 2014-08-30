@@ -10,10 +10,9 @@
 #import "ATHelper.h"
 
 #define ROW_ENABLE_MOVE_DATE 0
-#define ROW_IPAD_EDIT_FULLSCREEN 1
-#define ROW_DATE_FIELD_KEYBOARD 2
-#define ROW_ZOOM_TO_WEEK 3
-//#define ROW_ENABLE_TIME_LINK 4
+#define ROW_DATE_FIELD_KEYBOARD 1
+#define ROW_ZOOM_TO_WEEK 2
+#define NUMBER_OF_OPTION_ROW 3
 
 @interface ATOptionsTableViewController ()
 
@@ -65,7 +64,7 @@ UISwitch *switchViewZoomToWeek;
 - (NSInteger)tableView:(UITableView *)tableView numberOfRowsInSection:(NSInteger)section
 {
     // Return the number of rows in the section.
-    return 4;
+    return NUMBER_OF_OPTION_ROW;
 }
 - (UIView *)tableView:(UITableView *)tableView viewForHeaderInSection:(NSInteger)section
 {
@@ -99,25 +98,6 @@ UISwitch *switchViewZoomToWeek;
                 else
                     [switchViewMagnifierMove setOn:NO animated:NO];
                 [switchViewMagnifierMove addTarget:self action:@selector(dateMagnifierModeChanged:) forControlEvents:UIControlEventValueChanged];
-            }
-            return aCell;
-        }
-        case ROW_IPAD_EDIT_FULLSCREEN: { //Do not show this row in iPhone: 1) chg hight is set to 0 in heightFor...()  2)chg here to not add any textLabel/accessoryView here
-            UITableViewCell* aCell = [tableView dequeueReusableCellWithIdentifier:@"SwitchCellEditFullScreen"];
-            if( aCell == nil ) {
-                aCell = [[UITableViewCell alloc] initWithStyle:UITableViewCellStyleDefault reuseIdentifier:@"SwitchCellEditFullScreen"];
-                if (UI_USER_INTERFACE_IDIOM() != UIUserInterfaceIdiomPhone)
-                {
-                    aCell.textLabel.text = NSLocalizedString(@"Full Screen Event Editor",nil); //Note: iPad only show this row
-                    aCell.selectionStyle = UITableViewCellSelectionStyleNone;
-                    switchViewEditorFullScreen = [[UISwitch alloc] initWithFrame:CGRectZero];
-                    aCell.accessoryView = switchViewEditorFullScreen;
-                    if ([ATHelper getOptionEditorFullScreen])
-                        [switchViewEditorFullScreen setOn:YES animated:NO];
-                    else
-                        [switchViewEditorFullScreen setOn:NO animated:NO];
-                    [switchViewEditorFullScreen addTarget:self action:@selector(editorFullScreenChanged:) forControlEvents:UIControlEventValueChanged];
-                }
             }
             return aCell;
         }
@@ -176,10 +156,7 @@ UISwitch *switchViewZoomToWeek;
 }
 - (CGFloat)tableView:(UITableView *)tableView heightForRowAtIndexPath:(NSIndexPath *)indexPath
 {
-    if (UI_USER_INTERFACE_IDIOM() == UIUserInterfaceIdiomPhone && indexPath.row == ROW_IPAD_EDIT_FULLSCREEN)
-        return 0;
-    else
-        return 40;
+    return 40;
 }
 
 - (void) setDefaultAction: (id)sender {
