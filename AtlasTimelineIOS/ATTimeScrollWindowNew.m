@@ -555,6 +555,11 @@
     ATAppDelegate *appDelegate = (ATAppDelegate *)[[UIApplication sharedApplication] delegate];
     [self performSettingFocusedRowForPinch:appDelegate.focusedDate];
     
+    //bookmark time zoom level so app restart will restore state
+    NSUserDefaults* userDefault = [NSUserDefaults standardUserDefaults];
+    [userDefault setObject:[NSString stringWithFormat:@"%d",[appDelegate selectedPeriodInDays] ] forKey:@"BookmarkTimeZoomLevel"];
+    [userDefault synchronize];
+    
     [self.parent changeTimeScaleState];
     [self.parent refreshAnnotations];
     [self.parent showTimeLinkOverlay];

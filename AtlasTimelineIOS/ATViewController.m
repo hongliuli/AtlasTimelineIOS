@@ -480,6 +480,7 @@
     //get data from core data and added annotation to mapview
     // currently start from the first one, later change to start with latest one
     NSArray * eventList = appDelegate.eventListSorted;
+    int bookmarkedTimeZoomLevel = -1;
     if ([eventList count] > 0)
     {
         NSUserDefaults* userDefault = [NSUserDefaults standardUserDefaults];
@@ -495,9 +496,23 @@
         }
         appDelegate.focusedDate = entStruct.eventDate;
         appDelegate.focusedEvent = entStruct;  //appDelegate.focusedEvent is added when implement here
-        [self setNewFocusedDateAndUpdateMapWithNewCenter : entStruct :4]; //do not change map zoom level
-        [self showTimeLinkOverlay];
+        
+        NSString* bookmarkedMapZoomLevelStr = [userDefault valueForKey:@"BookmarkMapZoomLevel"];
+        int bookmarkedMapZoomLevel = 4;
+        if (bookmarkedMapZoomLevelStr != nil)
+        {
+            bookmarkedMapZoomLevel = [bookmarkedMapZoomLevelStr intValue];
+        }
+        
+        NSString* bookmarkedTimeZoomLevelStr = [userDefault valueForKey:@"BookmarkTimeZoomLevel"];
 
+        if (bookmarkedTimeZoomLevelStr != nil)
+        {
+            bookmarkedTimeZoomLevel = [bookmarkedTimeZoomLevelStr intValue];
+        }
+        
+        [self setNewFocusedDateAndUpdateMapWithNewCenter : entStruct :bookmarkedMapZoomLevel]; //do not change map zoom level
+        [self showTimeLinkOverlay];
     }
     
     //add annotation. ### this is the loop where we can adding NSLog to print individual items
@@ -515,14 +530,14 @@
     }
     
     appDelegate.mapViewController = self; //my way of share object, used in ATHelper
-    [self setTimeScrollConfiguration]; //I misplaced before above loop and get strange error
+    [self setTimeScrollConfiguration:bookmarkedTimeZoomLevel]; //I misplaced before above loop and get strange error
     [self displayTimelineControls]; //put it here so change db source will call it, but have to put in viewDidAppear as well somehow
 }
 
 
 //should be called when app start, add/delete ends events, zooming time
 //Need change zoom level if need, focused date no change
-- (void) setTimeScrollConfiguration
+- (void) setTimeScrollConfiguration:(int)bookmarkedPeriodInDays
 {
     NSDateComponents *dayComponent = [[NSDateComponents alloc] init];
     
@@ -581,6 +596,8 @@
             else
                 appDelegate.selectedPeriodInDays = 30;
         }
+        if (bookmarkedPeriodInDays > 0)
+            appDelegate.selectedPeriodInDays = bookmarkedPeriodInDays;
         
     }
     if (self.timeZoomLine != nil)
@@ -1224,6 +1241,10 @@
         currentSelectedEventAnn = nil;
         currentSelectedEvent = nil;
     }
+    //bookmark zoom level so app restart will restore state
+    NSUserDefaults* userDefault = [NSUserDefaults standardUserDefaults];
+    [userDefault setObject:[NSString stringWithFormat:@"%d",[self zoomLevel] ] forKey:@"BookmarkMapZoomLevel"];
+    [userDefault synchronize];
     
 }
 - (void) showDescriptionLabelViews:(MKMapView*)mapView
@@ -1964,7 +1985,7 @@
     [self deletePhotoFilesByEventId:tmp.uniqueId];//put all phot into deletedPhotoQueue
     if (index == 0 || index == [list count]) //do not -1 since it already removed the element
     {
-        [self setTimeScrollConfiguration];
+        [self setTimeScrollConfiguration: -1];
         [self displayTimelineControls];
     }
     if (self.eventEditorPopover != nil)
@@ -2076,7 +2097,7 @@
     
      appDelegate.focusedDate = ann.eventDate;
     [self setNewFocusedDateAndUpdateMap:newData needAdjusted:FALSE];
-    [self setTimeScrollConfiguration];
+    [self setTimeScrollConfiguration:-1];
     [self displayTimelineControls];
     
     if (self.timeZoomLine != nil)
