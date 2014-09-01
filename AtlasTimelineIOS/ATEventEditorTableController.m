@@ -229,7 +229,7 @@ forRowAtIndexPath: (NSIndexPath*)indexPath
         [markerPicker addTarget:self action:@selector(markerPickerAction:) forControlEvents:UIControlEventTouchUpInside];
         [customView addSubview:markerPicker];
         
-        lblShareCount = [[UILabel alloc] initWithFrame:CGRectMake(270, 0, 100, 40)];
+        lblShareCount = [[UILabel alloc] initWithFrame:CGRectMake(305, -25, 100, 40)];
         lblShareCount.font = [UIFont fontWithName:@"Helvetica" size:10];
         lblShareCount.backgroundColor = [UIColor clearColor];
         lblShareCount.text = @"";

@@ -858,7 +858,7 @@
             [self processEmptyDeletedPhotoQueue];
         
         UIAlertView *alert = [[UIAlertView alloc]initWithTitle: NSLocalizedString(@"Photo backup has started!",nil)
-                                                       message: @"Photos will be uploaded to your Dropbox account one by one, please watch for the decreasing number.\n\nThe upload is done if number is decreased to 0."
+                                                       message: NSLocalizedString(@"Photos will be uploaded to your Dropbox account one by one, please watch for the decreasing number.\n\nThe upload is done if number is decreased to 0. (Please repeat the operation if backup is interrupted)",nil)
                                                       delegate: self
                                              cancelButtonTitle:NSLocalizedString(@"OK",nil)
                                              otherButtonTitles:nil,nil];
