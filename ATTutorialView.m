@@ -47,6 +47,20 @@ UILabel* updatableLabel2;
         // Initialization code
         // add subview etc here
     }
+    
+    NSUserDefaults* userDefault = [NSUserDefaults standardUserDefaults];
+    NSString* tmpKey = [userDefault objectForKey:@"FIRST_TIME_SHOW_READER_APP"];
+    if (tmpKey == nil)
+    {
+        [userDefault setObject:@"yes" forKey:@"FIRST_TIME_SHOW_READER_APP"];
+        UIAlertView *alert = [[UIAlertView alloc]initWithTitle: @""
+                    message: NSLocalizedString(@"Please check Apple Store for ChronicleMap new app [The World War II] and more  will come!",nil)
+                    delegate: self
+                    cancelButtonTitle:NSLocalizedString(@"OK",nil)
+                    otherButtonTitles:nil,nil];
+        [alert show];
+    }
+    
     return self;
 }
 
