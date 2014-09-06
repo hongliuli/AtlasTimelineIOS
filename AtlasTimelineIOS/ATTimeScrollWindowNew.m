@@ -736,7 +736,7 @@
         pinchVelocity = 999; //reuse code for pinch. as long as greate than 0
         [self doTimewheelZooming:pinchVelocity];
     }
-    [appDelegate.mapViewController refreshEventListView];
+    [appDelegate.mapViewController refreshEventListView:true];
 }
 
 -(void) zoomInAction:(id)sender
@@ -744,14 +744,14 @@
     pinchVelocity = 999; //reuse code for pinch. as long as greate than 0
     [self doTimewheelZooming:pinchVelocity];
     ATAppDelegate *appDelegate = (ATAppDelegate *)[[UIApplication sharedApplication] delegate];
-    [appDelegate.mapViewController refreshEventListView];
+    [appDelegate.mapViewController refreshEventListView:true];
 }
 -(void) zoomOutAction:(id)sender
 {
     pinchVelocity = -999; //reuse code for pinch. as long as greate than 0
     [self doTimewheelZooming:pinchVelocity];
     ATAppDelegate *appDelegate = (ATAppDelegate *)[[UIApplication sharedApplication] delegate];
-    [appDelegate.mapViewController refreshEventListView];
+    [appDelegate.mapViewController refreshEventListView:true];
 }
 
 //have tap gesture achive two thing: prevent call tapGesture on parent mapView and process select a row action without a TableViewController
@@ -857,7 +857,7 @@
     [self.parent.timeZoomLine changeDateText];
     [self.parent.timeZoomLine changeScaleText];
     [self.parent refreshAnnotations];
-    [self.parent refreshEventListView];
+    [self.parent refreshEventListView:true];
     [self changeFocusedCellColorToRed ];
     
     //animate button for emphasis

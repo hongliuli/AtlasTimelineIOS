@@ -59,7 +59,8 @@
 - (void) displayZoomLine;
 - (void) loadEpisode:(NSString*)episodeName;
 - (void) cancelPreference;
-- (void) refreshEventListView;
+- (void) refreshEventListView:(BOOL)callFromScrollTimewheel;
 - (int) zoomLevel;
+- (void) refreshFocusedEvent;
 
 @end
