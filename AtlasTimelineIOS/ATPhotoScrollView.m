@@ -117,8 +117,8 @@
         {
             if (iconMapMarker == nil)
             {
-                UIImageView *imgView = [[UIImageView alloc] initWithFrame:CGRectMake(60, 10, 30, 30)];
-                imgView.image = [UIImage imageNamed:@"marker-selected.png"];
+                UIImageView *imgView = [[UIImageView alloc] initWithFrame:CGRectMake(60, 10, 40, 40)];
+                imgView.image = [UIImage imageNamed:@"button_blue_first.png"];
                 imgView.tag = MAP_MARKER_TAG;
                 [cell.photo addSubview:imgView];
             }

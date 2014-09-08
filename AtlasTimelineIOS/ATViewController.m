@@ -195,7 +195,7 @@
     else
         [switchEventListViewModeBtn removeFromSuperview];
     switchEventListViewModeBtn.frame = CGRectMake(20, 70, 40, 40);
-    [switchEventListViewModeBtn setImage:[UIImage imageNamed:@"Desk-clock-icon.png"] forState:UIControlStateNormal];
+    [switchEventListViewModeBtn setImage:[UIImage imageNamed:@"Hourglass-icon.png"] forState:UIControlStateNormal];
     [switchEventListViewModeBtn addTarget:self action:@selector(switchEventListViewMode:) forControlEvents:UIControlEventTouchUpInside];
     [self.mapView addSubview:switchEventListViewModeBtn];
     switchEventListViewModeToVisibleOnMapFlag = false;
@@ -296,15 +296,15 @@
     {
         switchEventListViewModeToVisibleOnMapFlag = false;
         eventListInVisibleMapArea = nil; //IMPORTANT: refreshEventListView will use this is nil or not to decide if in map event list view mode, do not refresh if scroll timewheel
-        [switchEventListViewModeBtn setImage:[UIImage imageNamed:@"Desk-clock-icon"] forState:UIControlStateNormal];
-        [self.mapView makeToast:NSLocalizedString(@"Show events in selected time period (default)",nil) duration:4.0 position:[NSValue valueWithCGPoint:CGPointMake(210, 90)]];
+        [switchEventListViewModeBtn setImage:[UIImage imageNamed:@"Hourglass-icon"] forState:UIControlStateNormal];
+        [self.mapView makeToast:NSLocalizedString(@"List events in selected time period (default)",nil) duration:4.0 position:[NSValue valueWithCGPoint:CGPointMake(210, 90)]];
         [self refreshEventListView:false];
     }
     else
     {
         switchEventListViewModeToVisibleOnMapFlag = true;
         [switchEventListViewModeBtn setImage:[UIImage imageNamed:@"Maps-icon.png"] forState:UIControlStateNormal];
-        [self.mapView makeToast:NSLocalizedString(@"Show events currently on screen (map)",nil) duration:4.0 position:[NSValue valueWithCGPoint:CGPointMake(200, 90)]];
+        [self.mapView makeToast:NSLocalizedString(@"List events currently on screen (map)",nil) duration:4.0 position:[NSValue valueWithCGPoint:CGPointMake(200, 90)]];
         [self refreshEventListView:false];
     }
 }
@@ -2430,6 +2430,12 @@
         NSData* imageData = UIImageJPEGRepresentation(thumbImage, JPEG_QUALITY);
         // NSLog(@"---------last write success:%i thumbnail file size=%i",ret, imageData.length);
         [imageData writeToFile:thumbPath atomically:NO];
+        
+        //touch file to change file order
+        NSDate *now = [NSDate date];
+        NSDictionary* attr = [NSDictionary dictionaryWithObjectsAndKeys: now, NSFileModificationDate, NULL];
+        NSString* photoToTouch = [photoFinalDir stringByAppendingPathComponent:photoForThumbnail];
+        [[NSFileManager defaultManager] setAttributes: attr ofItemAtPath: photoToTouch error: NULL];
     }
     if (deletedList != nil && [deletedList count] > 0)
     {

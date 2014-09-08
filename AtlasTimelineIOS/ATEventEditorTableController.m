@@ -259,9 +259,58 @@ forRowAtIndexPath: (NSIndexPath*)indexPath
         NSString *fullPathToFile = [[ATHelper getPhotoDocummentoryPath] stringByAppendingPathComponent:photoDirName];
             
         NSArray* tmpFileList = [[NSFileManager defaultManager] contentsOfDirectoryAtPath:fullPathToFile error:&error];
-        if (tmpFileList != nil && [tmpFileList count] > 0)
+        if(error != nil) {
+            NSLog(@"Error in reading files: %@", [error localizedDescription]);
+            return;
+        }
+       // /*
+        // sort by creation date
+        NSMutableArray* filesAndProperties = [NSMutableArray arrayWithCapacity:[tmpFileList count]];
+        for(NSString* file in tmpFileList) {
+            NSString* filePath = [fullPathToFile stringByAppendingPathComponent:file];
+            error = nil;
+            NSDictionary* properties = [[NSFileManager defaultManager]
+                                        attributesOfItemAtPath:filePath
+                                        error:&error];
+            NSDate* modDate = [properties objectForKey:NSFileModificationDate];
+            
+            if(error == nil)
+            {
+                [filesAndProperties addObject:[NSDictionary dictionaryWithObjectsAndKeys:
+                                               file, @"path",
+                                               modDate, @"lastModDate",
+                                               nil]];
+            }
+        }
+        
+        // sort using a block
+        // order inverted as we want latest date first
+        NSArray* sortedFiles = [filesAndProperties sortedArrayUsingComparator:
+                                ^(id path1, id path2)
+                                {
+                                    // compare
+                                    NSComparisonResult comp = [[path1 objectForKey:@"lastModDate"] compare:
+                                                               [path2 objectForKey:@"lastModDate"]];
+                                    // invert ordering
+                                    if (comp == NSOrderedDescending) {
+                                        comp = NSOrderedAscending;
+                                    }
+                                    else if(comp == NSOrderedAscending){
+                                        comp = NSOrderedDescending;
+                                    }
+                                    return comp;                                
+                                }];
+        
+        
+        if (sortedFiles != nil && [sortedFiles count] > 0)
         {
-            self.photoScrollView.photoList = [NSMutableArray arrayWithArray:tmpFileList];
+            NSMutableArray* sortedPhotoList = [[NSMutableArray alloc] init];
+            for (NSDictionary* item in sortedFiles)
+            {
+                NSString* photoPath = [item objectForKey:@"path"];
+                [sortedPhotoList addObject:photoPath];
+            }
+            self.photoScrollView.photoList = [NSMutableArray arrayWithArray:sortedPhotoList];
             //remove thumbnail file title
             [self.photoScrollView.photoList removeObject:@"thumbnail"];
             _photoList = self.photoScrollView.photoList;

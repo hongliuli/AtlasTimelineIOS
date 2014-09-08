@@ -53,11 +53,11 @@ UILabel* shareCountLabel;
     //prepare button
     UIBarButtonItem* doneButton = [[UIBarButtonItem alloc]
                                    initWithBarButtonSystemItem: UIBarButtonSystemItemDone target:self action:@selector(doneAction:)];
-    UIImage *markerIcon = [UIImage imageNamed:@"marker-selected.png"];
+    UIImage *markerIcon = [UIImage imageNamed:@"button_blue_first.png"];
     UIButton *markerButton = [UIButton buttonWithType:UIButtonTypeCustom ];
     [markerButton setBackgroundImage:markerIcon forState:UIControlStateNormal];
     [markerButton addTarget:self action:@selector(setDefaultAction:) forControlEvents:UIControlEventTouchUpInside];
-    markerButton.frame = (CGRect) { .size.width = 30, .size.height = 30,};
+    markerButton.frame = (CGRect) { .size.width = 40, .size.height = 40,};
     UIBarButtonItem* setThumbnailButton = [[UIBarButtonItem alloc] initWithCustomView:markerButton ];
     
     UIImage *shareIcon = [UIImage imageNamed:@"share.png"];
