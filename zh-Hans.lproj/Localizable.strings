@@ -84,6 +84,7 @@
 "Download from server to offline"="从服务器下载到设备";
 "Download missing %@ photos from Dropbox. This operation can be repeated until all photos are downloaded."="从Dropbox下载[%@]中还没有被下载的照片. 可以重复这个操作直到全部下载完成.";
 "Downloading .. %d success, %d warnings"="正在下载.. %d 个完成, %d 个警告";
+"Download WWII App Now"="马上下载";
 "Double-tap at center to center on today"="双击中心位置可快速选择今天为当前选择时间";
 "Dropbox may not have some photos you are looking for."="Dropbox可能没有你寻找的一些照片.";
 "Edit"="编辑";
@@ -135,6 +136,8 @@
 "No"="不";
 "No photos to export to your Dropbox!"="没有照片可上载到你的Dropbox!";
 "Not login"="没有登录";
+"Not Now"="下次再说";
+"No, Thanks"="不要再提示";
 "OK"="好的";
 "%d new photo(s) are not saved"="%d 张新照片被保存";
 "Photo Backup - New:%d  Del:%d"="照片备份- 新的:%d  删除:%d";
@@ -147,6 +150,7 @@
 "Options"="选项";
 " Pick Episode to Share"=" 选一个片断来分享";
 "Please check Apple Store for ChronicleMap new app [The World War II] and more  will come!"="请观注 ChronicleMap 在苹果店中的新APP ［第二次世界大战］，而且会有更多！";
+"Please download our WWII App, use it as an example to understand why ChronicleMap is the best choice for your portable photo albums, trip planner and journal"="请下载我们的［第二次世界大战］APP。通过它，你可以更好地了解为什么 ChronicleMap APP 是你最好的相册和行程安排工具。";
 "Please grant access in iOS Settings->Privacy->Contacts->Chronicle Map\n(This is optional. Address Book is used for you to find friend easily)"="请开放访问权限：在iOS的[设置->隐私->通讯录->Chronicle Map]\n(访问通讯录不是必须的，只是帮助你更容易地找到朋友.)";
 "Please Enter Valid Email Address."="请输入有效电子邮件地址.";
 "Please enter the security code you received in your email!"="请输入你在邮件中收到的安全代码!";
@@ -194,8 +198,8 @@
 "Share Episode Success!"="分享片断成功!";
 "Share Event"="分享事件";
 "Share my Episodes to Friends"="分享我的片断给朋友";
-"Show events in selected time period (default)"="显示所选时间段中事件(默认设置)";
-"Show events currently on screen (map)"="显示当前出现在屏幕(地图)上的事件";
+"List events in selected time period (default)"="列举当前所选时间段中事件(默认设置)";
+"List events currently on screen (map)"="列举当前在屏幕(地图)上的事件";
 "Support Us"="支持我们";
 "Sync %i events to %@ on server"="同步 %i 个事件到服务器的[%@]";
 "Tap (+) or double-tab here to zoom in"="点击 (+) 或双击这里来放大时间范围";
