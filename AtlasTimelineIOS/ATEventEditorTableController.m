@@ -682,11 +682,12 @@ forRowAtIndexPath: (NSIndexPath*)indexPath
     //have to ask ATViewController to write photo files, because for new event, we do not have id for photo directory names yet
     //photoViewController will write which to delete and wihich to set as thumbnail etc
     NSString* thumbNailFileName = nil;
-    int thumbNailIndex = self.photoScrollView.selectedAsThumbnailIndex;
-    if (thumbNailIndex >= 0 && thumbNailIndex < [self.photoScrollView.photoList count])
-        thumbNailFileName = self.photoScrollView.photoList[thumbNailIndex];
+    NSArray* sortedPhotoList = self.photoScrollView.selectedAsSortIndexList;
+
+    if (sortedPhotoList != nil && [sortedPhotoList count] >0 )
+        thumbNailFileName = self.photoScrollView.photoList[0];
         
-    [self.delegate updateEvent:ent newAddedList:photoNewAddedList deletedList:photoDeletedList thumbnailFileName:thumbNailFileName];
+    [self.delegate updateEvent:ent newAddedList:photoNewAddedList deletedList:photoDeletedList sortList:self.photoScrollView.selectedAsSortIndexList];
     [self dismissViewControllerAnimated:NO completion:nil]; //for iPhone case
 }
 

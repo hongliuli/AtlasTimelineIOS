@@ -728,7 +728,7 @@
         [self.focusedEventLabel removeFromSuperview];
     self.focusedEventLabel = [[UILabel alloc] initWithFrame:focusedLabelFrame];
     self.focusedEventLabel.text = [NSString stringWithFormat:@" %@",[appDelegate.dateFormater stringFromDate: appDelegate.focusedDate]];
-    NSLog(@"%@",self.focusedEventLabel.text);
+    //NSLog(@"%@",self.focusedEventLabel.text);
     [self.focusedEventLabel setFont:[UIFont fontWithName:@"Arial" size:13]];
     self.focusedEventLabel.textColor = [UIColor blackColor];
     self.focusedEventLabel.backgroundColor = [[UIColor redColor] colorWithAlphaComponent:1.0f];
@@ -2104,7 +2104,7 @@
     if (self.preferencePopover != nil)
         [self.preferencePopover dismissPopoverAnimated:true];
 }
-- (void)updateEvent:(ATEventDataStruct*)newData newAddedList:(NSArray *)newAddedList deletedList:(NSArray*)deletedList thumbnailFileName:(NSString*)thumbNailFileName{
+- (void)updateEvent:(ATEventDataStruct*)newData newAddedList:(NSArray *)newAddedList deletedList:(NSArray*)deletedList sortList:(NSArray *)sortList{
     //update annotation by remove/add, then update database or added to database depends on if have id field in selectedAnnotation
     ATAppDelegate *appDelegate = (ATAppDelegate *)[[UIApplication sharedApplication] delegate];
     NSMutableArray* list  = appDelegate.eventListSorted;
@@ -2138,6 +2138,27 @@
     else
         newData.uniqueId = newEntity.uniqueId;
     
+    NSString* thumbNailFileName = nil;
+    NSDate *now = [NSDate date];
+    if (sortList !=nil && [sortList count] > 0)
+    {
+        int thumbNailIdx = [sortList[0] intValue]; //always set first sorted as thumbnail
+        thumbNailFileName = self.eventEditor.photoScrollView.photoList[thumbNailIdx];
+        for (NSNumber* idxNum in sortList )
+        {
+            int idx = [idxNum intValue];
+            NSString* photoFileName = self.eventEditor.photoScrollView.photoList[idx]; //check range
+            
+            //touch file to change file order
+            NSString *photoFinalDir = [[ATHelper getPhotoDocummentoryPath] stringByAppendingPathComponent:newData.uniqueId];
+            
+            NSDictionary* attr = [NSDictionary dictionaryWithObjectsAndKeys: now, NSFileModificationDate, NULL];
+            NSString* photoToTouch = [photoFinalDir stringByAppendingPathComponent:photoFileName];
+
+            [[NSFileManager defaultManager] setAttributes: attr ofItemAtPath: photoToTouch error: NULL];
+            now = [NSDate dateWithTimeInterval:-1.0 sinceDate:now]; //increment by on seconds
+        }
+    }
     [self writePhotoToFile:newData.uniqueId newAddedList:newAddedList deletedList:deletedList photoForThumbNail:thumbNailFileName];//write file before add nodes to map, otherwise will have black photo on map
     
     NSString *key=[NSString stringWithFormat:@"%f|%f",newData.lat, newData.lng];

@@ -18,6 +18,7 @@
 
 UIImageView* shareIconView;
 UILabel* shareCountLabel;
+UILabel* sortIdexLabel;
 
 - (id)initWithCoder:(NSCoder *)coder
 {
@@ -53,10 +54,10 @@ UILabel* shareCountLabel;
     //prepare button
     UIBarButtonItem* doneButton = [[UIBarButtonItem alloc]
                                    initWithBarButtonSystemItem: UIBarButtonSystemItemDone target:self action:@selector(doneAction:)];
-    UIImage *markerIcon = [UIImage imageNamed:@"button_blue_first.png"];
+    UIImage *markerIcon = [UIImage imageNamed:@"sort-ascending-icon.png"];
     UIButton *markerButton = [UIButton buttonWithType:UIButtonTypeCustom ];
     [markerButton setBackgroundImage:markerIcon forState:UIControlStateNormal];
-    [markerButton addTarget:self action:@selector(setDefaultAction:) forControlEvents:UIControlEventTouchUpInside];
+    [markerButton addTarget:self action:@selector(sortSelectedAction:) forControlEvents:UIControlEventTouchUpInside];
     markerButton.frame = (CGRect) { .size.width = 40, .size.height = 40,};
     UIBarButtonItem* setThumbnailButton = [[UIBarButtonItem alloc] initWithCustomView:markerButton ];
     
@@ -85,23 +86,19 @@ UILabel* shareCountLabel;
     shareIconView = [[UIImageView alloc] initWithFrame:CGRectMake(50, [ATConstants screenHeight] - 110 , 30, 30)];
     shareCountLabel = [[UILabel alloc] initWithFrame:CGRectMake(80, [ATConstants screenHeight] - 110 , 180, 30)];
     shareIconView.image = nil;
-    shareCountLabel.backgroundColor = [UIColor colorWithRed: 0.95 green: 0.95 blue: 0.95 alpha: 0.5];
+    shareCountLabel.backgroundColor = [UIColor colorWithRed: 0.55 green: 0.55 blue: 0.55 alpha: 0.5];
     shareCountLabel.textColor = [UIColor whiteColor];
     [self.view addSubview:shareIconView];
     [self.view addSubview:shareCountLabel];
     shareCountLabel.hidden = true;
     
-    if ([self.eventEditor.photoScrollView.selectedAsShareIndexSet containsObject:[NSNumber numberWithInt:[ATEventEditorTableController selectedPhotoIdx]]])
-    {      
-        shareIconView.image = [UIImage imageNamed:@"share.png"];
-        shareCountLabel.hidden = false;
-        shareCountLabel.text = [NSString stringWithFormat:NSLocalizedString(@"%d selected for sharing",nil),self.eventEditor.photoScrollView.selectedAsShareIndexSet.count ];
-    }
-    else
-    {
-        shareIconView.image = nil;
-        shareCountLabel.hidden = true;
-    }
+    sortIdexLabel = [[UILabel alloc] initWithFrame:CGRectMake(50, [ATConstants screenHeight] - 140 , 120, 30)];
+    sortIdexLabel.backgroundColor = [UIColor colorWithRed: 0.55 green: 0.55 blue: 0.55 alpha: 0.5];
+    sortIdexLabel.textColor = [UIColor whiteColor];
+    [self.view addSubview:sortIdexLabel];
+    sortIdexLabel.hidden = true;
+    
+    [self showHideIcons:[ATEventEditorTableController selectedPhotoIdx]];
 }
 
 
@@ -111,17 +108,9 @@ UILabel* shareCountLabel;
 {
     NSUInteger index = vc.pageIndex;
     self.pageControl.currentPage = index;
-    if ([self.eventEditor.photoScrollView.selectedAsShareIndexSet containsObject:[NSNumber numberWithInt:index]])
-    {
-        shareIconView.image = [UIImage imageNamed:@"share.png"];
-        shareCountLabel.hidden = false;
-        shareCountLabel.text = [NSString stringWithFormat:NSLocalizedString(@"%d selected for sharing",nil),self.eventEditor.photoScrollView.selectedAsShareIndexSet.count ];
-    }
-    else
-    {
-        shareIconView.image = nil;
-        shareCountLabel.hidden = true;
-    }
+  
+    [self showHideIcons:index];
+    
     return [PhotoViewController photoViewControllerForPageIndex:(index - 1)];
 }
 
@@ -129,17 +118,8 @@ UILabel* shareCountLabel;
 {
     NSUInteger index = vc.pageIndex;
     self.pageControl.currentPage =  index;
-    if ([self.eventEditor.photoScrollView.selectedAsShareIndexSet containsObject:[NSNumber numberWithInt:index]])
-    {
-        shareIconView.image = [UIImage imageNamed:@"share.png"];
-        shareCountLabel.hidden = false;
-        shareCountLabel.text = [NSString stringWithFormat:NSLocalizedString(@"%d selected for sharing",nil),self.eventEditor.photoScrollView.selectedAsShareIndexSet.count ];
-    }
-    else
-    {
-        shareIconView.image = nil;
-        shareCountLabel.hidden = true;
-    }
+    [self showHideIcons:index];
+
     return[PhotoViewController photoViewControllerForPageIndex:(index + 1)];
 }
 //Following delegate for show page numbers. But the position is too low and no way to customize, so I have to use PageControl
@@ -153,6 +133,32 @@ UILabel* shareCountLabel;
     return [ATEventEditorTableController selectedPhotoIdx];
 }
  */
+
+-(void)showHideIcons:(int)index
+{
+    if ([self.eventEditor.photoScrollView.selectedAsShareIndexSet containsObject:[NSNumber numberWithInt:index]])
+    {
+        shareIconView.image = [UIImage imageNamed:@"share.png"];
+        shareCountLabel.hidden = false;
+        shareCountLabel.text = [NSString stringWithFormat:NSLocalizedString(@"%d selected for sharing",nil),self.eventEditor.photoScrollView.selectedAsShareIndexSet.count ];
+    }
+    else
+    {
+        shareIconView.image = nil;
+        shareCountLabel.hidden = true;
+    }
+    
+    if ([self.eventEditor.photoScrollView.selectedAsSortIndexList containsObject:[NSNumber numberWithInt:index]])
+    {
+        int sortIdx = [self.eventEditor.photoScrollView.selectedAsSortIndexList indexOfObject:[NSNumber numberWithInt:index]];
+        sortIdexLabel.hidden = false;
+        sortIdexLabel.text = [NSString stringWithFormat:NSLocalizedString(@"Order: %d",nil),sortIdx + 1 ];
+    }
+    else
+    {
+        sortIdexLabel.hidden = true;
+    }
+}
 - (void) doneAction: (id)sender
 {
     int selectedPhotoIdx = self.pageControl.currentPage;
@@ -164,8 +170,8 @@ UILabel* shareCountLabel;
 - (void) deleteAction: (id)sender
 {
     int selectedPhotoIdx = self.pageControl.currentPage;
-    if (self.eventEditor.photoScrollView.selectedAsThumbnailIndex == selectedPhotoIdx)
-        self.eventEditor.photoScrollView.selectedAsThumbnailIndex = NOT_THUMBNAIL;
+    if ([self.eventEditor.photoScrollView.selectedAsSortIndexList containsObject: [NSNumber numberWithInt:selectedPhotoIdx]])
+        [self.eventEditor.photoScrollView.selectedAsSortIndexList removeObject:[NSNumber numberWithInt:selectedPhotoIdx]];
     if ([self.eventEditor.photoScrollView.selectedAsShareIndexSet containsObject:[NSNumber numberWithInt:selectedPhotoIdx]])
         [self.eventEditor.photoScrollView.selectedAsShareIndexSet removeObject:[NSNumber numberWithInt:selectedPhotoIdx]];
     
@@ -174,20 +180,31 @@ UILabel* shareCountLabel;
     [self.eventEditor deleteCallback: deletedFileName];
     [self dismissModalViewControllerAnimated:true]; //use Modal with Done button is good both iPad/iPhone
 }
-- (void) setDefaultAction: (id)sender
+- (void) sortSelectedAction: (id)sender
 {
     int selectedPhotoIdx = self.pageControl.currentPage;
-    self.eventEditor.photoScrollView.selectedAsThumbnailIndex = selectedPhotoIdx;
-    [self.eventEditor.photoScrollView.horizontalTableView reloadData]; //so map marker icon will display on new cell
-    [self.eventEditor.photoScrollView.horizontalTableView scrollToRowAtIndexPath: [NSIndexPath indexPathForRow:selectedPhotoIdx inSection:0] atScrollPosition:UITableViewScrollPositionMiddle animated:NO];
-    [self dismissModalViewControllerAnimated:true]; //use Modal with Done button is good both iPad/iPhone
+
+    NSNumber *selectedPhotoIdxObj = [NSNumber numberWithInt: selectedPhotoIdx];
+    if ([self.eventEditor.photoScrollView.selectedAsSortIndexList containsObject:selectedPhotoIdxObj])
+    {
+        [self.eventEditor.photoScrollView.selectedAsSortIndexList removeObject: selectedPhotoIdxObj];
+        sortIdexLabel.hidden = true;
+    }
+    else
+    {
+        [self.eventEditor.photoScrollView.selectedAsSortIndexList addObject:selectedPhotoIdxObj];
+        int count = [self.eventEditor.photoScrollView.selectedAsSortIndexList count];
+        
+        sortIdexLabel.text = [NSString stringWithFormat:NSLocalizedString(@"Order: %d",nil), count ];
+        sortIdexLabel.hidden = false;
+    }
 }
 - (void) setShareAction: (id)sender
 {
     int selectedPhotoIdx = self.pageControl.currentPage;
+
     [self.eventEditor.photoScrollView.selectedAsShareIndexSet addObject:[NSNumber numberWithInt: selectedPhotoIdx]];
-    [self.eventEditor.photoScrollView.horizontalTableView reloadData]; //show share icon will display on new 
-    [self.eventEditor.photoScrollView.horizontalTableView scrollToRowAtIndexPath: [NSIndexPath indexPathForRow:selectedPhotoIdx inSection:0] atScrollPosition:UITableViewScrollPositionMiddle animated:NO];
+
     shareCountLabel.text = [NSString stringWithFormat:NSLocalizedString(@"%d selected for sharing",nil),self.eventEditor.photoScrollView.selectedAsShareIndexSet.count ];
     if (shareIconView.image == nil)
     {

@@ -15,7 +15,7 @@
 @property (nonatomic, retain) UITableView *horizontalTableView;
 @property (weak, nonatomic) ATEventEditorTableController* eventEditor;
 @property int selectedPhotoIndex;
-@property int selectedAsThumbnailIndex;
 @property NSMutableSet* selectedAsShareIndexSet;
+@property NSMutableArray* selectedAsSortIndexList;
 
 @end
