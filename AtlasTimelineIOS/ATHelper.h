@@ -28,13 +28,7 @@
 + (NSString*) get100YearForTimeLink:(NSDate*) date;
 + (NSString*) getYearMonthForTimeLink:(NSDate*) date;
 + (NSDate *)getMonthStartDate:(NSDate*)date;
-+ (void) createPhotoDocumentoryPath;
-+ (NSString*) getRootDocumentoryPath;
-+ (NSString*)getPhotoDocummentoryPath;
-+ (NSString*)getNewUnsavedEventPhotoPath;
-+ (UIImage*)imageResizeWithImage:(UIImage*)image scaledToSize:(CGSize)newSize;
-+ (UIImage*)readPhotoFromFile:(NSString*)photoFileName eventId:photoDir;
-+ (UIImage*)readPhotoThumbFromFile:(NSString*)eventId;
+
 + (UIColor *) colorWithHexString: (NSString *) stringToConvert;
 + (NSString*) getMarkerNameFromDescText: (NSString*)descTxt;
 + (NSString*) clearMakerFromDescText: (NSString*)desc :(NSString*)markerName;
@@ -44,6 +38,15 @@
 + (void)startReplaceDb:(NSString*)selectedAtlasName :(NSArray*)downloadedJsonArray :(UIActivityIndicatorView*)spinner;
 + (BOOL)isBCDate:(NSDate*)date;
 + (NSDictionary*) getScaleStartEndDate:(NSDate*)focusedDate;
+
+// file/photos related
++ (void) createPhotoDocumentoryPath;
++ (NSString*) getRootDocumentoryPath;
++ (NSString*)getPhotoDocummentoryPath;
++ (NSString*)getNewUnsavedEventPhotoPath;
++ (UIImage*)imageResizeWithImage:(UIImage*)image scaledToSize:(CGSize)newSize;
++ (UIImage*)readPhotoFromFile:(NSString*)photoFileName eventId:photoDir;
++ (UIImage*)readPhotoThumbFromFile:(NSString*)eventId;
 
 //set/get options
 + (BOOL) getOptionDateFieldKeyboardEnable;

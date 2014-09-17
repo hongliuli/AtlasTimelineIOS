@@ -69,7 +69,7 @@
 @protocol EventEditorDelegate <NSObject>
 @required
 - (void)deleteEvent; //ATViewController will delete the selectedAnnotation, so no need to pass parameter
-- (void)updateEvent:(ATEventDataStruct*)newData newAddedList:(NSArray *)newAddedList deletedList:(NSArray*)deletedList sortList:(NSArray*)sortList;
+- (void)updateEvent:(ATEventDataStruct*)newData newAddedList:(NSArray *)newAddedList deletedList:(NSArray*)deletedList photoMetaData:(NSDictionary *)photoMetaData;
 - (void)cancelEvent;
 - (void)restartEditor;
 - (void)addToEpisode;

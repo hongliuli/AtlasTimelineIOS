@@ -42,6 +42,10 @@
 #define NEWEVENT_DESC_PLACEHOLD NSLocalizedString(@"Write notes here",nil)
 #define NEW_NOT_SAVED_FILE_PREFIX @"NEW"
 
+#define PHOTO_META_FILE_NAME @"MetaFileForOrderAndDesc"
+#define PHOTO_META_SORT_LIST_KEY @"sort_key"
+#define PHOTO_META_DESC_MAP_KEY @"desc_key"
+
 @implementation ATEventEditorTableController
 
 static NSArray* _photoList = nil;
@@ -73,6 +77,8 @@ UIToolbar* markerPickerToolbar; //treat it the same way as self.toolbar
 
 int editorPhotoViewWidth;
 int editorPhotoViewHeight;
+
+NSMutableDictionary *photoFilesMetaMap;
 
 #pragma mark UITableViewDelegate
 /*
@@ -263,28 +269,62 @@ forRowAtIndexPath: (NSIndexPath*)indexPath
             NSLog(@"Error in reading files: %@", [error localizedDescription]);
             return;
         }
-       // /*
-        // sort by creation date
-        NSMutableArray* filesAndProperties = [NSMutableArray arrayWithCapacity:[tmpFileList count]];
-        for(NSString* file in tmpFileList) {
-            NSString* filePath = [fullPathToFile stringByAppendingPathComponent:file];
-            error = nil;
-            NSDictionary* properties = [[NSFileManager defaultManager]
-                                        attributesOfItemAtPath:filePath
-                                        error:&error];
-            NSDate* modDate = [properties objectForKey:NSFileModificationDate];
-            
-            if(error == nil)
-            {
-                [filesAndProperties addObject:[NSDictionary dictionaryWithObjectsAndKeys:
-                                               file, @"path",
-                                               modDate, @"lastModDate",
-                                               nil]];
-            }
-        }
+       self.photoScrollView.photoList = [NSMutableArray arrayWithArray:tmpFileList];
+        //Sort photo list. The sort will be saved to dropbox as a file together with photo description
+        NSString *photoMetaFilePath = [[[ATHelper getPhotoDocummentoryPath] stringByAppendingPathComponent:self.eventId] stringByAppendingPathComponent:PHOTO_META_FILE_NAME];
         
+        //photoFileMetaMap will be nil if no file ???
+        photoFilesMetaMap = [NSDictionary dictionaryWithContentsOfFile:photoMetaFilePath];
+        if (photoFilesMetaMap != nil)
+        {
+            self.photoScrollView.photoSortedNameList = (NSMutableArray*)[photoFilesMetaMap objectForKey:PHOTO_META_SORT_LIST_KEY];
+            self.photoScrollView.photoDescMap = [photoFilesMetaMap objectForKey:PHOTO_META_DESC_MAP_KEY];
+        }
+        //Although photoSortedNameList should have all filenames in order, to be safe, still read filename from directory then sort accordingly
+        if (self.photoScrollView.photoSortedNameList != nil)
+        {
+            NSMutableArray* newList = [[NSMutableArray alloc] initWithCapacity:[self.photoScrollView.photoList count]];
+            int tmpCnt = [self.photoScrollView.photoSortedNameList count];
+            for (int i = 0; i < tmpCnt; i++)
+            {
+                NSString* fileName = self.photoScrollView.photoSortedNameList[i];
+                if ([self.photoScrollView.photoList containsObject:fileName])
+                    [newList addObject: fileName];
+            }
+            for (int i = 0; i < tmpCnt; i++)
+            {
+                NSString* fileName = self.photoScrollView.photoSortedNameList[i];
+                [self.photoScrollView.photoList removeObject:fileName];
+            }
+            [newList addObjectsFromArray:self.photoScrollView.photoList];
+            self.photoScrollView.photoList = newList;
+        }
+        //remove thumbnail file title
+        [self.photoScrollView.photoList removeObject:@"thumbnail"];
+        [self.photoScrollView.photoList removeObject:PHOTO_META_FILE_NAME];
+        _photoList = self.photoScrollView.photoList;
+        
+        /*
+        // order inverted as we want latest date first. But this could not be restored when restore back from Dropbox
+         // sort by creation date
+         NSMutableArray* filesAndProperties = [NSMutableArray arrayWithCapacity:[tmpFileList count]];
+         for(NSString* file in tmpFileList) {
+         NSString* filePath = [fullPathToFile stringByAppendingPathComponent:file];
+         error = nil;
+         NSDictionary* properties = [[NSFileManager defaultManager]
+         attributesOfItemAtPath:filePath
+         error:&error];
+         NSDate* modDate = [properties objectForKey:NSFileModificationDate];
+         
+         if(error == nil)
+         {
+            [filesAndProperties addObject:[NSDictionary dictionaryWithObjectsAndKeys:
+                file, @"path",
+            modDate, @"lastModDate",
+                nil]];
+         }
+         }
         // sort using a block
-        // order inverted as we want latest date first
         NSArray* sortedFiles = [filesAndProperties sortedArrayUsingComparator:
                                 ^(id path1, id path2)
                                 {
@@ -301,7 +341,6 @@ forRowAtIndexPath: (NSIndexPath*)indexPath
                                     return comp;                                
                                 }];
         
-        
         if (sortedFiles != nil && [sortedFiles count] > 0)
         {
             NSMutableArray* sortedPhotoList = [[NSMutableArray alloc] init];
@@ -315,6 +354,7 @@ forRowAtIndexPath: (NSIndexPath*)indexPath
             [self.photoScrollView.photoList removeObject:@"thumbnail"];
             _photoList = self.photoScrollView.photoList;
         }
+         */
     }
     //tricky: in iPod, here will be called before viewForSectionHeader, so customViewForPhoto is nil
     if (customViewForPhoto != nil && nil == [customViewForPhoto viewWithTag:ADDED_PHOTOSCROLL_TAG_900]) 
@@ -681,13 +721,40 @@ forRowAtIndexPath: (NSIndexPath*)indexPath
     
     //have to ask ATViewController to write photo files, because for new event, we do not have id for photo directory names yet
     //photoViewController will write which to delete and wihich to set as thumbnail etc
-    NSString* thumbNailFileName = nil;
+    
+    NSMutableArray* finalFullSortedList = nil;
+    NSMutableDictionary* finalPhotoDescMap = nil;
     NSArray* sortedPhotoList = self.photoScrollView.selectedAsSortIndexList;
+    if (sortedPhotoList != nil && [sortedPhotoList count] > 0)
+    {
+        NSMutableArray* newList = [[NSMutableArray alloc] init];
+        for (NSNumber* orderIdx in sortedPhotoList)
+        {
+            NSString* fileName = self.photoScrollView.photoList[[orderIdx intValue]];
+            [newList addObject:fileName];
+        }
+        for (NSString* tmp in newList)
+        {
+            [self.photoScrollView.photoList removeObject:tmp];
+        }
+        [newList addObjectsFromArray:self.photoScrollView.photoList];
+        self.photoScrollView.photoList = newList;
+        finalFullSortedList = self.photoScrollView.photoList;
+    }
+    
+    //TODO check if have description
+    NSDictionary* changedDescMap = self.photoScrollView.photoDescMap;
+    //TODO check if photo desc changed then ....
+    
+    NSMutableDictionary* finalPhotoMetaDataMap = nil;
+    if (finalPhotoDescMap != nil || finalFullSortedList != nil)
+    {
+        finalPhotoMetaDataMap = [[NSMutableDictionary alloc] init];
+        [finalPhotoMetaDataMap setObject:self.photoScrollView.photoList forKey:PHOTO_META_SORT_LIST_KEY];
+    }
 
-    if (sortedPhotoList != nil && [sortedPhotoList count] >0 )
-        thumbNailFileName = self.photoScrollView.photoList[0];
-        
-    [self.delegate updateEvent:ent newAddedList:photoNewAddedList deletedList:photoDeletedList sortList:self.photoScrollView.selectedAsSortIndexList];
+    
+    [self.delegate updateEvent:ent newAddedList:photoNewAddedList deletedList:photoDeletedList photoMetaData:finalPhotoMetaDataMap];
     [self dismissViewControllerAnimated:NO completion:nil]; //for iPhone case
 }
 

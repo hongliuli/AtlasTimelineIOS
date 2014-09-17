@@ -198,13 +198,14 @@ UILabel* sortIdexLabel;
         sortIdexLabel.text = [NSString stringWithFormat:NSLocalizedString(@"Order: %d",nil), count ];
         sortIdexLabel.hidden = false;
     }
+    [self.eventEditor.photoScrollView.horizontalTableView reloadData]; //so order number will display on new cell
 }
 - (void) setShareAction: (id)sender
 {
     int selectedPhotoIdx = self.pageControl.currentPage;
 
     [self.eventEditor.photoScrollView.selectedAsShareIndexSet addObject:[NSNumber numberWithInt: selectedPhotoIdx]];
-
+   [self.eventEditor.photoScrollView.horizontalTableView reloadData]; //show share icon will display on new 
     shareCountLabel.text = [NSString stringWithFormat:NSLocalizedString(@"%d selected for sharing",nil),self.eventEditor.photoScrollView.selectedAsShareIndexSet.count ];
     if (shareIconView.image == nil)
     {

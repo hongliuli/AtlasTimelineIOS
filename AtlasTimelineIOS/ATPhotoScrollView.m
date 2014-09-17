@@ -22,6 +22,7 @@
 #define PHOTO_SORT_TAG 200
 #define NEW_NOT_SAVED_FILE_PREFIX @"NEW"
 
+
 @implementation ATPhotoScrollView
 {
 }
@@ -55,6 +56,9 @@
         UITapGestureRecognizer *tap = [[UITapGestureRecognizer alloc] initWithTarget:self action:@selector(handleTapGesture:)];
         tap.numberOfTapsRequired =1;
         [self.horizontalTableView addGestureRecognizer:tap]; //old way of [self addGest..] will cause sometime tap does not work
+        
+        //The important part to fill uitable datasource photoList is in
+        //ATEventEditor
     }
     self.selectedAsShareIndexSet = [[NSMutableSet alloc] init];
     self.selectedAsSortIndexList = [[NSMutableArray alloc] init];

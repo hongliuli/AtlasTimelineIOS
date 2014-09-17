@@ -13,6 +13,8 @@
 #define ALERT_FOR_SAVE 1
 #define ALERT_FOR_POPOVER_ERROR 2
 
+#define PHOTO_META_FILE_NAME @"MetaFileForOrderAndDesc"
+
 #import <QuartzCore/QuartzCore.h>
 
 #import "ATViewController.h"
@@ -2104,7 +2106,7 @@
     if (self.preferencePopover != nil)
         [self.preferencePopover dismissPopoverAnimated:true];
 }
-- (void)updateEvent:(ATEventDataStruct*)newData newAddedList:(NSArray *)newAddedList deletedList:(NSArray*)deletedList sortList:(NSArray *)sortList{
+- (void)updateEvent:(ATEventDataStruct*)newData newAddedList:(NSArray *)newAddedList deletedList:(NSArray*)deletedList photoMetaData:(NSDictionary *)photoMetaData{
     //update annotation by remove/add, then update database or added to database depends on if have id field in selectedAnnotation
     ATAppDelegate *appDelegate = (ATAppDelegate *)[[UIApplication sharedApplication] delegate];
     NSMutableArray* list  = appDelegate.eventListSorted;
@@ -2139,6 +2141,9 @@
         newData.uniqueId = newEntity.uniqueId;
     
     NSString* thumbNailFileName = nil;
+    if (self.eventEditor.photoScrollView.photoList != nil && [self.eventEditor.photoScrollView.photoList count]>0)
+        thumbNailFileName = self.eventEditor.photoScrollView.photoList[0];
+    /*
     NSDate *now = [NSDate date];
     if (sortList !=nil && [sortList count] > 0)
     {
@@ -2159,6 +2164,8 @@
             now = [NSDate dateWithTimeInterval:-1.0 sinceDate:now]; //increment by on seconds
         }
     }
+     */
+    
     [self writePhotoToFile:newData.uniqueId newAddedList:newAddedList deletedList:deletedList photoForThumbNail:thumbNailFileName];//write file before add nodes to map, otherwise will have black photo on map
     
     NSString *key=[NSString stringWithFormat:@"%f|%f",newData.lat, newData.lng];
@@ -2224,6 +2231,10 @@
     if (self.eventEditorPopover != nil)
         [self.eventEditorPopover dismissPopoverAnimated:true];
     [self refreshEventListView:false];
+    
+    //TODO save metaFile
+    NSString *photoMetaFilePath = [[[ATHelper getPhotoDocummentoryPath] stringByAppendingPathComponent:newData.uniqueId] stringByAppendingPathComponent:PHOTO_META_FILE_NAME];
+    [photoMetaData writeToFile:photoMetaFilePath atomically:TRUE];
 }
 //delegate required implementation
 - (void)addToEpisode{
