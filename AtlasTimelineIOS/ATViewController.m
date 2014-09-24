@@ -2435,7 +2435,14 @@
                 [[NSFileManager defaultManager] createDirectoryAtPath:photoFinalDir withIntermediateDirectories:YES attributes:nil error:&error];
             [[NSFileManager defaultManager] moveItemAtPath:newPhotoTmpFile toPath:newPhotoFinalFileName error:&error];
             //Add to newPhotoQueue for sync to dropbox
-            [[self dataController] insertNewPhotoQueue:[eventId stringByAppendingPathComponent:fileName]];
+            if ([PHOTO_META_FILE_NAME isEqualToString:fileName] )
+            {
+                BOOL eventPhotoMetaFileExistInQueueFlag = [[self dataController] isItInNewPhotoQueue:[eventId stringByAppendingPathComponent:fileName]];
+                if (!eventPhotoMetaFileExistInQueueFlag)
+                    [[self dataController] insertNewPhotoQueue:[eventId stringByAppendingPathComponent:fileName]];
+            }
+            else
+                [[self dataController] insertNewPhotoQueue:[eventId stringByAppendingPathComponent:fileName]];
         }
         NSError* error;
         //remove the dir then recreate to clean up this temp dir
@@ -2464,10 +2471,12 @@
         [imageData writeToFile:thumbPath atomically:NO];
         
         //touch file to change file order
+        /*** not needed. now sort photo is in another way
         NSDate *now = [NSDate date];
         NSDictionary* attr = [NSDictionary dictionaryWithObjectsAndKeys: now, NSFileModificationDate, NULL];
         NSString* photoToTouch = [photoFinalDir stringByAppendingPathComponent:photoForThumbnail];
         [[NSFileManager defaultManager] setAttributes: attr ofItemAtPath: photoToTouch error: NULL];
+         */
     }
     if (deletedList != nil && [deletedList count] > 0)
     {

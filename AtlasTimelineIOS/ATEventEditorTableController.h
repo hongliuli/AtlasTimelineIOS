@@ -42,6 +42,7 @@
 @property (weak, nonatomic) IBOutlet UIBarButtonItem *deleteButton;
 @property (weak, nonatomic) IBOutlet UIBarButtonItem *saveButton;
 @property BOOL isFirstTimeAddPhoto;
+@property BOOL photoDescChangedFlag;
 
 - (IBAction)saveAction:(id)sender;
 - (IBAction)deleteAction:(id)sender;

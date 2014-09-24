@@ -64,6 +64,7 @@
 "Complete"="完成";
 "Confirm to delete the event"="确信删除该事件";
 "Confirm to download and set [%@] active!"="确信下载并把 ［%@］置成活跃!";
+"Confirm to replace %@ contents in your device!"="确信替换在设备上所有的 %@事件!";
 "Confirm to replace all %@ photos on Dropbox!"="确信替换在Dropbox上所有的 %@照片!";
 "Connect Server Fail!"="连接服务器失败!";
 "Content %@ is empty or do not have photos to download."=" [%@]中没有照片下载.";
@@ -93,6 +94,7 @@
 "Enter Code"="输入代码";
 "Enter email"="电邮地址";
 "Enter Name for the new episode"="输入新的片断名字";
+"Enter Photo Description:"="输入相片描述:";
 "Enter your email， tap [Send Code]. Then check your email to get security code.\nNext, enter the security code and tap [Verify] to login. Your email address will be your login ID!"="输入email地址，点击 ［发送代码］，然后从新收到的email拿到安全码，输入安全码完成登录!\n你的email地址就是你访问服务器的ID";
 "Episode name is empty or contains some special char"="片断名字是空的，或含有特殊字符";
 "Episode name should not be empty, and should not contains '@', '*','&' or '|'. Tap Create Episode again to enter valid name!"="片断名字不能为空，或不能有这些字符： '@', '*','&' or '|'. 再点击［创建片断］，输入有效名字!";
@@ -148,7 +150,7 @@
 "Online Help"="在线帮助";
 "Only when myEvents is active can you edit episode"="只有当 myEvents 被设为活跃后才能修改纪事";
 "Options"="选项";
-"Order: %d"="序列: ";
+"Order: %d"="序列: %d";
 " Pick Episode to Share"=" 选一个片断来分享";
 "Please check Apple Store for ChronicleMap new app [The World War II] and more  will come!"="请观注 ChronicleMap 在苹果店中的新APP ［第二次世界大战］，而且会有更多！";
 "Please download our WWII App, use it as an example to understand why ChronicleMap is the best choice for your portable photo albums, trip planner and journal"="请下载我们的［第二次世界大战］APP。通过它，你可以更好地了解为什么 ChronicleMap APP 是你最好的相册和行程安排工具。";
@@ -178,6 +180,7 @@
 "Restore Photos"="恢复照片";
 "Restore Purchase"="恢复购买";
 "Save failed"="保存失败";
+"Save"="存储";
 "Search Address     OR  "="搜索地址      或  ";
 "Scroll Date Magnifer"="滑动日期放大镜";
 "search any description and address"="搜索事件－输入描述或地址任何部分";
