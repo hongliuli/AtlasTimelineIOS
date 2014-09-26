@@ -859,6 +859,7 @@
         else if (dbDeletedPhotoCount > 0) //bypass process createFolder, only delete file for more efficient
             [self processEmptyDeletedPhotoQueue];
         
+        [UIApplication sharedApplication].idleTimerDisabled = YES;
         UIAlertView *alert = [[UIAlertView alloc]initWithTitle: NSLocalizedString(@"Photo backup has started!",nil)
                                                        message: NSLocalizedString(@"Photos will be uploaded to your Dropbox account one by one, please watch for the decreasing number.\n\nThe upload is done if number is decreased to 0. (Please repeat the operation if backup is interrupted)",nil)
                                                       delegate: self
@@ -950,6 +951,7 @@
         }
         else
         {
+            [UIApplication sharedApplication].idleTimerDisabled = YES;
             downloadAllFromDropboxAlert = [[UIAlertView alloc]initWithTitle: [NSString stringWithFormat:NSLocalizedString(@"Import photos from Dropbox:/ChronicleMap/%@",nil), [ATHelper getSelectedDbFileName]]
                             message: [NSString stringWithFormat:NSLocalizedString(@"Download missing %@ photos from Dropbox. This operation can be repeated until all photos are downloaded.",nil),[ATHelper getSelectedDbFileName]]
                             delegate: self
