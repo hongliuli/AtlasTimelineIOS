@@ -78,6 +78,9 @@
 #define EPISODE_VIEW_HIGHT_SMALL 140
 #define EPISODE_ROW_HEIGHT 30
 
+#define PHOTO_META_SORT_LIST_KEY @"sort_key"
+#define PHOTO_META_DESC_MAP_KEY @"desc_key"
+
 @interface MFTopAlignedLabel : UILabel
 
 @end
@@ -2234,6 +2237,23 @@
     
     //TODO save metaFile
     NSString *photoMetaFilePath = [[[ATHelper getPhotoDocummentoryPath] stringByAppendingPathComponent:newData.uniqueId] stringByAppendingPathComponent:PHOTO_META_FILE_NAME];
+    if (newAddedList != nil && [newAddedList count] > 0)
+    {
+        NSMutableDictionary* photoDescMap = [photoMetaData objectForKey:PHOTO_META_DESC_MAP_KEY];
+        NSDictionary* cloneMap = [NSDictionary dictionaryWithDictionary:photoDescMap];
+        for (NSString* fileName in cloneMap)
+        {
+            NSString* descTxt = [photoDescMap objectForKey:fileName];
+            NSString* fileName2 = fileName;
+            int prefixLen = [NEW_NOT_SAVED_FILE_PREFIX length];
+            if ([fileName hasPrefix:NEW_NOT_SAVED_FILE_PREFIX])
+            {
+                fileName2 = [fileName substringFromIndex:prefixLen];
+                [photoDescMap removeObjectForKey:fileName];
+                [photoDescMap setObject:descTxt forKey:fileName2];
+            }
+        }
+    }
     [photoMetaData writeToFile:photoMetaFilePath atomically:TRUE];
 }
 //delegate required implementation
