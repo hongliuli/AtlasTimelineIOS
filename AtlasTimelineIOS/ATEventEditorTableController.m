@@ -990,7 +990,15 @@ forRowAtIndexPath: (NSIndexPath*)indexPath
     lblTotalCount.text = [NSString stringWithFormat:@"%d", [self.photoScrollView.photoList count] ];
     lblNewAddedCount.text = [NSString stringWithFormat:NSLocalizedString(@"[+%d/-%d unsaved!]",nil), [photoNewAddedList count], [photoDeletedList count] ];//color is red so use separate lbl
     if ([photoNewAddedList count] == 0 && [photoDeletedList count] == 0)
-        lblNewAddedCount.hidden = true;
+    {
+        if (self.photoDescChangedFlag > 0 || [self.photoScrollView.selectedAsSortIndexList count] > 0)
+        {
+            lblNewAddedCount.text = NSLocalizedString(@"change unsaved",nil);
+            lblNewAddedCount.hidden = false;
+        }
+        else
+            lblNewAddedCount.hidden = true;
+    }
     else
         lblNewAddedCount.hidden = false;
 }

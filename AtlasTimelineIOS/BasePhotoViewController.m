@@ -107,7 +107,7 @@ UIImageView* hasPhotoDescImage;
     
     int screenWidth = [ATConstants screenWidth];
     int textWidth = screenWidth * 0.7;
-    photoDescView = [[UITextView alloc] initWithFrame:CGRectMake((screenWidth - textWidth)/2, 50 , textWidth, 110)];
+    photoDescView = [[UITextView alloc] initWithFrame:CGRectMake((screenWidth - textWidth)/2, 10 , textWidth, 110)];
     photoDescView.backgroundColor = [UIColor colorWithRed: 0 green: 0 blue: 0 alpha: 0.5];
     photoDescView.textColor = [UIColor whiteColor];
     //photoDescView.textAlignment = NSTextAlignmentCenter;
@@ -201,10 +201,14 @@ UIImageView* hasPhotoDescImage;
         currentPhotoDescTxt = [photoDescMap objectForKey:currentPhotoFileName];
         if (currentPhotoDescTxt != nil)
         {
-            hasPhotoDescImage.hidden = false;
             photoDescView.text = currentPhotoDescTxt;
             if (!self.toolbar.hidden)
+            {
                 photoDescView.hidden = false;
+                hasPhotoDescImage.hidden = true;
+            }
+            else
+                hasPhotoDescImage.hidden = false;
         }
         else
         {
@@ -218,6 +222,7 @@ UIImageView* hasPhotoDescImage;
     int selectedPhotoIdx = self.pageControl.currentPage;
     [self dismissModalViewControllerAnimated:true]; //use Modal with Done button is good both iPad/iPhone
     [self.eventEditor.photoScrollView.horizontalTableView scrollToRowAtIndexPath: [NSIndexPath indexPathForRow:selectedPhotoIdx inSection:0] atScrollPosition:UITableViewScrollPositionMiddle animated:NO];
+    [self.eventEditor updatePhotoCountLabel];
 }
 
 //TODO delete will cause issue to those marked as share, but I do not want to consider it, it weired that people will do share and delete in the same session
@@ -315,7 +320,7 @@ UIImageView* hasPhotoDescImage;
 }
 - (void)customIOS7dialogButtonTouchUpInside: (CustomIOS7AlertView *)alertView clickedButtonAtIndex: (NSInteger)buttonIndex
 {
-    if (buttonIndex == 0) //save button cliced
+    if (buttonIndex == 0) //Continue button cliced
     {
         if (![photoDescInputView.text isEqualToString:currentPhotoDescTxt])
         {
