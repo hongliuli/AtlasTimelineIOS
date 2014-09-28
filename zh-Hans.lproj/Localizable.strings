@@ -58,7 +58,7 @@
 "Backup/Restore myEvents data"="备份/恢复myEvents数据";
 "Backup/Restore Photos to Dropbox"="备份/恢复照片到Dropbox";
 "Cancel"="取消";
-"Cancel will lose your new photos."="取消会丢失新照片.";
+"Cancel will lose your photo changes."="取消会丢失照片修改.";
 "Cannot zoom-out anymore!"="不能再放大!";
 "change unsaved"="需要保存";
 "Check Your Email!"="检查你的电子邮件!";
@@ -230,6 +230,7 @@
 "WARNING: All photoes on your dropbox:/ChronicleMap/%@ will be deleted and replaced by %d photos from this device!"="警告: 在你的 Dropbox:/ChoronicleMap/%@ 中的所有照片将被删除，而被设备APP上的%d 照片所代替!";
 "WARNING: Export will replace existing %@ event data on server."="警告: 上载将替换服务器上的 %@ 事件数据.";
 "WARNING: Local %@'s %@ events will be replaced!"="警告: 设备上 %@ 的 %@ 事件将被代替!";
+"Warning: Photo change(s) are not saved."="警告: 相片修改没有被保存";
 "%@ was downloaded before"="%@ 以前被下载过";
 "Write notes here"="写点东西";
 "Yes"="是的";

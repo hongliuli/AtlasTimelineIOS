@@ -812,28 +812,29 @@ forRowAtIndexPath: (NSIndexPath*)indexPath
     }
     if (alertView == alertCancel)
     {
-        if (buttonIndex == 0)
-        {
-            NSLog(@"user canceled upload");
-            // Any action can be performed here
-        }
-        else if (buttonIndex == 1)
-        {
-            //will delete selected event from annotation/db
-            [self.delegate cancelEvent];
-        }
+        [self.delegate cancelEvent];
     }
 }
 
 - (IBAction)cancelAction:(id)sender {
     int cnt = [photoNewAddedList count] ;
-    if (cnt > 0)
+    if (cnt > 0 || self.photoDescChangedFlag || [self.photoScrollView.selectedAsSortIndexList count] > 0)
     {
-        alertCancel = [[UIAlertView alloc]initWithTitle: [NSString stringWithFormat:NSLocalizedString(@"%d new photo(s) are not saved",nil),cnt]
-                                                message: [NSString stringWithFormat:NSLocalizedString(@"Cancel will lose your new photos.",nil)]
+        NSString* titleTxt = [NSString stringWithFormat:NSLocalizedString(@"%d new photo(s) are not saved",nil),cnt];
+        if (cnt == 0)
+        {
+            if (self.photoDescChangedFlag && [self.photoScrollView.selectedAsSortIndexList count] > 0)
+                titleTxt = @"New photo order/desc need save";
+            else if ([self.photoScrollView.selectedAsSortIndexList count] > 0)
+                titleTxt = NSLocalizedString(@"New photo order need save",nil);
+            else
+                titleTxt = NSLocalizedString(@"New photo desc need save",nil) ;
+        }
+        alertCancel = [[UIAlertView alloc]initWithTitle:titleTxt
+                                                message: [NSString stringWithFormat:NSLocalizedString(@"Warning: Photo change(s) are not saved.",nil)]
                                                delegate: self
-                                      cancelButtonTitle:NSLocalizedString(@"Do not cancel",nil)
-                                      otherButtonTitles:NSLocalizedString(@"Quit w/o save",nil),nil];
+                                      cancelButtonTitle:NSLocalizedString(@"Ok",nil)
+                                      otherButtonTitles:nil];
         
         
         [alertCancel show];

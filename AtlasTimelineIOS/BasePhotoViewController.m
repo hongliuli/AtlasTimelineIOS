@@ -23,7 +23,7 @@ UITextView* photoDescView;
 NSString* currentPhotoDescTxt;
 NSString* currentPhotoFileName;
 UITextView *photoDescInputView;
-UIImageView* hasPhotoDescImage;
+UILabel* hasPhotoDescLabel;
 
 - (id)initWithCoder:(NSCoder *)coder
 {
@@ -95,9 +95,17 @@ UIImageView* hasPhotoDescImage;
     [self.view bringSubviewToFront:self.toolbar];
     [self.view bringSubviewToFront:self.pageControl];
     
-    hasPhotoDescImage = [[UIImageView alloc] initWithFrame:CGRectMake(5, 50 , 30, 30)];
-    [hasPhotoDescImage setImage:[UIImage imageNamed:@"pencil-orange-icon.png"]];
-    [self.view addSubview:hasPhotoDescImage];
+    hasPhotoDescLabel = [[UILabel alloc] initWithFrame:CGRectMake([ATConstants screenWidth] - 80, 50 , 35, 40)];
+    [hasPhotoDescLabel setBackgroundColor:[UIColor colorWithRed: 0 green: 0 blue: 0 alpha: 0.6]];
+     hasPhotoDescLabel.numberOfLines = 4;
+    [hasPhotoDescLabel.layer setCornerRadius:4.0f];
+    [hasPhotoDescLabel.layer setMasksToBounds:YES];
+    hasPhotoDescLabel.textColor = [UIColor whiteColor];
+    hasPhotoDescLabel.layer.borderColor = [UIColor whiteColor].CGColor;
+    hasPhotoDescLabel.layer.borderWidth = 1;
+    hasPhotoDescLabel.font = [UIFont fontWithName:@"Helvetica" size:8];
+    hasPhotoDescLabel.text=@"   . . . . .\n   . . . . .\n   . . . . .\n   . . . . .";
+    [self.view addSubview:hasPhotoDescLabel];
     
     shareIconView = [[UIImageView alloc] initWithFrame:CGRectMake(50, [ATConstants screenHeight] - 110 , 30, 30)];
     shareCountLabel = [[UILabel alloc] initWithFrame:CGRectMake(80, [ATConstants screenHeight] - 110 , 180, 30)];
@@ -195,24 +203,29 @@ UIImageView* hasPhotoDescImage;
     NSDictionary* photoDescMap = self.eventEditor.photoScrollView.photoDescMap;
     currentPhotoDescTxt = nil;
     photoDescView.hidden = true;
-    hasPhotoDescImage.hidden = true;
+    hasPhotoDescLabel.hidden = true;
     if (photoDescMap != nil)
     {
         currentPhotoDescTxt = [photoDescMap objectForKey:currentPhotoFileName];
         if (currentPhotoDescTxt != nil)
         {
             photoDescView.text = currentPhotoDescTxt;
+            if ([currentPhotoDescTxt length] < 100)
+                photoDescView.textAlignment = NSTextAlignmentCenter;
+            else
+                photoDescView.textAlignment = NSTextAlignmentLeft;
+            
             if (!self.toolbar.hidden)
             {
                 photoDescView.hidden = false;
-                hasPhotoDescImage.hidden = true;
+                hasPhotoDescLabel.hidden = true;
             }
             else
-                hasPhotoDescImage.hidden = false;
+                hasPhotoDescLabel.hidden = false;
         }
         else
         {
-            hasPhotoDescImage.hidden = true;
+            hasPhotoDescLabel.hidden = true;
         }
     }
 }
@@ -322,7 +335,10 @@ UIImageView* hasPhotoDescImage;
 {
     if (buttonIndex == 0) //Continue button cliced
     {
-        if (![photoDescInputView.text isEqualToString:currentPhotoDescTxt])
+        NSString* currentTxtTmp = currentPhotoDescTxt;
+        if (currentTxtTmp == nil)
+            currentTxtTmp = @"";
+        if (![photoDescInputView.text isEqualToString:currentTxtTmp])
         {
             self.eventEditor.photoDescChangedFlag = true;
             //TODO enable Save button
@@ -370,7 +386,8 @@ UIImageView* hasPhotoDescImage;
     [sortIdexLabel setFrame:CGRectMake(50, [ATConstants screenHeight] - 140 , 120, 30)];
     [shareCountLabel setFrame:CGRectMake(80, [ATConstants screenHeight] - 110 , 180, 30)];
     [shareIconView setFrame:CGRectMake(50, [ATConstants screenHeight] - 110 , 30, 30)];
-
+    [hasPhotoDescLabel setFrame:CGRectMake([ATConstants screenWidth] - 80, 50 , 35, 40)];
+    NSLog(@"  rotation scree height=%d",[ATConstants screenHeight]);
 }
 
 @end

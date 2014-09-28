@@ -6,8 +6,6 @@
 //  Copyright (c) 2012 hong. All rights reserved.
 //
 
-#define SCREEN_WIDTH ((([UIApplication sharedApplication].statusBarOrientation == UIInterfaceOrientationPortrait) || ([UIApplication sharedApplication].statusBarOrientation == UIInterfaceOrientationPortraitUpsideDown)) ? [[UIScreen mainScreen] bounds].size.width : [[UIScreen mainScreen] bounds].size.height)
-#define SCREEN_HEIGHT ((([UIApplication sharedApplication].statusBarOrientation == UIInterfaceOrientationPortrait) || ([UIApplication sharedApplication].statusBarOrientation == UIInterfaceOrientationPortraitUpsideDown)) ? [[UIScreen mainScreen] bounds].size.height : [[UIScreen mainScreen] bounds].size.width)
 
 #define IN_APP_PURCHASED @"IN_APP_PURCHASED"
 #define ALERT_FOR_SAVE 1
@@ -134,7 +132,6 @@
     
     BOOL switchEventListViewModeToVisibleOnMapFlag;
     NSMutableArray* eventListInVisibleMapArea;
-    
 }
 
 @synthesize mapView = _mapView;
@@ -151,6 +148,15 @@
     switchEventListViewModeToVisibleOnMapFlag = false; //eventListView for timewheel is more reasonable, so make it as default always, even not save to userDefault
     [ATHelper createPhotoDocumentoryPath];
     self.locationManager = [[CLLocationManager alloc] init];
+    //add for ios8
+    self.locationManager.delegate = self;
+    NSString *version = [[UIDevice currentDevice] systemVersion];
+    BOOL isAtLeast8 = [version compare:@"8.0" options:NSNumericSearch] != NSOrderedAscending;
+    if (isAtLeast8) {
+        [self.locationManager requestWhenInUseAuthorization];
+        [self.locationManager requestAlwaysAuthorization];
+    }
+    
     mapViewShowWhatFlag = MAPVIEW_SHOW_ALL;
     int searchBarHeight = [ATConstants searchBarHeight];
     int searchBarWidth = [ATConstants searchBarWidth];
