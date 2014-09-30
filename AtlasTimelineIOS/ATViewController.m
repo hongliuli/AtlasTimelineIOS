@@ -151,10 +151,10 @@
     //add for ios8
     self.locationManager.delegate = self;
     NSString *version = [[UIDevice currentDevice] systemVersion];
-    BOOL isAtLeast8 = [version compare:@"8.0" options:NSNumericSearch] != NSOrderedAscending;
+    BOOL isAtLeast8 = [version compare:@"80.0" options:NSNumericSearch] != NSOrderedAscending;
     if (isAtLeast8) {
-        [self.locationManager requestWhenInUseAuthorization];
-        [self.locationManager requestAlwaysAuthorization];
+       // [self.locationManager requestWhenInUseAuthorization];
+       // [self.locationManager requestAlwaysAuthorization];
     }
     
     mapViewShowWhatFlag = MAPVIEW_SHOW_ALL;
