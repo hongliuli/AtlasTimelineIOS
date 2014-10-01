@@ -732,7 +732,7 @@ forRowAtIndexPath: (NSIndexPath*)indexPath
     //photoViewController will write which to delete and wihich to set as thumbnail etc
     
     NSMutableArray* finalFullSortedList = nil;
-    NSMutableDictionary* finalPhotoDescMap = nil;
+
     NSArray* sortedPhotoList = self.photoScrollView.selectedAsSortIndexList;
     if (sortedPhotoList != nil && [sortedPhotoList count] > 0)
     {
@@ -812,7 +812,18 @@ forRowAtIndexPath: (NSIndexPath*)indexPath
     }
     if (alertView == alertCancel)
     {
-        [self.delegate cancelEvent];
+        {
+            if (buttonIndex == 0)
+            {
+                NSLog(@"user canceled upload");
+                // Any action can be performed here
+            }
+            else if (buttonIndex == 1)
+            {
+                //will delete selected event from annotation/db
+                [self.delegate cancelEvent];
+            }
+        }
     }
 }
 
@@ -830,11 +841,11 @@ forRowAtIndexPath: (NSIndexPath*)indexPath
             else
                 titleTxt = NSLocalizedString(@"New photo desc need save",nil) ;
         }
-        alertCancel = [[UIAlertView alloc]initWithTitle:titleTxt
-                                                message: [NSString stringWithFormat:NSLocalizedString(@"Warning: Photo change(s) are not saved.",nil)]
+        alertCancel = [[UIAlertView alloc]initWithTitle: [NSString stringWithFormat:NSLocalizedString(@"%d new photo(s) are not saved",nil),cnt]
+                                                message: [NSString stringWithFormat:NSLocalizedString(@"Cancel will lose your new photos.",nil)]
                                                delegate: self
-                                      cancelButtonTitle:NSLocalizedString(@"Ok",nil)
-                                      otherButtonTitles:nil];
+                                      cancelButtonTitle:NSLocalizedString(@"Do not cancel",nil)
+                                      otherButtonTitles:NSLocalizedString(@"Quit w/o save",nil),nil];
         
         
         [alertCancel show];
