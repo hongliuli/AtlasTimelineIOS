@@ -286,23 +286,23 @@ forRowAtIndexPath: (NSIndexPath*)indexPath
         photoFilesMetaMap = [NSMutableDictionary dictionaryWithContentsOfFile:photoMetaFilePath];
         if (photoFilesMetaMap != nil)
         {
-            self.photoScrollView.photoSortedNameList = (NSMutableArray*)[photoFilesMetaMap objectForKey:PHOTO_META_SORT_LIST_KEY];
+            self.photoScrollView.photoSortedListFromMetaFile = (NSMutableArray*)[photoFilesMetaMap objectForKey:PHOTO_META_SORT_LIST_KEY];
             self.photoScrollView.photoDescMap = [photoFilesMetaMap objectForKey:PHOTO_META_DESC_MAP_KEY];
         }
         //Although photoSortedNameList should have all filenames in order, to be safe, still read filename from directory then sort accordingly
-        if (self.photoScrollView.photoSortedNameList != nil)
+        if (self.photoScrollView.photoSortedListFromMetaFile != nil)
         {
             NSMutableArray* newList = [[NSMutableArray alloc] initWithCapacity:[self.photoScrollView.photoList count]];
-            int tmpCnt = [self.photoScrollView.photoSortedNameList count];
+            int tmpCnt = [self.photoScrollView.photoSortedListFromMetaFile count];
             for (int i = 0; i < tmpCnt; i++)
             {
-                NSString* fileName = self.photoScrollView.photoSortedNameList[i];
+                NSString* fileName = self.photoScrollView.photoSortedListFromMetaFile[i];
                 if ([self.photoScrollView.photoList containsObject:fileName])
                     [newList addObject: fileName];
             }
             for (int i = 0; i < tmpCnt; i++)
             {
-                NSString* fileName = self.photoScrollView.photoSortedNameList[i];
+                NSString* fileName = self.photoScrollView.photoSortedListFromMetaFile[i];
                 [self.photoScrollView.photoList removeObject:fileName];
             }
             [newList addObjectsFromArray:self.photoScrollView.photoList];
@@ -731,7 +731,7 @@ forRowAtIndexPath: (NSIndexPath*)indexPath
     //have to ask ATViewController to write photo files, because for new event, we do not have id for photo directory names yet
     //photoViewController will write which to delete and wihich to set as thumbnail etc
     
-    NSMutableArray* finalFullSortedList = nil;
+    NSArray* finalFullSortedList = self.photoScrollView.photoSortedListFromMetaFile;
 
     NSArray* sortedPhotoList = self.photoScrollView.selectedAsSortIndexList;
     if (sortedPhotoList != nil && [sortedPhotoList count] > 0)
