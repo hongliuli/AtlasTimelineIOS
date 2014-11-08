@@ -27,6 +27,9 @@ BOOL eventListViewInMapModeFlag;
 
 NSDateFormatter *dateFormatter;
 
+UIColor *greyColor;
+UIFont *boldFont;
+
 - (id)initWithFrame:(CGRect)frame
 {
     if (self == [super initWithFrame:frame])
@@ -51,6 +54,8 @@ NSDateFormatter *dateFormatter;
         [dateFormatter setTimeStyle:NSDateFormatterNoStyle];
         [dateFormatter setLocale:[NSLocale currentLocale]];
         
+        greyColor=[UIColor darkGrayColor];
+        boldFont=[UIFont fontWithName:@"Arial-BoldMT" size:13];
     }
     return self;
 }
@@ -135,16 +140,23 @@ NSDateFormatter *dateFormatter;
     NSString* titleStr = @"";
     NSString* descToDisplay = [NSString stringWithFormat:@"%@\n%@",dateStr, descStr ];
     
+    NSMutableAttributedString *attString=[[NSMutableAttributedString alloc] initWithString:descToDisplay];
+    [attString addAttribute:NSForegroundColorAttributeName value:greyColor range:NSMakeRange(0, [dateStr length])];
+    
     int titleEndLocation = [descStr rangeOfString:@"\n"].location;
-    if (titleEndLocation < 60) //title is in file as [Desc]xxx yyy zzzz\n
+    if (titleEndLocation < 80) //title is in file as [Desc]xxx yyy zzzz\n
     {
         titleStr = [descStr substringToIndex:titleEndLocation];
         descStr = [descStr substringFromIndex:titleEndLocation];
-        descToDisplay = [NSString stringWithFormat:@"%@\n%@\n%@", dateStr,titleStr, descStr ];
+        descToDisplay = [NSString stringWithFormat:@"%@\n%@%@", dateStr,titleStr, descStr ];
+        attString=[[NSMutableAttributedString alloc] initWithString:descToDisplay];
+        int dateStrLen = [dateStr length];
+        [attString addAttribute:NSForegroundColorAttributeName value:greyColor range:NSMakeRange(0, dateStrLen)];
+        [attString addAttribute:NSFontAttributeName value:boldFont range:NSMakeRange(dateStrLen, [titleStr length] + 1)];
     }
     
     //dateStr = [dateStr substringToIndex:10];
-    cell.eventDescView.text = descToDisplay;
+    cell.eventDescView.attributedText = attString;
     ATAppDelegate *appDelegate = (ATAppDelegate *)[[UIApplication sharedApplication] delegate];
     ATEventDataStruct* focusedEvent = appDelegate.focusedEvent;
     if (focusedEvent != nil && [focusedEvent.uniqueId isEqual:evt.uniqueId])

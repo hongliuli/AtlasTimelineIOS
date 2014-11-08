@@ -40,6 +40,8 @@ NSString* timeZoomLevelStr;
 UILabel* updatableLabel;
 UILabel* updatableLabel2;
 
+NSMutableArray* appStoreUrlList;
+
 - (id)initWithFrame:(CGRect)frame
 {
     self = [super initWithFrame:frame];
@@ -47,17 +49,37 @@ UILabel* updatableLabel2;
         // Initialization code
         // add subview etc here
     }
+    NSString* serviceUrl = [NSString stringWithFormat:@"http://www.chroniclemap.com//resources/newappshortlist.html"];
+    NSString* responseStr  = [ATHelper httpGetFromServer:serviceUrl];
+    NSMutableArray* appNameList = [[NSMutableArray alloc] init];
+    appStoreUrlList = [[NSMutableArray alloc] init];
     
-    NSUserDefaults* userDefault = [NSUserDefaults standardUserDefaults];
-    //[userDefault setObject:nil forKey:@"DO_NOT_PROMPT_DOWNLOAD"];
-    NSString* tmpKey = [userDefault objectForKey:@"DO_NOT_PROMPT_DOWNLOAD"];
-    if (tmpKey == nil)
+    if (responseStr != nil && [responseStr length] > 100)
+    {
+        NSArray* appList = [responseStr componentsSeparatedByString:@"\n"];
+        for (NSString* appStr in appList)
+        {
+            if (appStr != nil && [appStr length] > 20)
+            {
+                NSArray* appDetail = [appStr componentsSeparatedByString:@"|"];
+                [appNameList addObject:NSLocalizedString(appDetail[0],nil)];
+                [appStoreUrlList addObject:appDetail[1]];
+            }
+        }
+    }
+    [appNameList addObject:NSLocalizedString(@"More ...",nil)];
+    [appStoreUrlList addObject:NSLocalizedString(@"http://www.chroniclemap.com/resources/allapplist.html",nil)]; //TODO have chinese url
+    
+    if ([appNameList count] > 0)
     {
         UIAlertView *alert = [[UIAlertView alloc]initWithTitle: @""
-                    message: NSLocalizedString(@"Please download our WWII App, use it as an example to understand why ChronicleMap is the best choice for your portable photo albums, trip planner and journal",nil)
-                    delegate: self
-                    cancelButtonTitle:NSLocalizedString(@"Not Now",nil)
-                    otherButtonTitles:NSLocalizedString(@"Download WWII App Now",nil), NSLocalizedString(@"No, Thanks",nil), nil];
+                                                       message: NSLocalizedString(@"Related Apps to download",nil)
+                                                      delegate: self
+                                             cancelButtonTitle:NSLocalizedString(@"Not Now",nil)
+                                             otherButtonTitles: nil];
+        for( NSString *title in appNameList)  {
+            [alert addButtonWithTitle:title];
+        }
         [alert show];
     }
     
@@ -68,15 +90,8 @@ UILabel* updatableLabel2;
 {
     if (buttonIndex == 0) //Not Now
         return; //user clicked cancel button
-    if (buttonIndex == 1)
-    {
-        [[UIApplication sharedApplication] openURL:[NSURL URLWithString:@"https://itunes.apple.com/us/app/second-world-war-on-chroniclemap/id893801070?ls=1&mt=8"]];
-    }
-    else
-    {
-        NSUserDefaults* userDefault = [NSUserDefaults standardUserDefaults];
-        [userDefault setObject:@"yes" forKey:@"DO_NOT_PROMPT_DOWNLOAD"];
-    }
+    
+    [[UIApplication sharedApplication] openURL:[NSURL URLWithString:appStoreUrlList[buttonIndex -1]]];
 }
 
 - (void) updateDateText
