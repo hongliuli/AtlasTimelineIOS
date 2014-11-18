@@ -38,6 +38,7 @@
 + (void)startReplaceDb:(NSString*)selectedAtlasName :(NSArray*)downloadedJsonArray :(UIActivityIndicatorView*)spinner;
 + (BOOL)isBCDate:(NSDate*)date;
 + (NSDictionary*) getScaleStartEndDate:(NSDate*)focusedDate;
++ (BOOL) isAtLeast8;
 
 // file/photos related
 + (void) createPhotoDocumentoryPath;

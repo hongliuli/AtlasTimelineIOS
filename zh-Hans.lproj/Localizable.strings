@@ -57,6 +57,8 @@
 "Backup Photos (Incremental)"="增量备份";
 "Backup/Restore myEvents data"="备份/恢复myEvents数据";
 "Backup/Restore Photos to Dropbox"="备份/恢复照片到Dropbox";
+"By Map"="按地图列表";
+"By Timewheel"="按期间列表";
 "Cancel"="取消";
 "Cancel will lose your photo changes."="取消会丢失照片修改.";
 "Cannot zoom-out anymore!"="不能再放大!";
@@ -154,7 +156,6 @@
 "Order: %d"="序列: %d";
 " Pick Episode to Share"=" 选一个片断来分享";
 "Please check Apple Store for ChronicleMap new app [The World War II] and more  will come!"="请观注 ChronicleMap 在苹果店中的新APP ［第二次世界大战］，而且会有更多！";
-"Please download our WWII App, use it as an example to understand why ChronicleMap is the best choice for your portable photo albums, trip planner and journal"="请下载我们的［第二次世界大战］APP。通过它，你可以更好地了解为什么 ChronicleMap APP 是你最好的相册和行程安排工具。";
 "Please grant access in iOS Settings->Privacy->Contacts->Chronicle Map\n(This is optional. Address Book is used for you to find friend easily)"="请开放访问权限：在iOS的[设置->隐私->通讯录->Chronicle Map]\n(访问通讯录不是必须的，只是帮助你更容易地找到朋友.)";
 "Please Enter Valid Email Address."="请输入有效电子邮件地址.";
 "Please enter the security code you received in your email!"="请输入你在邮件中收到的安全代码!";
@@ -184,6 +185,8 @@
 "Save"="存储";
 "Search Address     OR  "="搜索地址      或  ";
 "Scroll Date Magnifer"="滑动日期放大镜";
+"Scroll timewheel to list events in the selected period"="滑动时间轮，列表在同一时间段中的事件";
+"Scroll map to list events moving into the screen"="滑动地图，列表出现在地图上的事件";
 "search any description and address"="搜索事件－输入描述或地址任何部分";
 "   section %d   row %d"="   section %d   row %d";
 "Select Active from the downloaded contents/episodes"="从已下载的内容／片段中选一个为活跃的";
@@ -203,8 +206,6 @@
 "Share Episode Success!"="分享片断成功!";
 "Share Event"="分享事件";
 "Share my Episodes to Friends"="分享我的片断给朋友";
-"List events in same period"="列举在同一时间段中的事件";
-"List events in same region"="列举在同一区域中的事件";
 "Support Us"="支持我们";
 "Sync %i events to %@ on server"="同步 %i 个事件到服务器的[%@]";
 "Tap (+) or double-tab here to zoom in"="点击 (+) 或双击这里来放大时间范围";
@@ -233,6 +234,7 @@
 "Warning: Photo change(s) are not saved."="警告: 相片修改没有被保存";
 "%@ was downloaded before"="%@ 以前被下载过";
 "Write notes here"="写点东西";
+"WWII"="二战历史";
 "Yes"="是的";
 "Yes, Continue"="是的，继续";
 "There is a new version!"="有新版本!";

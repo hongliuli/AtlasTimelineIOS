@@ -18,6 +18,10 @@
 #define EVENT_TYPE_NO_PHOTO 0
 #define EVENT_TYPE_HAS_PHOTO 1
 
+#define MAPVIEW_HIDE_ALL 1
+#define MAPVIEW_SHOW_PHOTO_LABEL_ONLY 2
+#define MAPVIEW_SHOW_ALL 3
+
 @implementation ATEventListWindowView
 
 NSArray* internalEventList;
@@ -242,6 +246,7 @@ UIFont *boldFont;
         [mapView refreshEventListView:false];
     }
     else{ //Do not change focused event for up/down arrow cause
+        
         appDelegate.focusedDate = evt.eventDate;
         appDelegate.focusedEvent = evt;  //appDelegate.focusedEvent is added when implement here
         int zoomLeve = -1;
@@ -250,6 +255,9 @@ UIFont *boldFont;
         [mapView setNewFocusedDateAndUpdateMapWithNewCenter : evt :zoomLeve]; //do not change map zoom level
         [self.tableView reloadData]; //so show checkIcon for selected row
         [mapView showTimeLinkOverlay];
+
+        mapView.mapViewShowWhatFlag = MAPVIEW_SHOW_ALL; //ad-hoc fix to make sure thumbnail on map always show when select on eventlist view
+
         //bookmark selected event
         NSUserDefaults* userDefault = [NSUserDefaults standardUserDefaults];
         int idx = [appDelegate.eventListSorted indexOfObject:evt];

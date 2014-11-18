@@ -42,6 +42,7 @@
 @property (strong, nonatomic) NSDate* startDate;
 @property (strong, nonatomic) NSDate* endDate;
 @property (strong, nonatomic) ATTimeZoomLine* timeZoomLine;
+@property int mapViewShowWhatFlag; //see MAPVIEW_SHOW_xxxxx macros
 
 
 - (void) prepareMapView;
