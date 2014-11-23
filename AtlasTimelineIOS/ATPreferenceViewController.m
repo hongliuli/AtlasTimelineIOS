@@ -123,7 +123,7 @@
     if (userId == nil)
         return;
     NSString* serviceUrl = [NSString stringWithFormat:@"%@/retreivelistofcontents?user_id=%@&security_code=%@",[ATConstants ServerURL], userId, securityCode];
-    NSString* responseStr = [ATHelper httpGetFromServer:serviceUrl];
+    NSString* responseStr = [ATHelper httpGetFromServer:serviceUrl :false];
     NSArray* libraryList = nil;
     if (responseStr == nil)
         return;
