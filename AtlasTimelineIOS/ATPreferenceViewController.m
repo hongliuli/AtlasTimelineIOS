@@ -1302,7 +1302,7 @@
         }
         //following is to prompt user that device already has all photos in dropbox
         if ( [photoFromDropboxCell.textLabel.text isEqualToString:RESTORE_PHOTO_TITLE])
-                photoFromDropboxCell.textLabel.text = NSLocalizedString(@"All photos are already downloaded",nil);
+                photoFromDropboxCell.textLabel.text = NSLocalizedString(@"Repeat until no more download",nil);
     }
 }
 - (void)restClient:(DBRestClient*)client loadMetadataFailedWithError:(NSError*)error
@@ -1379,8 +1379,8 @@
     else if (downloadFromDropboxLoadMedadataFailCount > 0 && downloadFromDropboxSuccessCount + downloadFromDropboxFailCount == 0 && onlyShowOnceForIssueWithDropbox)
     { //this condition is used when loadMetadataWithError called the function
         onlyShowOnceForIssueWithDropbox = false;
-        NSString* message = [NSString stringWithFormat:NSLocalizedString(@"This may happen if the app was uninstalled before export all photos to dropbox /ChronicleMap/%@ folder!",nil), [ATHelper getSelectedDbFileName]];
-        UIAlertView *alert = [[UIAlertView alloc] initWithTitle:NSLocalizedString(@"Dropbox may not have some photos you are looking for.",nil) message:message delegate:nil cancelButtonTitle:NSLocalizedString(@"OK",nil) otherButtonTitles:nil];
+        NSString* message = [NSString stringWithFormat:NSLocalizedString(@"If no change to row with [Repeat until no more download], it means all photos are downloaded!",nil), [ATHelper getSelectedDbFileName]];
+        UIAlertView *alert = [[UIAlertView alloc] initWithTitle:NSLocalizedString(@"Wait for 10+ seconds",nil) message:message delegate:nil cancelButtonTitle:NSLocalizedString(@"OK",nil) otherButtonTitles:nil];
         [alert show];
     }
 }
