@@ -45,7 +45,6 @@
 "A minor error occurs"="出现一个小错";
 "An episode is a collection of events, such as an itinerary, that you can share to your friends' ChronicleMap app. (Photos are not included.)\n\nTo send an episode to a friend's ChronicleMap app, tap the episode in [Settings->Share my Episodes]\n\nYour friend can check the incoming episode in the app's [Settings->Incoming Contents/Episodes] and download to display on map."="一个［片断］就是一组相关事件，例如一个旅行行程．［片断］可以分享给朋友的纪事地图APP（不包含照片）。\n\n送[片断]给朋友的APP：点击[菜单->分享我的片断]，然后选择片断和朋友发送。\n\n你的朋友就可以在APP上的[菜单->片断收件箱]里下载片断到地图上.";
 "After he/she clicks accept link in the email, you can start to send her episode"="朋友在邮件中点击Accept后，你就可以给他/她发送片断";
-"All photos are already downloaded"="所有照片已经下载完毕";
 " - All your life stories are here!"=" - 你所有的人生故事!";
 "An invitation email has been sent to your friend"="邀请邮件已经发给你的朋友";
 "Are you sure?"="确信吗?";
@@ -90,7 +89,6 @@
 "Downloading .. %d success, %d warnings"="正在下载.. %d 个完成, %d 个警告";
 "Download WWII App Now"="马上下载";
 "Double-tap at center to center on today"="双击中心位置可快速选择今天为当前选择时间";
-"Dropbox may not have some photos you are looking for."="Dropbox可能没有你寻找的一些照片.";
 "Edit"="编辑";
 "Edit is not allowed now!"="现在不允许编辑!";
 "Enter agree to continue:"="键入agree 继续:";
@@ -117,6 +115,7 @@
 "%@ has not accepted your request yet"="%@ 还没有接受你的请求";
 "Full Screen Event Editor"="全屏幕事件编辑";
 "If you have downloaded it before, the offline one will stay until you remove the app. Are you sure to delete it from server?"="如果你以前下载过到设备上，你仍然可以看到该内容，直到APP被卸载。 确信从服务器上删除?";
+"If no change to row with [Repeat until no more download], it means all photos are downloaded!"="如果［可重复此操作，直到全部完成］字样没改变， 则全部照片下载完毕";
 "Incoming Contents/Episodes"="片断收件箱";
 "Import %@"="下载 %@";
 "Import failed, please check if network is available, or if your Dropbox has photos in /ChronicleMap/%@ directory."="下载失败！请检查网络，或者检查你的Dropbox的 /ChronicleMap/%@ 文件目录下有照片文件.";
@@ -175,6 +174,7 @@
 "Reached the max Zoom-In level Week!"="不能再放大，7天是最高放大级别!";
 "Record/navigate events on map in chronological order!"="以时间顺序，记录/浏览地图事件!";
 "Red Dot and Green Dot on Time Wheel"="时间轮上方的红点和绿点";
+"Repeat until no more download"="可重复此操作，直到全部完成";
 "Replace"="替换";
 "Replace photos on Dropbox for %@"="替换Dropbox中%@的照片";
 "Reset to Default"="复位到缺省设置";
@@ -235,6 +235,7 @@
 "%@ was downloaded before"="%@ 以前被下载过";
 "Write notes here"="写点东西";
 "WWII"="二战历史";
+"Wait for 10+ seconds"="请等待十多秒";
 "Yes"="是的";
 "Yes, Continue"="是的，继续";
 "There is a new version!"="有新版本!";
