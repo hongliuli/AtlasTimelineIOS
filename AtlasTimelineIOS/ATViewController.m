@@ -123,11 +123,10 @@
     UIButton *btnLess;
     ATEventListWindowView* eventListView;
     
-    MKAnnotationView* viewForEditorSizeChange;
-    
     ATEventDataStruct* currentSelectedEvent;
     MKAnnotationView* selectedEventAnnInEventListView;
     MKAnnotationView* selectedEventAnnOnMap;
+    ATEventAnnotation* selectedEventAnnDataOnMap;
     
     BOOL switchEventListViewModeToVisibleOnMapFlag;
     NSMutableArray* eventListInVisibleMapArea;
@@ -1214,8 +1213,10 @@
     if ([annViewKey intValue] > 0 && [annViewKey intValue] == currentTapTouchKey && !currentTapTouchMove)
     {
         MKAnnotationView* annView = [tmpLblUniqueIdMap objectForKey:annViewKey];
-        [self startEventEditor:annView];
+
         selectedEventAnnOnMap = annView;
+        selectedEventAnnDataOnMap = [annView annotation];
+        [self startEventEditor:annView];
         [self refreshFocusedEvent];
     }
 }
@@ -1381,10 +1382,11 @@
 }
 -(void)goToCoordinate:(CLLocationCoordinate2D)coord
 {
+    //TODO end point eyeAltitude should vary according to start/end distance. If distance is too small then eyeAltitude should narro to 500
     MKMapCamera *end = [MKMapCamera cameraLookingAtCenterCoordinate:coord
                                                   fromEyeCoordinate:coord
-                                                        eyeAltitude:500];
-    end.pitch = 55; //show 3d effect so building will show
+                                                        eyeAltitude:40000];
+    
     
     MKMapCamera *start = self.mapView.camera;
     CLLocation *startLocation = [[CLLocation alloc] initWithCoordinate:start.centerCoordinate
@@ -1394,12 +1396,27 @@
                                                             altitude:end.altitude
                                                   horizontalAccuracy:0 verticalAccuracy:0 timestamp:nil];
     CLLocationDistance distance = [startLocation distanceFromLocation:endLocation];
+    
+    //TODO disable swirl effect when close
+    if (distance <300) //if click on same event (or event close to eachother, zoom in)
+    {
+        end.altitude = 500;
+        end.pitch = 55; //show 3d effect so building will show
+    }
+    else if (distance <1500) //if click on same event (or event close to eachother, zoom in)
+    {
+        end.altitude = 3000;
+    }
+    else if (distance <3000) //if click on same event (or event close to eachother, zoom in)
+    {
+        end.altitude = 5400;
+    }
     //now filter based on distance
-    if (distance < 2500) {
+    if (distance < 50000) {
         [self.mapView setCamera:end animated:YES];
         return;
     }
-    if (distance < 50000) {
+    if (distance < 150000) {
         [self performShortCmeraAnimation:end];
         return;
     }
@@ -1601,11 +1618,11 @@
 }
 - (void)mapView:(MKMapView *)mapView annotationView:(MKAnnotationView *)view calloutAccessoryControlTapped:(UIControl *)control
 {
-
+    selectedEventAnnOnMap = view;
+    selectedEventAnnDataOnMap = [view annotation];
     if ([control.accessibilityLabel isEqualToString: @"right"]){
         [self startEventEditor:view];
     }
-    selectedEventAnnOnMap = view;
     [self refreshFocusedEvent];
 }
 
@@ -1668,8 +1685,7 @@
 
 - (void) startEventEditor:(MKAnnotationView*)view
 {
-    viewForEditorSizeChange = view;
-    ATEventAnnotation* ann = [view annotation];
+    ATEventAnnotation* ann = selectedEventAnnDataOnMap; // [view annotation];
     selectedEventAnnotation = ann;
     self.selectedAnnotation = ann;
     ATAppDelegate *appDelegate = (ATAppDelegate *)[[UIApplication sharedApplication] delegate];
@@ -2200,7 +2216,7 @@
 }
 - (void)restartEditor{
     [self cancelEvent];
-    [self startEventEditor:viewForEditorSizeChange];
+    [self startEventEditor:selectedEventAnnOnMap];
 }
 - (void)cancelPreference{
     if (self.preferencePopover != nil)
