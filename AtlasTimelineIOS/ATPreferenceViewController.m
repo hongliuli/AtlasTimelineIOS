@@ -524,7 +524,7 @@
             cell = [[UITableViewCell alloc] initWithStyle:UITableViewCellStyleDefault reuseIdentifier:cellIdentifier];
         }
     }
-
+    cell.accessoryType = UITableViewCellAccessoryDisclosureIndicator;
     int row = indexPath.row;
     if (section == SECTION_CONTENT_MANAGE)
     {
@@ -633,7 +633,8 @@
     [customView setBackgroundColor:[UIColor colorWithRed: 0.85 green: 0.85 blue: 0.85 alpha: 0.0]];
     UILabel *label = [[UILabel alloc] initWithFrame:CGRectMake(10, 0, tableView.bounds.size.width, 30)];
     label.font = [UIFont fontWithName:@"Helvetica" size:18.0];
-    label.textColor = [UIColor colorWithRed: 0.55 green: 0.55 blue: 0.95 alpha: 1.0];
+    label.textColor = [UIColor lightGrayColor];
+    label.textAlignment = NSTextAlignmentCenter;
     // create the parent view that will hold header Label
     if (section == SECTION_CONTENT_MANAGE)
     {
@@ -645,6 +646,7 @@
     }
     if (section == SECTION_LOGIN_EMAIL)
     {
+        label.textAlignment = NSTextAlignmentLeft;
         NSString* loginEmail = nil;
         NSUserDefaults* userDefault = [NSUserDefaults standardUserDefaults];
         NSString* userEmail = [userDefault objectForKey:[ATConstants UserEmailKeyName]];
