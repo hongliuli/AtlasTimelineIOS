@@ -457,7 +457,7 @@ forRowAtIndexPath: (NSIndexPath*)indexPath
     //xxxx
     BOOL fullFlag = [ATHelper getOptionEditorFullScreen];
     [ATHelper setOptionEditorFullScreen:!fullFlag];
-    [self.delegate cancelEvent];
+    //[self.delegate cancelEvent];
     [self dismissViewControllerAnimated:NO completion:nil]; //for iPhone case
     [self.delegate restartEditor];
 }
