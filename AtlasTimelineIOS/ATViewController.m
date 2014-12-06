@@ -10,6 +10,7 @@
 #define IN_APP_PURCHASED @"IN_APP_PURCHASED"
 #define ALERT_FOR_SAVE 1
 #define ALERT_FOR_POPOVER_ERROR 2
+#define ALERT_FOR_DIRECTION_MODE 3
 
 #define PHOTO_META_FILE_NAME @"MetaFileForOrderAndDesc"
 
@@ -83,8 +84,12 @@
 
 @end
 
-
-
+/*
+@interface UIWindow (AutoLayoutDebug)
++ (UIWindow*)keyWindow;
+-(NSString*)_autolayoutTrace;
+@end
+*/
 
 @implementation ATViewController
 {
@@ -132,6 +137,10 @@
     NSMutableArray* eventListInVisibleMapArea;
     
     NSMutableArray* animationCameras;
+    NSMutableArray* directionOverlayArray;
+    ATEventAnnotation   *destAnnForDirection;
+    UIView* directionInfoView;
+    UIColor* lastRouteColor;
 }
 
 @synthesize mapView = _mapView;
@@ -486,7 +495,15 @@
     
 }
 - (void)alertView:(UIAlertView *)alertView clickedButtonAtIndex:(NSInteger)buttonIndex {
-    //if (alertView.tag == ALERT_FOR_SAVE)
+    if (alertView.tag == ALERT_FOR_DIRECTION_MODE)
+    {
+        if (buttonIndex == 0)
+            return;
+        else if (buttonIndex == 1)
+            [self drawDirectionWithMode:MKDirectionsTransportTypeAutomobile];
+        else
+            [self drawDirectionWithMode:MKDirectionsTransportTypeWalking];;
+    }
     if (buttonIndex == 1 && alertView.tag == ALERT_FOR_SAVE) {
         NSString *episodeName = [alertView textFieldAtIndex:0].text;
         episodeName =[episodeName stringByTrimmingCharactersInSet:
@@ -1029,7 +1046,7 @@
             
             UIButton* leftButton = [UIButton buttonWithType:UIButtonTypeInfoLight ];
             [leftButton setTintColor:[UIColor clearColor]];
-            [leftButton setBackgroundImage:[UIImage imageNamed:@"focuseIcon.png"] forState:UIControlStateNormal];
+            [leftButton setBackgroundImage:[UIImage imageNamed:@"car-icon.png"] forState:UIControlStateNormal];
             
             leftButton.accessibilityLabel=@"left";
             customPinView.leftCalloutAccessoryView = leftButton;
@@ -1603,7 +1620,7 @@
             
             UIButton* leftButton = [UIButton buttonWithType:UIButtonTypeInfoLight ];
             [leftButton setTintColor:[UIColor clearColor]];
-            [leftButton setBackgroundImage:[UIImage imageNamed:@"focuseIcon.png"] forState:UIControlStateNormal];
+            [leftButton setBackgroundImage:[UIImage imageNamed:@"car-icon.png"] forState:UIControlStateNormal];
             
             leftButton.accessibilityLabel=@"left";
             customPinView.leftCalloutAccessoryView = leftButton;
@@ -1618,13 +1635,96 @@
 }
 - (void)mapView:(MKMapView *)mapView annotationView:(MKAnnotationView *)view calloutAccessoryControlTapped:(UIControl *)control
 {
-    selectedEventAnnOnMap = view;
-    selectedEventAnnDataOnMap = [view annotation];
     if ([control.accessibilityLabel isEqualToString: @"right"]){
+        selectedEventAnnOnMap = view;
+        selectedEventAnnDataOnMap = [view annotation];
         [self startEventEditor:view];
+        [self refreshFocusedEvent];
     }
-    [self refreshFocusedEvent];
+    else
+    {
+        ATAppDelegate *appDelegate = (ATAppDelegate *)[[UIApplication sharedApplication] delegate];
+        destAnnForDirection = [view annotation];
+        ATEventDataStruct* startData = appDelegate.focusedEvent;
+        if ([destAnnForDirection.uniqueId isEqualToString:startData.uniqueId])
+        {
+            UIAlertView *alert = [[UIAlertView alloc] initWithTitle:NSLocalizedString(@"Direction",nil)
+                                                            message:NSLocalizedString(@"To get direction to this location from other event, please tap that event on map then tap [car] icon at left.",nil)
+                                                           delegate:self
+                                                  cancelButtonTitle:NSLocalizedString(@"Cancel",nil)
+                                                  otherButtonTitles:nil];
+            [alert show];
+        }
+        else
+        {
+            UIAlertView *alert = [[UIAlertView alloc] initWithTitle:[NSString stringWithFormat:NSLocalizedString(@"Direction to",nil)]
+                                                            message:[NSString stringWithFormat:NSLocalizedString(@"%@",nil),startData.address]
+                                                           delegate:self
+                                                  cancelButtonTitle:NSLocalizedString(@"Cancel",nil)
+                                                  otherButtonTitles:NSLocalizedString(@"Drive",nil), NSLocalizedString(@"Walk",nil),nil];
+            alert.tag = ALERT_FOR_DIRECTION_MODE;
+            [alert show];
+        }
+    }
 }
+
+- (void) drawDirectionWithMode:(int)mode
+{
+    ATAppDelegate *appDelegate = (ATAppDelegate *)[[UIApplication sharedApplication] delegate];
+    ATEventDataStruct* startData = appDelegate.focusedEvent;
+    MKPlacemark *fromPlacemark = [[MKPlacemark alloc] initWithCoordinate:CLLocationCoordinate2DMake(startData.lat, startData.lng) addressDictionary:nil];
+    MKPlacemark *destPlacemark = [[MKPlacemark alloc] initWithCoordinate:CLLocationCoordinate2DMake(destAnnForDirection.coordinate.latitude, destAnnForDirection.coordinate.longitude) addressDictionary:nil];
+    MKMapItem* fromItem = [[MKMapItem alloc] initWithPlacemark:fromPlacemark];
+    MKMapItem* toItem = [[MKMapItem alloc] initWithPlacemark: destPlacemark];
+    
+    MKDirectionsRequest *request = [[MKDirectionsRequest alloc] init];
+    [request setSource:fromItem];
+    [request setDestination:toItem];
+    [request setTransportType:mode]; // This can be limited to automobile and walking directions.
+    [request setRequestsAlternateRoutes:YES]; // Gives you several route options.
+    MKDirections *directions = [[MKDirections alloc] initWithRequest:request];
+    if (directionOverlayArray == nil)
+        directionOverlayArray = [[NSMutableArray alloc] init];
+    else
+    {
+        [self.mapView removeOverlays:directionOverlayArray];
+        [directionOverlayArray removeAllObjects];
+    }
+    [directions calculateDirectionsWithCompletionHandler:^(MKDirectionsResponse *response, NSError *error) {
+        if (!error) {
+            int cnt = 0;
+            for (MKRoute *route in [response routes]) {
+                MKPolyline* line = [route polyline];
+                line.title = [NSString stringWithFormat: @"direction_%d",cnt ];
+                cnt++;
+                [directionOverlayArray addObject:line];
+                [self.mapView addOverlay:line level:MKOverlayLevelAboveRoads]; // Draws the route above roads, but below labels.
+                if (cnt >= 2) break;
+                // You can also get turn-by-turn steps, distance, advisory notices, ETA, etc by accessing various route properties.
+            }
+            MKRoute* routeDetails = response.routes.lastObject;
+            float distance = routeDetails.distance;
+            MKDistanceFormatter *formatter = [[MKDistanceFormatter alloc] init];
+            //formatter.units = MKDistanceFormatterUnitsImperial; // Mile
+            formatter.units = MKDistanceFormatterUnitsDefault; //Km
+            [self refreshAnnotations];//without this, the first time draw direction will not display unless move map a little bit
+            NSLog(@"%@", [formatter stringFromDistance:distance]);
+            [self startDirectionInfoView:[formatter stringFromDistance:distance]];
+        }
+        else
+        {
+            NSLog(@"ERROR: %@",error.description);
+            UIAlertView *alert = [[UIAlertView alloc] initWithTitle:NSLocalizedString(@"Direction Not Available",nil)
+                                                            message:NSLocalizedString(@"Route information is not available at this moment. (or network is not available)",nil)
+                                                           delegate:self
+                                                  cancelButtonTitle:NSLocalizedString(@"OK",nil)
+                                                  otherButtonTitles:nil];
+            alert.tag = ALERT_FOR_POPOVER_ERROR;
+            [alert show];
+        }
+    }];
+}
+
 
 - (void) refreshFocusedEvent
 {
@@ -1721,6 +1821,7 @@
                                                       otherButtonTitles:nil];
                 alert.tag = ALERT_FOR_POPOVER_ERROR;
                 [alert show];
+
             }
         }
     }
@@ -2049,6 +2150,31 @@
         
     }
     // *********/
+    if ([[overlay title] isEqualToString:@"direction_0"])
+    {
+        lastRouteColor = [UIColor blueColor];
+        routeLineView.strokeColor = lastRouteColor;
+        routeLineView.lineWidth = 5.0;
+
+    }
+    else if ([[overlay title] isEqualToString:@"direction_1"])
+    {
+        lastRouteColor = [UIColor orangeColor];
+        routeLineView.strokeColor = lastRouteColor;
+        routeLineView.lineWidth = 5.0;
+    }
+    else if ([[overlay title] isEqualToString:@"direction_2"])
+    {
+        lastRouteColor = [UIColor greenColor];
+        routeLineView.strokeColor = lastRouteColor;
+        routeLineView.lineWidth = 5.0;
+    }
+    else if ([[overlay title] isEqualToString:@"direction_3"])
+    {
+        lastRouteColor = [UIColor purpleColor];
+        routeLineView.strokeColor = lastRouteColor;
+        routeLineView.lineWidth = 5.0;
+    }
     return routeLineView;
 }
 
@@ -2547,6 +2673,100 @@
     }
     episodeNameforUpdating = nil;
 }
+
+- (void) startDirectionInfoView:(NSString*)distanceString
+{
+    UILabel* lbDistance = nil;
+    UIButton* btnCancel = nil;
+    if (directionInfoView == nil)
+    {
+        //NSLog(@"%@",[[UIWindow keyWindow] _autolayoutTrace]);
+        
+        directionInfoView = [[UIView alloc] init];
+        [directionInfoView.layer setCornerRadius:10.0f];
+        directionInfoView.translatesAutoresizingMaskIntoConstraints = NO;
+        [directionInfoView setBackgroundColor:[UIColor colorWithRed:1.0 green:1.0 blue:1.0 alpha:0.9]];
+        [self.view addSubview:directionInfoView];
+        
+        lbDistance = [[UILabel alloc] init];
+        UIFont *nameLabelFont = [UIFont preferredFontForTextStyle:UIFontTextStyleHeadline];
+        [lbDistance setTextColor:[UIColor blackColor]];
+        lbDistance.font = nameLabelFont;
+        lbDistance.tag = 100;
+        btnCancel = [[UIButton alloc] init];
+        [btnCancel setTitle:@"Cancel" forState:UIControlStateNormal];
+        [btnCancel setTitleColor:[UIColor blueColor] forState:UIControlStateNormal];
+     
+        [directionInfoView addSubview:lbDistance];
+        [directionInfoView addSubview:btnCancel];
+        
+        lbDistance.translatesAutoresizingMaskIntoConstraints = NO;
+        btnCancel.translatesAutoresizingMaskIntoConstraints = NO;
+        NSDictionary *itemsDictionary = NSDictionaryOfVariableBindings(lbDistance, btnCancel);
+        NSArray* lblTop = [NSLayoutConstraint
+                           constraintsWithVisualFormat:@"V:|-5-[lbDistance(60)]" options:0 metrics:nil views:itemsDictionary];
+        NSArray* btnTop = [NSLayoutConstraint
+                           constraintsWithVisualFormat:@"V:|-5-[btnCancel(60)]" options:0 metrics:nil views:itemsDictionary];
+        NSArray* lblDistanceConstraints = [NSLayoutConstraint
+                                           constraintsWithVisualFormat:@"H:|-5-[lbDistance(200)]" options:0 metrics:nil views:itemsDictionary];
+        NSArray* cancelConstraints = [NSLayoutConstraint
+                                      constraintsWithVisualFormat:@"H:[btnCancel(60)]-|" options:0 metrics:nil views:itemsDictionary];
+        [directionInfoView addConstraints:lblDistanceConstraints];
+        [directionInfoView addConstraints:cancelConstraints];
+        [directionInfoView addConstraints:btnTop];
+        [directionInfoView addConstraints:lblTop];
+        [directionInfoView layoutIfNeeded];
+    }
+    else
+    {
+        lbDistance = (UILabel*)[directionInfoView viewWithTag:100];
+    }
+    [lbDistance setTextColor:lastRouteColor];
+    lbDistance.text = [NSString stringWithFormat:@"%@",distanceString];
+    id topGuide = self.topLayoutGuide;
+    NSDictionary* viewDictionary = NSDictionaryOfVariableBindings(topGuide,directionInfoView);
+    
+    //Constraints to put view at right left, (will not use this, I want to put view in center
+    //NSArray *constraintsLeft = [NSLayoutConstraint constraintsWithVisualFormat:@"H:[directionInfoView(200)]-|" options:0 metrics:nil views:viewDictionary];
+    //[self.view addConstraints:constraintsLeft];
+    //Constraint to put in center, this can not be done with VFL, so have to use following two contraitns for both center and width
+    
+    NSLayoutConstraint* centerConstraint = [NSLayoutConstraint
+            constraintWithItem:directionInfoView
+            attribute:NSLayoutAttributeCenterX
+            relatedBy:NSLayoutRelationEqual
+            toItem:self.view
+            attribute:NSLayoutAttributeCenterX
+            multiplier:1.0f constant:0.0f];
+    [self.view addConstraint:centerConstraint];
+    NSLayoutConstraint* widthConstraint = [NSLayoutConstraint
+                                            constraintWithItem:directionInfoView
+                                            attribute:NSLayoutAttributeWidth
+                                            relatedBy:NSLayoutRelationEqual
+                                            toItem:nil
+                                            attribute:NSLayoutAttributeNotAnAttribute
+                                            multiplier:1.0f constant:300.0f];
+    [self.view addConstraint:widthConstraint];
+    //Constraints to put view just under navitation bar, using VFL (visual form language)
+    NSArray* topConstraints = [NSLayoutConstraint
+                   constraintsWithVisualFormat:@"V:[topGuide]-5-[directionInfoView(70)]" options:0 metrics:nil views:viewDictionary];
+       // ######  NOTE: V:|[topGUide]... is wrong, do not need | with top/bottom guide
+    [self.view addConstraints:topConstraints];
+    [UIView animateWithDuration:0.5
+                     animations:^{
+                         [self.view layoutIfNeeded];
+                     } completion:nil];
+    
+}
+
+- (void) closeDirectionView
+{
+    if (directionInfoView != nil)
+    {
+
+    }
+}
+
 //Save photo to file. Called by updateEvent after write event to db
 //I should put image process functions such as resize/convert to JPEG etc in ImagePickerController
 //put it here is because we have to save image here since we only have uniqueId and some other info here
