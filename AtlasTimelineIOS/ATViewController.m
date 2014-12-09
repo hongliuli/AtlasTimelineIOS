@@ -137,10 +137,15 @@
     NSMutableArray* eventListInVisibleMapArea;
     
     NSMutableArray* animationCameras;
-    NSMutableArray* directionOverlayArray;
-    ATEventAnnotation   *destAnnForDirection;
-    UIView* directionInfoView;
-    UIColor* lastRouteColor;
+    NSMutableArray* _directionOverlayArray;
+    ATEventAnnotation   *_destAnnForDirection;
+    UIView* _directionInfoView;
+    NSArray* _directionRouteColorResultSet;
+    NSMutableArray* _directionRouteDistanceResultSet;
+    int _directionCurrentDistanceIndex;
+    UILabel* _lblDirectionDistance;
+    NSArray* _topDistanceLblCon; //will animated on this
+    NSTimer* _timerDirectionRouteDisplay;
 }
 
 @synthesize mapView = _mapView;
@@ -156,6 +161,7 @@
     [super viewDidLoad];
     switchEventListViewModeToVisibleOnMapFlag = false; //eventListView for timewheel is more reasonable, so make it as default always, even not save to userDefault
     [ATHelper createPhotoDocumentoryPath];
+    _directionRouteColorResultSet = @[[UIColor blueColor],[UIColor orangeColor],[UIColor greenColor],[UIColor purpleColor]];
     self.locationManager = [[CLLocationManager alloc] init];
     //add for ios8
     self.locationManager.delegate = self;
@@ -1644,12 +1650,12 @@
     else
     {
         ATAppDelegate *appDelegate = (ATAppDelegate *)[[UIApplication sharedApplication] delegate];
-        destAnnForDirection = [view annotation];
+        _destAnnForDirection = [view annotation];
         ATEventDataStruct* startData = appDelegate.focusedEvent;
-        if ([destAnnForDirection.uniqueId isEqualToString:startData.uniqueId])
+        if ([_destAnnForDirection.uniqueId isEqualToString:startData.uniqueId])
         {
-            UIAlertView *alert = [[UIAlertView alloc] initWithTitle:NSLocalizedString(@"Direction",nil)
-                                                            message:NSLocalizedString(@"To get direction to this location from other event, please tap that event on map then tap [car] icon at left.",nil)
+            UIAlertView *alert = [[UIAlertView alloc] initWithTitle:NSLocalizedString(@"Direction to this checked event",nil)
+                                                            message:NSLocalizedString(@"Tap another event on map to get direction to this location.",nil)
                                                            delegate:self
                                                   cancelButtonTitle:NSLocalizedString(@"Cancel",nil)
                                                   otherButtonTitles:nil];
@@ -1657,7 +1663,7 @@
         }
         else
         {
-            UIAlertView *alert = [[UIAlertView alloc] initWithTitle:[NSString stringWithFormat:NSLocalizedString(@"Direction to",nil)]
+            UIAlertView *alert = [[UIAlertView alloc] initWithTitle:[NSString stringWithFormat:NSLocalizedString(@"Direction to the checked event:",nil)]
                                                             message:[NSString stringWithFormat:NSLocalizedString(@"%@",nil),startData.address]
                                                            delegate:self
                                                   cancelButtonTitle:NSLocalizedString(@"Cancel",nil)
@@ -1670,10 +1676,11 @@
 
 - (void) drawDirectionWithMode:(int)mode
 {
+    [self closeDirectionView:nil]; //prevent tap// direction again before close perviouse one
     ATAppDelegate *appDelegate = (ATAppDelegate *)[[UIApplication sharedApplication] delegate];
     ATEventDataStruct* startData = appDelegate.focusedEvent;
     MKPlacemark *fromPlacemark = [[MKPlacemark alloc] initWithCoordinate:CLLocationCoordinate2DMake(startData.lat, startData.lng) addressDictionary:nil];
-    MKPlacemark *destPlacemark = [[MKPlacemark alloc] initWithCoordinate:CLLocationCoordinate2DMake(destAnnForDirection.coordinate.latitude, destAnnForDirection.coordinate.longitude) addressDictionary:nil];
+    MKPlacemark *destPlacemark = [[MKPlacemark alloc] initWithCoordinate:CLLocationCoordinate2DMake(_destAnnForDirection.coordinate.latitude, _destAnnForDirection.coordinate.longitude) addressDictionary:nil];
     MKMapItem* fromItem = [[MKMapItem alloc] initWithPlacemark:fromPlacemark];
     MKMapItem* toItem = [[MKMapItem alloc] initWithPlacemark: destPlacemark];
     
@@ -1683,39 +1690,54 @@
     [request setTransportType:mode]; // This can be limited to automobile and walking directions.
     [request setRequestsAlternateRoutes:YES]; // Gives you several route options.
     MKDirections *directions = [[MKDirections alloc] initWithRequest:request];
-    if (directionOverlayArray == nil)
-        directionOverlayArray = [[NSMutableArray alloc] init];
+    if (_directionOverlayArray == nil)
+        _directionOverlayArray = [[NSMutableArray alloc] init];
     else
     {
-        [self.mapView removeOverlays:directionOverlayArray];
-        [directionOverlayArray removeAllObjects];
+        [self.mapView removeOverlays:_directionOverlayArray];
+        [_directionOverlayArray removeAllObjects];
     }
     [directions calculateDirectionsWithCompletionHandler:^(MKDirectionsResponse *response, NSError *error) {
         if (!error) {
-            int cnt = 0;
-            for (MKRoute *route in [response routes]) {
-                MKPolyline* line = [route polyline];
-                line.title = [NSString stringWithFormat: @"direction_%d",cnt ];
-                cnt++;
-                [directionOverlayArray addObject:line];
-                [self.mapView addOverlay:line level:MKOverlayLevelAboveRoads]; // Draws the route above roads, but below labels.
-                if (cnt >= 2) break;
-                // You can also get turn-by-turn steps, distance, advisory notices, ETA, etc by accessing various route properties.
-            }
-            MKRoute* routeDetails = response.routes.lastObject;
-            float distance = routeDetails.distance;
+            if (_directionRouteDistanceResultSet == nil)
+                _directionRouteDistanceResultSet = [[NSMutableArray alloc] init];
+            else
+                [_directionRouteDistanceResultSet removeAllObjects];
+            _directionRouteColorResultSet = @[[UIColor blueColor],[UIColor orangeColor],[UIColor greenColor],[UIColor purpleColor]];
+
             MKDistanceFormatter *formatter = [[MKDistanceFormatter alloc] init];
             //formatter.units = MKDistanceFormatterUnitsImperial; // Mile
             formatter.units = MKDistanceFormatterUnitsDefault; //Km
+            int routeCount = 0;
+            for (MKRoute *route in [response routes]) {
+                MKPolyline* line = [route polyline];
+                line.title = [NSString stringWithFormat: @"direction_%d",routeCount ];
+                [_directionOverlayArray addObject:line];
+                [self.mapView addOverlay:line level:MKOverlayLevelAboveRoads]; // Draws the route above roads, but below labels.
+                
+                float distance = route.distance;
+                NSString* distanceStr = [formatter stringFromDistance:distance];
+                NSTimeInterval expectedTime = route.expectedTravelTime;
+                int hours = expectedTime / 3600;
+                int minutes = (expectedTime - hours*3600)/60;
+                NSString* str = [NSString stringWithFormat:@"%@ - %dh %dmin",distanceStr,hours, minutes];
+                if (hours >= 10)
+                    str = [NSString stringWithFormat:@"%@ - %dh",distanceStr,hours];
+                [_directionRouteDistanceResultSet addObject:str];
+
+                routeCount++;
+                if (routeCount >= 3) break; //max only show 3 routes
+                // You can also get turn-by-turn steps, distance, advisory notices, ETA, etc by accessing various route properties.
+            }
+            
             [self refreshAnnotations];//without this, the first time draw direction will not display unless move map a little bit
-            NSLog(@"%@", [formatter stringFromDistance:distance]);
-            [self startDirectionInfoView:[formatter stringFromDistance:distance]];
+            [self startDirectionInfoView];
         }
         else
         {
-            NSLog(@"ERROR: %@",error.description);
+            [self closeDirectionView:nil];
             UIAlertView *alert = [[UIAlertView alloc] initWithTitle:NSLocalizedString(@"Direction Not Available",nil)
-                                                            message:NSLocalizedString(@"Route information is not available at this moment. (or network is not available)",nil)
+                                                            message:error.localizedFailureReason
                                                            delegate:self
                                                   cancelButtonTitle:NSLocalizedString(@"OK",nil)
                                                   otherButtonTitles:nil];
@@ -2150,29 +2172,25 @@
         
     }
     // *********/
+    //NSLog(@"---- overlay title=%@",[overlay title]);
     if ([[overlay title] isEqualToString:@"direction_0"])
     {
-        lastRouteColor = [UIColor blueColor];
-        routeLineView.strokeColor = lastRouteColor;
+        routeLineView.strokeColor = _directionRouteColorResultSet[0];
         routeLineView.lineWidth = 5.0;
-
     }
     else if ([[overlay title] isEqualToString:@"direction_1"])
     {
-        lastRouteColor = [UIColor orangeColor];
-        routeLineView.strokeColor = lastRouteColor;
+        routeLineView.strokeColor = _directionRouteColorResultSet[1];
         routeLineView.lineWidth = 5.0;
     }
     else if ([[overlay title] isEqualToString:@"direction_2"])
     {
-        lastRouteColor = [UIColor greenColor];
-        routeLineView.strokeColor = lastRouteColor;
+        routeLineView.strokeColor = _directionRouteColorResultSet[2];
         routeLineView.lineWidth = 5.0;
     }
     else if ([[overlay title] isEqualToString:@"direction_3"])
     {
-        lastRouteColor = [UIColor purpleColor];
-        routeLineView.strokeColor = lastRouteColor;
+        routeLineView.strokeColor = _directionRouteColorResultSet[3];
         routeLineView.lineWidth = 5.0;
     }
     return routeLineView;
@@ -2674,57 +2692,72 @@
     episodeNameforUpdating = nil;
 }
 
-- (void) startDirectionInfoView:(NSString*)distanceString
+- (void) startDirectionInfoView
 {
-    UILabel* lbDistance = nil;
     UIButton* btnCancel = nil;
-    if (directionInfoView == nil)
+
+    if (_directionInfoView == nil)
     {
         //NSLog(@"%@",[[UIWindow keyWindow] _autolayoutTrace]);
         
-        directionInfoView = [[UIView alloc] init];
-        [directionInfoView.layer setCornerRadius:10.0f];
-        directionInfoView.translatesAutoresizingMaskIntoConstraints = NO;
-        [directionInfoView setBackgroundColor:[UIColor colorWithRed:1.0 green:1.0 blue:1.0 alpha:0.9]];
-        [self.view addSubview:directionInfoView];
+        _directionInfoView = [[UIView alloc] init];
+        [_directionInfoView.layer setCornerRadius:10.0f];
+        _directionInfoView.translatesAutoresizingMaskIntoConstraints = NO;
+        [_directionInfoView setBackgroundColor:[UIColor colorWithRed:1.0 green:1.0 blue:1.0 alpha:0.9]];
+        [self.view addSubview:_directionInfoView];
         
-        lbDistance = [[UILabel alloc] init];
+        _lblDirectionDistance = [[UILabel alloc] init];
         UIFont *nameLabelFont = [UIFont preferredFontForTextStyle:UIFontTextStyleHeadline];
-        [lbDistance setTextColor:[UIColor blackColor]];
-        lbDistance.font = nameLabelFont;
-        lbDistance.tag = 100;
+        [_lblDirectionDistance setTextColor:[UIColor blackColor]];
+        _lblDirectionDistance.font = nameLabelFont;
+        _lblDirectionDistance.tag = 100;
         btnCancel = [[UIButton alloc] init];
-        [btnCancel setTitle:@"Cancel" forState:UIControlStateNormal];
+        [btnCancel setTitle:NSLocalizedString(@"Cancel",nil) forState:UIControlStateNormal];
         [btnCancel setTitleColor:[UIColor blueColor] forState:UIControlStateNormal];
+        [btnCancel addTarget:self action:@selector(closeDirectionView:) forControlEvents:UIControlEventTouchUpInside];
      
-        [directionInfoView addSubview:lbDistance];
-        [directionInfoView addSubview:btnCancel];
+        [_directionInfoView addSubview:_lblDirectionDistance];
+        [_directionInfoView addSubview:btnCancel];
         
-        lbDistance.translatesAutoresizingMaskIntoConstraints = NO;
+        _lblDirectionDistance.translatesAutoresizingMaskIntoConstraints = NO;
         btnCancel.translatesAutoresizingMaskIntoConstraints = NO;
-        NSDictionary *itemsDictionary = NSDictionaryOfVariableBindings(lbDistance, btnCancel);
-        NSArray* lblTop = [NSLayoutConstraint
-                           constraintsWithVisualFormat:@"V:|-5-[lbDistance(60)]" options:0 metrics:nil views:itemsDictionary];
-        NSArray* btnTop = [NSLayoutConstraint
+        NSDictionary *itemsDictionary = NSDictionaryOfVariableBindings(_lblDirectionDistance, btnCancel);
+        _topDistanceLblCon = [NSLayoutConstraint
+                           constraintsWithVisualFormat:@"V:|-5-[_lblDirectionDistance(60)]" options:0 metrics:nil views:itemsDictionary];
+        NSArray* topCancelBtnCon = [NSLayoutConstraint
                            constraintsWithVisualFormat:@"V:|-5-[btnCancel(60)]" options:0 metrics:nil views:itemsDictionary];
         NSArray* lblDistanceConstraints = [NSLayoutConstraint
-                                           constraintsWithVisualFormat:@"H:|-5-[lbDistance(200)]" options:0 metrics:nil views:itemsDictionary];
+                                           constraintsWithVisualFormat:@"H:|-5-[_lblDirectionDistance(200)]" options:0 metrics:nil views:itemsDictionary];
         NSArray* cancelConstraints = [NSLayoutConstraint
                                       constraintsWithVisualFormat:@"H:[btnCancel(60)]-|" options:0 metrics:nil views:itemsDictionary];
-        [directionInfoView addConstraints:lblDistanceConstraints];
-        [directionInfoView addConstraints:cancelConstraints];
-        [directionInfoView addConstraints:btnTop];
-        [directionInfoView addConstraints:lblTop];
-        [directionInfoView layoutIfNeeded];
+        [_directionInfoView addConstraints:lblDistanceConstraints];
+        [_directionInfoView addConstraints:cancelConstraints];
+        [_directionInfoView addConstraints:topCancelBtnCon];
+        [_directionInfoView addConstraints:_topDistanceLblCon];
+        [_directionInfoView layoutIfNeeded];
     }
     else
     {
-        lbDistance = (UILabel*)[directionInfoView viewWithTag:100];
+        _lblDirectionDistance = (UILabel*)[_directionInfoView viewWithTag:100];
     }
-    [lbDistance setTextColor:lastRouteColor];
-    lbDistance.text = [NSString stringWithFormat:@"%@",distanceString];
+    if (_timerDirectionRouteDisplay == nil)
+    {
+        _timerDirectionRouteDisplay = [NSTimer scheduledTimerWithTimeInterval:2.0
+                                                                       target:self
+                                                                     selector:@selector(changeDistanceLabel:)
+                                                                     userInfo:nil
+                                                                      repeats:YES];
+        [_timerDirectionRouteDisplay fire];
+    }
+    else
+    {
+        [_timerDirectionRouteDisplay fire];
+    }
+    _directionCurrentDistanceIndex = 0;
+    [_lblDirectionDistance setTextColor:_directionRouteColorResultSet[_directionCurrentDistanceIndex]];
+    [_lblDirectionDistance setText:[NSString stringWithFormat:@"%@",_directionRouteDistanceResultSet[_directionCurrentDistanceIndex]]];
     id topGuide = self.topLayoutGuide;
-    NSDictionary* viewDictionary = NSDictionaryOfVariableBindings(topGuide,directionInfoView);
+    NSDictionary* viewDictionary = NSDictionaryOfVariableBindings(topGuide,_directionInfoView);
     
     //Constraints to put view at right left, (will not use this, I want to put view in center
     //NSArray *constraintsLeft = [NSLayoutConstraint constraintsWithVisualFormat:@"H:[directionInfoView(200)]-|" options:0 metrics:nil views:viewDictionary];
@@ -2732,7 +2765,7 @@
     //Constraint to put in center, this can not be done with VFL, so have to use following two contraitns for both center and width
     
     NSLayoutConstraint* centerConstraint = [NSLayoutConstraint
-            constraintWithItem:directionInfoView
+            constraintWithItem:_directionInfoView
             attribute:NSLayoutAttributeCenterX
             relatedBy:NSLayoutRelationEqual
             toItem:self.view
@@ -2740,7 +2773,7 @@
             multiplier:1.0f constant:0.0f];
     [self.view addConstraint:centerConstraint];
     NSLayoutConstraint* widthConstraint = [NSLayoutConstraint
-                                            constraintWithItem:directionInfoView
+                                            constraintWithItem:_directionInfoView
                                             attribute:NSLayoutAttributeWidth
                                             relatedBy:NSLayoutRelationEqual
                                             toItem:nil
@@ -2749,7 +2782,7 @@
     [self.view addConstraint:widthConstraint];
     //Constraints to put view just under navitation bar, using VFL (visual form language)
     NSArray* topConstraints = [NSLayoutConstraint
-                   constraintsWithVisualFormat:@"V:[topGuide]-5-[directionInfoView(70)]" options:0 metrics:nil views:viewDictionary];
+                   constraintsWithVisualFormat:@"V:[topGuide]-5-[_directionInfoView(70)]" options:0 metrics:nil views:viewDictionary];
        // ######  NOTE: V:|[topGUide]... is wrong, do not need | with top/bottom guide
     [self.view addConstraints:topConstraints];
     [UIView animateWithDuration:0.5
@@ -2759,11 +2792,36 @@
     
 }
 
-- (void) closeDirectionView
-{
-    if (directionInfoView != nil)
-    {
 
+- (void) changeDistanceLabel:(NSTimer*)_timer
+{
+    if (_lblDirectionDistance != nil)
+    {
+        int cnt = [_directionRouteDistanceResultSet count];
+        if (_directionCurrentDistanceIndex >= cnt - 1)
+            _directionCurrentDistanceIndex = 0;
+        else
+            _directionCurrentDistanceIndex++;
+
+        [_lblDirectionDistance setTextColor:_directionRouteColorResultSet[_directionCurrentDistanceIndex]];
+        [_lblDirectionDistance setText:[NSString stringWithFormat:@"%@",_directionRouteDistanceResultSet[_directionCurrentDistanceIndex]]];
+    }
+}
+
+
+- (void) closeDirectionView:(id)sender
+{
+    if (_directionInfoView != nil)
+    {
+        [_directionInfoView removeFromSuperview];
+        _directionInfoView = nil;
+
+        if (_timerDirectionRouteDisplay != nil)
+        {
+            [_timerDirectionRouteDisplay invalidate];
+            _timerDirectionRouteDisplay = nil;
+        }
+        [self.mapView removeOverlays:_directionOverlayArray];
     }
 }
 
