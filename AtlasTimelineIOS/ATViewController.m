@@ -1655,7 +1655,7 @@
         if ([_destAnnForDirection.uniqueId isEqualToString:startData.uniqueId])
         {
             UIAlertView *alert = [[UIAlertView alloc] initWithTitle:NSLocalizedString(@"Direction to this checked event",nil)
-                                                            message:NSLocalizedString(@"Tap another event on map to get direction to this location.",nil)
+                                                            message:NSLocalizedString(@"Tap another event or long press any location on map to get direction to this location.",nil)
                                                            delegate:self
                                                   cancelButtonTitle:NSLocalizedString(@"Cancel",nil)
                                                   otherButtonTitles:nil];
@@ -1720,9 +1720,9 @@
                 NSTimeInterval expectedTime = route.expectedTravelTime;
                 int hours = expectedTime / 3600;
                 int minutes = (expectedTime - hours*3600)/60;
-                NSString* str = [NSString stringWithFormat:@"%@ - %dh %dmin",distanceStr,hours, minutes];
+                NSString* str = [NSString stringWithFormat:NSLocalizedString(@"%@ - %dh %dmin",nil),distanceStr,hours, minutes];
                 if (hours >= 10)
-                    str = [NSString stringWithFormat:@"%@ - %dh",distanceStr,hours];
+                    str = [NSString stringWithFormat:NSLocalizedString(@"%@ - %dh",nil),distanceStr,hours];
                 [_directionRouteDistanceResultSet addObject:str];
 
                 routeCount++;
@@ -2723,11 +2723,11 @@
         btnCancel.translatesAutoresizingMaskIntoConstraints = NO;
         NSDictionary *itemsDictionary = NSDictionaryOfVariableBindings(_lblDirectionDistance, btnCancel);
         _topDistanceLblCon = [NSLayoutConstraint
-                           constraintsWithVisualFormat:@"V:|-5-[_lblDirectionDistance(60)]" options:0 metrics:nil views:itemsDictionary];
+                           constraintsWithVisualFormat:@"V:|-5-[_lblDirectionDistance(50)]" options:0 metrics:nil views:itemsDictionary];
         NSArray* topCancelBtnCon = [NSLayoutConstraint
                            constraintsWithVisualFormat:@"V:|-5-[btnCancel(60)]" options:0 metrics:nil views:itemsDictionary];
         NSArray* lblDistanceConstraints = [NSLayoutConstraint
-                                           constraintsWithVisualFormat:@"H:|-5-[_lblDirectionDistance(200)]" options:0 metrics:nil views:itemsDictionary];
+                                           constraintsWithVisualFormat:@"H:|-5-[_lblDirectionDistance(240)]" options:0 metrics:nil views:itemsDictionary];
         NSArray* cancelConstraints = [NSLayoutConstraint
                                       constraintsWithVisualFormat:@"H:[btnCancel(60)]-|" options:0 metrics:nil views:itemsDictionary];
         [_directionInfoView addConstraints:lblDistanceConstraints];
