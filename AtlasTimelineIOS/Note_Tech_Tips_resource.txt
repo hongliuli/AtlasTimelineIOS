@@ -5,7 +5,7 @@ TEST app archive:
 http://developer.apple.com/library/ios/#documentation/ToolsLanguages/Conceptual/YourFirstAppStoreSubmission/TestYourApponManyDevicesandiOSVersions/TestYourApponManyDevicesandiOSVersions.html
     For Now, start from "Create an iOS App Store Package" because we already has others ready
 
-iTunes Connect / Develop Center  hongliuli@gmail.com/Hongliu001 (future change will be 002 003 etc)
+iTunes Connect / Develop Center  hongliuli@gmail.com/Capitalhongliu001 (future change will be 002 003 etc)
 
 Every year should only buy Developer license on hongliuli@gmail.com, not on my Apple Id hongliuli@yahoo.com
 
@@ -31,13 +31,19 @@ Migrate to Xcode5.02 and iOS 7
 Xcode5 has issue. So I continues use Xcode4.6 to develope, but has issue connect to iPad with iOS7. The solution:
    - open Xcode5.02 while connect a iOS7 iPad
    - quite Xcode5.02 and open Xcode4, then we can see iPad name in schema dropdown for iPad
-   
+   Samething happen to ios8 and xcode6, xcode 6 has issue, have to use xcode 5 to deploy to ios 8, but have to use xcode 6 to active device..
    
 if get certificate expire error, go to https://developer.apple.com/account/ios/profile/profileList.action  and do:
   - clic "edit" for the expired profile
   - check the radio button for create certificate, then click enabled [Generate] button
   - in Xcode Organizer->Device, click [Refresh] button at the bottom right. 
     (Note: Click [Renew] button does not work, may be a Xcode bug. have to got to dev portal as described above)
+    
+More on Distribution/Profile Provision/Certificate etc:
+    . Concept: http://www.raywenderlich.com/2915/ios-code-signing-under-the-hood
+    . Xcode5 Deploy your App good docu:
+        Phase 1: http://codewithchris.com/deploy-your-app-on-an-iphone/
+        Phase 2: http://codewithchris.com/submit-your-app-to-the-app-store/
 Chute Photo Picker Plus
     https://github.com/chute/photo-picker-plus-ios to pick photo from all sources (flickr/facebook)
     To add Chute SDK and PhotoPickerPlus Component, simplly in project, "Add Files To ..."
@@ -209,6 +215,11 @@ But I also want to follow 2ndApp.Storyboard doc's example to have a Birdsighting
 
 Navigator/Segue/Controller etc
 ------------------------------
+Have to understand View Controller Basic:
+      https://developer.apple.com/library/ios/featuredarticles/ViewControllerPGforiPhoneOS/AboutViewControllers/AboutViewControllers.html#//apple_ref/doc/uid/TP40007457-CH112-SW10
+and How to Present View Controller from other view Controller (presentModalView/Popover/etc)
+      https://developer.apple.com/library/ios/featuredarticles/ViewControllerPGforiPhoneOS/ModalViewControllers/ModalViewControllers.html#//apple_ref/doc/uid/TP40007457-CH111-SW1
+
 Use Navigator Controller as much as possible since its impl will be same for iPad and iPhone, and we can take advantage of the automatically generated back button back to parent view with Push seque.
 For iPad if sub-view is too big, then have to use popover/Modal etc to bring up smaller sub-view. but inside the smaller sub-views, use second Navigator Controller to navigate further sub-views
 (NOTE: Push segue is only for views managed by Navigator Controler)
@@ -223,6 +234,10 @@ For iPad if sub-view is too big, then have to use popover/Modal etc to bring up 
         - make a Popover segue from Setting button to the new NavigatorController.
         - then use Push segue for all sub-views
         (All view controller must set same explicit size in attribute editor)
+        
+-- ATEventListWidnowView / ATTimeScrollWindowNew
+   These two are UIView with a UITableView as member, and set tabieView delegate and datasource to self.
+   So the parent UIView act as UITableViewController (remember UITableViewController is a convenience class, not neccessary to have)
           
 -- Popover/Modal Event Editor
    1. iPad has to use iPad specific UIPopoverController. This controller can wrap any View Controller such as Table View Controller. 

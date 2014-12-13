@@ -2,6 +2,61 @@
 
 Version History
 ---------------
+
+iOS8 and Xcode6 issue:
+----------------------
+
+##########################
+I have to continues to use Xcode 5 (in my Finder is Xcode 2, I can not rename folder name "Xcode 2" to other name otherwise build fail).
+If I use Xcode 6, then great mess:
+    . Have to write atLeast8() function for rotation related to use different approach in iOS8
+    . Have to use new CollocationManager
+. Worst of all: my Min event editor will never work when build with Xcode 6: lost text/date value
+        Wiat for xcode 6.1.1 published to see if the issue
+. When start new app after removed, first event edit desc will make eventeditor fly away
+With Xcode5, most works
+###########################
+
+3.13 
+    - Display Drive/Walk direction from any location or event to the currently selected event, a great feature for planing trip and during trip
+    - Improve Settings menu user interface. (Preference table UI change: section header aligned center and in grey color; add acceesary type arrow to tappable cell)
+    - Fixed min/max event editor causing display for different event. The issue is: 1. need save annotation instead of annotation view.  2. When call startEventEditor, should first save ann to global var first
+
+    
+    
+
+3.12 new features: (2014-11-23)
+    - Scroll map in camera mode when jump to another location, greatly enhance user experience on map.
+    - improve event list text readability by differing text darkness for date, title and content.
+    - Used Dropbox latest API, may improved a little. Also changed wording such as  "Repeat until no more download"
+    - Use text button to emphasis event list mode: timewheel or map mode.
+    - improve map mode eventview refresh loop performance
+    - Related App list from server
+    - use a UIView to do photo description editor, removed a third party customizealertview for photo desc editor
+    - Improve select on event list view to make sure everytime will show thumbnail
+    - Tried hard to automatically switch event list view mode and give up. The main problem is in automatic mode, each time scroll map will cause many executions such as refresh event list view, very soon the memory warning will occure frequently. I tried to use timer or time delay technic, but always has glitch.
+    - xcode6 does not work for min/max event editor etc
+
+
+
+    - try compile with xcode6, change atleastios8() function, test max/min editor works or not
+
+    - Enable Save only when there is change (not implemented)
+
+3.11 new features
+    - Toggle event list view mode: display events visible on map or visible in time wheel
+    - Write description for each photo
+    - Sort photos in an event
+    - Restore to last states when app restart. States restored include last selected event, map zoom and time zoom.
+    - Add max/minimize screen switch button in event editor
+    - Prompt to use our WWII app as example to understand why ChronicleMap is the best choice for your photo albums and trip planner
+    - An event is also automatically focused on event view list when start event editor on map
+    - Add Up/Down arrow button to Event List View to easily move to next/prev time period in Time Wheel mode
+    - Pop-up annotation info window when an event is selected on event list view.
+    - More instructions about uploading photos to dropbox in alert view
+    - Fxied bug that crash app when view newly added photos before saving
+    - Compile with Xcode5 and tested on iOS8
+
 3.1 (2014-06-06)
     - Display Event List View on map, an important improvement
     - for tableview select bug, used self.tableView addGesture。 Modified include:
