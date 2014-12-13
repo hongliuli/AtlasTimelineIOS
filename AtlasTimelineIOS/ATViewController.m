@@ -1655,7 +1655,7 @@
         if ([_destAnnForDirection.uniqueId isEqualToString:startData.uniqueId])
         {
             UIAlertView *alert = [[UIAlertView alloc] initWithTitle:NSLocalizedString(@"Direction to this checked event",nil)
-                                                            message:NSLocalizedString(@"Tap another event or long press any location on map to get direction to this location.",nil)
+                                                            message:NSLocalizedString(@"Tap another event or long press any location on map as start point to get direction here.",nil)
                                                            delegate:self
                                                   cancelButtonTitle:NSLocalizedString(@"Cancel",nil)
                                                   otherButtonTitles:nil];
