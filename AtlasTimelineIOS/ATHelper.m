@@ -502,7 +502,7 @@ UIPopoverController *verifyViewPopover;
         if ([dateStr rangeOfString:@" AD"].location == NSNotFound)
             usDateformater = appDelegate.dateFormater; //do not apply USLocalize
     }
-
+    [appDelegate.uniqueIdToEventMap removeAllObjects];
     for (NSDictionary* dict in downloadedJsonArray)
     {
         ATEventDataStruct* evt = [[ATEventDataStruct alloc] init];
@@ -516,6 +516,7 @@ UIPopoverController *verifyViewPopover;
         evt.lng = [[dict objectForKey:@"lng"] doubleValue];
         evt.eventType = [[dict objectForKey:@"eventType"] intValue];
         [newEventList addObject:evt];
+        [appDelegate.uniqueIdToEventMap setObject:evt forKey:evt.uniqueId];
         // NSLog(@"%@    desc %@", [dict objectForKey:@"eventDate"],[dict objectForKey:@"eventDesc"]);
     }
     

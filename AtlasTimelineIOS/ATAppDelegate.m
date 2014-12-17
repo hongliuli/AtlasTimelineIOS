@@ -15,7 +15,7 @@
 #import "ATEventDataStruct.h"
 #import "ATHelper.h"
 #import "iRate.h"
-
+#import "Crittercism.h"
 
 #define EVENT_TYPE_NO_PHOTO 0
 #define EVENT_TYPE_HAS_PHOTO 1
@@ -122,6 +122,7 @@
 
 - (BOOL)application:(UIApplication *)application didFinishLaunchingWithOptions:(NSDictionary *)launchOptions
 {
+    [Crittercism enableWithAppID:@"548f983d51de5e9f042ec3f3"];
     ATViewController *controller;
     
     if (UI_USER_INTERFACE_IDIOM() == UIUserInterfaceIdiomPad)

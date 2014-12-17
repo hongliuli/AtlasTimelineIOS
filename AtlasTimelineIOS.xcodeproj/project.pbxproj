@@ -60,6 +60,8 @@
 		CE1D4E4917354CFB00AA603C /* focusedIcon.png in Resources */ = {isa = PBXBuildFile; fileRef = CE1D4E4817354CFB00AA603C /* focusedIcon.png */; };
 		CE1D4E4B1738896C00AA603C /* share-icons.png in Resources */ = {isa = PBXBuildFile; fileRef = CE1D4E4A1738896B00AA603C /* share-icons.png */; };
 		CE1D4E4D173890FA00AA603C /* Social.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = CE1D4E4C173890FA00AA603C /* Social.framework */; settings = {ATTRIBUTES = (Weak, ); }; };
+		CE2592E21A3FD9C000882869 /* dsym_upload.sh in Resources */ = {isa = PBXBuildFile; fileRef = CE2592E01A3FD9C000882869 /* dsym_upload.sh */; };
+		CE2592E31A3FD9C000882869 /* libCrittercism_v5_0_7.a in Frameworks */ = {isa = PBXBuildFile; fileRef = CE2592E11A3FD9C000882869 /* libCrittercism_v5_0_7.a */; };
 		CE2A1D0D16ADA956004476E8 /* ATAnnotationSelected.m in Sources */ = {isa = PBXBuildFile; fileRef = CE2A1D0C16ADA956004476E8 /* ATAnnotationSelected.m */; };
 		CE2D586519073A0500764E14 /* ATFriendAddView.m in Sources */ = {isa = PBXBuildFile; fileRef = CE2D586419073A0500764E14 /* ATFriendAddView.m */; };
 		CE320A4C18F986CB00D5DFE1 /* add-to-episode-folder.png in Resources */ = {isa = PBXBuildFile; fileRef = CE320A4A18F986CB00D5DFE1 /* add-to-episode-folder.png */; };
@@ -119,6 +121,7 @@
 		CEA41D3A18580C410034F1C3 /* BasePhotoViewController.m in Sources */ = {isa = PBXBuildFile; fileRef = CEA41D3518580C410034F1C3 /* BasePhotoViewController.m */; };
 		CEA41D3B18580C410034F1C3 /* ImageScrollView.m in Sources */ = {isa = PBXBuildFile; fileRef = CEA41D3718580C410034F1C3 /* ImageScrollView.m */; };
 		CEA41D3C18580C410034F1C3 /* PhotoViewController.m in Sources */ = {isa = PBXBuildFile; fileRef = CEA41D3918580C410034F1C3 /* PhotoViewController.m */; };
+		CEA9C1331A41DBC500AB1E7E /* SystemConfiguration.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = CEA9C1321A41DBC500AB1E7E /* SystemConfiguration.framework */; };
 		CEAAC531168F4E2E00BFCD31 /* MessageUI.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = CEAAC530168F4E2E00BFCD31 /* MessageUI.framework */; };
 		CEAAC535168F4FAD00BFCD31 /* SectionHeaderView.m in Sources */ = {isa = PBXBuildFile; fileRef = CEAAC534168F4FAD00BFCD31 /* SectionHeaderView.m */; };
 		CEAAC538168F5F1A00BFCD31 /* ATPeriod.m in Sources */ = {isa = PBXBuildFile; fileRef = CEAAC537168F5F1A00BFCD31 /* ATPeriod.m */; };
@@ -256,6 +259,11 @@
 		CE1D4E4817354CFB00AA603C /* focusedIcon.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; name = focusedIcon.png; path = images/focusedIcon.png; sourceTree = "<group>"; };
 		CE1D4E4A1738896B00AA603C /* share-icons.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; name = "share-icons.png"; path = "images/share-icons.png"; sourceTree = "<group>"; };
 		CE1D4E4C173890FA00AA603C /* Social.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Social.framework; path = System/Library/Frameworks/Social.framework; sourceTree = SDKROOT; };
+		CE2592DD1A3FD9C000882869 /* CRFilter.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = CRFilter.h; sourceTree = "<group>"; };
+		CE2592DE1A3FD9C000882869 /* Crittercism.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = Crittercism.h; sourceTree = "<group>"; };
+		CE2592DF1A3FD9C000882869 /* CrittercismDelegate.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = CrittercismDelegate.h; sourceTree = "<group>"; };
+		CE2592E01A3FD9C000882869 /* dsym_upload.sh */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.sh; path = dsym_upload.sh; sourceTree = "<group>"; };
+		CE2592E11A3FD9C000882869 /* libCrittercism_v5_0_7.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; path = libCrittercism_v5_0_7.a; sourceTree = "<group>"; };
 		CE2A1D0B16ADA956004476E8 /* ATAnnotationSelected.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = ATAnnotationSelected.h; sourceTree = "<group>"; };
 		CE2A1D0C16ADA956004476E8 /* ATAnnotationSelected.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = ATAnnotationSelected.m; sourceTree = "<group>"; };
 		CE2D586319073A0500764E14 /* ATFriendAddView.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = ATFriendAddView.h; sourceTree = "<group>"; };
@@ -343,6 +351,7 @@
 		CEA41D3718580C410034F1C3 /* ImageScrollView.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = ImageScrollView.m; sourceTree = "<group>"; };
 		CEA41D3818580C410034F1C3 /* PhotoViewController.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = PhotoViewController.h; sourceTree = "<group>"; };
 		CEA41D3918580C410034F1C3 /* PhotoViewController.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = PhotoViewController.m; sourceTree = "<group>"; };
+		CEA9C1321A41DBC500AB1E7E /* SystemConfiguration.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = SystemConfiguration.framework; path = System/Library/Frameworks/SystemConfiguration.framework; sourceTree = SDKROOT; };
 		CEAAC530168F4E2E00BFCD31 /* MessageUI.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = MessageUI.framework; path = System/Library/Frameworks/MessageUI.framework; sourceTree = SDKROOT; };
 		CEAAC533168F4FAD00BFCD31 /* SectionHeaderView.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = SectionHeaderView.h; sourceTree = "<group>"; };
 		CEAAC534168F4FAD00BFCD31 /* SectionHeaderView.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = SectionHeaderView.m; sourceTree = "<group>"; };
@@ -452,7 +461,9 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				CEA9C1331A41DBC500AB1E7E /* SystemConfiguration.framework in Frameworks */,
 				CE4712BD190BFFD600631C53 /* AddressBookUI.framework in Frameworks */,
+				CE2592E31A3FD9C000882869 /* libCrittercism_v5_0_7.a in Frameworks */,
 				CE754EAF19085A0B00D4EF82 /* AddressBook.framework in Frameworks */,
 				CE7D62941847C2A900F01B0E /* SenTestingKit.framework in Frameworks */,
 				CED46F5B178E3739008397D6 /* Security.framework in Frameworks */,
@@ -517,6 +528,7 @@
 				CE0E5300168E671F00C147FB /* Frameworks */,
 				CE0E52FE168E671F00C147FB /* Products */,
 				CECB7C86195BB9C10024355F /* AtlasTimelineIOS copy2-Info.plist */,
+				CE2592DC1A3FD9C000882869 /* CrittercismSDK */,
 			);
 			sourceTree = "<group>";
 		};
@@ -531,6 +543,7 @@
 		CE0E5300168E671F00C147FB /* Frameworks */ = {
 			isa = PBXGroup;
 			children = (
+				CEA9C1321A41DBC500AB1E7E /* SystemConfiguration.framework */,
 				CE4712BC190BFFD600631C53 /* AddressBookUI.framework */,
 				CE754EAE19085A0B00D4EF82 /* AddressBook.framework */,
 				CE0E5301168E671F00C147FB /* UIKit.framework */,
@@ -598,6 +611,18 @@
 				CE6A875016967D6A006154D2 /* Note_Project_Specification */,
 			);
 			name = "Supporting Files";
+			sourceTree = "<group>";
+		};
+		CE2592DC1A3FD9C000882869 /* CrittercismSDK */ = {
+			isa = PBXGroup;
+			children = (
+				CE2592DD1A3FD9C000882869 /* CRFilter.h */,
+				CE2592DE1A3FD9C000882869 /* Crittercism.h */,
+				CE2592DF1A3FD9C000882869 /* CrittercismDelegate.h */,
+				CE2592E01A3FD9C000882869 /* dsym_upload.sh */,
+				CE2592E11A3FD9C000882869 /* libCrittercism_v5_0_7.a */,
+			);
+			path = CrittercismSDK;
 			sourceTree = "<group>";
 		};
 		CE2A1CF216AD9882004476E8 /* images */ = {
@@ -853,6 +878,7 @@
 				CE0E52F9168E671E00C147FB /* Sources */,
 				CE0E52FA168E671E00C147FB /* Frameworks */,
 				CE0E52FB168E671E00C147FB /* Resources */,
+				CEA9C1341A41DCF400AB1E7E /* Run Script */,
 			);
 			buildRules = (
 			);
@@ -907,6 +933,7 @@
 				CE0E530C168E671F00C147FB /* InfoPlist.strings in Resources */,
 				CE3DF30A187FA39C0065337E /* add-button-md.png in Resources */,
 				CE0E531B168E671F00C147FB /* MainStoryboard_iPhone.storyboard in Resources */,
+				CE2592E21A3FD9C000882869 /* dsym_upload.sh in Resources */,
 				CEC836CB19B1789B00AE8924 /* window_maximize.png in Resources */,
 				CE11968D18D3F13400F65345 /* marker_home.png in Resources */,
 				CE0E531E168E671F00C147FB /* MainStoryboard_iPad.storyboard in Resources */,
@@ -1014,6 +1041,23 @@
 			runOnlyForDeploymentPostprocessing = 0;
 		};
 /* End PBXResourcesBuildPhase section */
+
+/* Begin PBXShellScriptBuildPhase section */
+		CEA9C1341A41DCF400AB1E7E /* Run Script */ = {
+			isa = PBXShellScriptBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			inputPaths = (
+			);
+			name = "Run Script";
+			outputPaths = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+			shellPath = /bin/sh;
+			shellScript = "APP_ID=\"548f983d51de5e9f042ec3f3\"\nAPI_KEY=\"OHAt7W763PO1GgMGMRPcIdd8NRsShTtG\"\nsource \"${SRCROOT}\"/CrittercismSDK/dsym_upload.sh";
+		};
+/* End PBXShellScriptBuildPhase section */
 
 /* Begin PBXSourcesBuildPhase section */
 		CE0E52F9168E671E00C147FB /* Sources */ = {
@@ -1207,6 +1251,10 @@
 				GCC_PREFIX_HEADER = "AtlasTimelineIOS/AtlasTimelineIOS-Prefix.pch";
 				INFOPLIST_FILE = "AtlasTimelineIOS/AtlasTimelineIOS-Info.plist";
 				IPHONEOS_DEPLOYMENT_TARGET = 6.0;
+				LIBRARY_SEARCH_PATHS = (
+					"$(inherited)",
+					"$(PROJECT_DIR)/CrittercismSDK",
+				);
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				PROVISIONING_PROFILE = "";
 				WRAPPER_EXTENSION = app;
@@ -1228,6 +1276,10 @@
 				GCC_PREFIX_HEADER = "AtlasTimelineIOS/AtlasTimelineIOS-Prefix.pch";
 				INFOPLIST_FILE = "AtlasTimelineIOS/AtlasTimelineIOS-Info.plist";
 				IPHONEOS_DEPLOYMENT_TARGET = 6.0;
+				LIBRARY_SEARCH_PATHS = (
+					"$(inherited)",
+					"$(PROJECT_DIR)/CrittercismSDK",
+				);
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				PROVISIONING_PROFILE = "";
 				WRAPPER_EXTENSION = app;

@@ -2468,6 +2468,7 @@
             NSDate *second = [(ATEventEntity*)b eventDate];
             return [first compare:second]== NSOrderedAscending;
         }];
+        [appDelegate.uniqueIdToEventMap setObject:newData forKey:newData.uniqueId];
     }
     else //for update, still need to remove and add incase  date is updated
     {

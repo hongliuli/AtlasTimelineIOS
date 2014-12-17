@@ -11,13 +11,18 @@ I have to continues to use Xcode 5 (in my Finder is Xcode 2, I can not rename fo
 If I use Xcode 6, then great mess:
     . Have to write atLeast8() function for rotation related to use different approach in iOS8
     . Have to use new CollocationManager
-. Worst of all: my Min event editor will never work when build with Xcode 6: lost text/date value
-        Wiat for xcode 6.1.1 published to see if the issue
-. When start new app after removed, first event edit desc will make eventeditor fly away
+. Worst of all: my event editor popover and min/max editor behaves weired. Found that ios8/xcode6 re-engineered popover: http://noxytrux.github.io/blog/2014/09/17/ios8-weirdness-part1-uipopovercontroller/
+
+    Because we need support both ios7/ios8, so could not use xcode 6, wait for new xcode to fix the popover backward compability.
+
 With Xcode5, most works
 ###########################
 
-3.13 
+3.14
+    - add crittercism bug reporting
+    - Fix bug: add new event will not show on event list view in map mode unless restart app
+
+3.13
     - Display Drive/Walk direction from any location or event to the currently selected event, a great feature for planing trip and during trip
     - Improve Settings menu user interface. (Preference table UI change: section header aligned center and in grey color; add acceesary type arrow to tappable cell)
     - Fixed min/max event editor causing display for different event. The issue is: 1. need save annotation instead of annotation view.  2. When call startEventEditor, should first save ann to global var first
