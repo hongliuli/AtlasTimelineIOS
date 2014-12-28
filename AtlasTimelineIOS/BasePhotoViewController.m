@@ -88,7 +88,7 @@ UIView *descEditorContentView;
     UIBarButtonItem *fixedSpace = [[UIBarButtonItem alloc] initWithBarButtonSystemItem:UIBarButtonSystemItemFixedSpace target:nil action:nil];
     fixedSpace.width = 10;
     
-    NSArray *items = [NSArray arrayWithObjects: doneButton, fixedSpace, setThumbnailButton, fixedSpace, setShareButton, fixedSpace, setEditButton,fixedSpace, deleteButton, nil];
+    NSArray *items = [NSArray arrayWithObjects: doneButton, fixedSpace, setThumbnailButton, fixedSpace, setShareButton, fixedSpace, setEditButton,fixedSpace, fixedSpace, deleteButton, nil];
     [self.toolbar setItems:items animated:NO];
     
     UITapGestureRecognizer *tap = [[UITapGestureRecognizer alloc]
@@ -369,18 +369,20 @@ UIView *descEditorContentView;
         currentPhotoDescTxt = photoDescInputView.text;
         photoDescView.hidden = false;
     }
+    [photoDescInputView resignFirstResponder];
     descEditorContentView.hidden = true;
 }
-
 - (void) deleteDescButtonAction: (id)sender {
     if (currentPhotoDescTxt != nil && [currentPhotoDescTxt length] > 0)
         self.eventEditor.photoDescChangedFlag = true;
     [self.eventEditor.photoScrollView.photoDescMap removeObjectForKey:currentPhotoFileName];
     photoDescView.hidden = true;
+    [photoDescInputView resignFirstResponder];
     descEditorContentView.hidden = true;
 }
 
 - (void) cancelDescButtonAction: (id)sender {
+    [photoDescInputView resignFirstResponder];
     descEditorContentView.hidden = true;
 }
 
