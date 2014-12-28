@@ -8,6 +8,8 @@
 
 "%@ - %dh %dmin"="%@ - %d:%d分";
 "%@ - %dh"="%@ - %d小时";
+"%d files are downloaded! (Repeat this action until [0 files are downloaded] is displayed.)"="下载了%d个照片文件！（重复此操作，直到显示［下载了0个照片文件］）";
+"0 file is downloaded! All photo files on Dropbox have been restored to this APP."="下载了0个照片文件！Dropbox上所有［霞客行］照片文件已下载完毕。";
 "[+%d/-%d unsaved!]"="[+%d/-%d 没有保存!]";
 "7 Days"="7 天";
 "Month"="月";
@@ -122,14 +124,11 @@
 "%@ has not accepted your request yet"="%@ 还没有接受你的请求";
 "Full Screen Event Editor"="全屏幕事件编辑";
 "If you have downloaded it before, the offline one will stay until you remove the app. Are you sure to delete it from server?"="如果你以前下载过到设备上，你仍然可以看到该内容，直到APP被卸载。 确信从服务器上删除?";
-"If no change to row with [Repeat until no more download], it means all photos are downloaded!"="如果［可重复此操作，直到全部完成］字样没改变， 则全部照片下载完毕";
 "Incoming Contents/Episodes"="片段收件箱";
 "Import %@"="下载 %@";
-"Import failed, please check if network is available, or if your Dropbox has photos in /ChronicleMap/%@ directory."="下载失败！请检查网络，或者检查你的Dropbox的 /ChronicleMap/%@ 文件目录下有照片文件.";
 "Import may take a few minutes, continue?."="下载会等待几分钟，继续吗?.";
 "Import photos from Dropbox:/ChronicleMap/%@"="从Dropbox中的文件目录:/ChronicleMap/%@下载照片";
 "Import photos from Dropbox finished"="从Dropbox下载照片完成";
-"Import photos from Dropbox: %d success, %d fail. Please make sure you have a good wifi connection and try again."="从Dropbox下载照片: %d 个成功, %d 个失败. 请保证有良好的WiFi连接";
 "In this case, all events within %@ of %@ are colored."="在这种情况下, 在%@内以%@为中心日期，所有事件都带颜色.";
 "Invite Friend"="邀请朋友";
 "Invalid Email Format!"="无效邮件地址格式!";
@@ -152,7 +151,6 @@
 "OK"="好的";
 "%d new photo(s) are not saved"="%d 张新照片被保存";
 "Photo Backup - New:%d  Del:%d"="照片备份- 新的:%d  删除:%d";
-"%d photos have been downloaded to your device from Dropbox!"="%d 张照片已从Dropbox下载到你的APP!";
 "%d photo(s)"="%d 张照片";
 "%d photo(s) in the event will be deleted as well"="%d 张照片会从该事件中删除";
 "Pinch is another way of zooming Time Wheel"="捏手指是缩放时间轮的另一个办法";
@@ -243,7 +241,6 @@
 "%@ was downloaded before"="%@ 以前被下载过";
 "Write notes here"="写点东西";
 "WWII"="二战历史";
-"Wait for 10+ seconds"="请等待十多秒";
 "Walk"="徒步";
 "Yes"="是的";
 "Yes, Continue"="是的，继续";

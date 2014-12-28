@@ -97,6 +97,16 @@
     
     BOOL hasNewIncomingShareFlag;
     NSString* currentEventMetapath;
+    UIProgressView* progressDownloadOveralView;
+    UIProgressView* progressDownloadDetailView;
+    int progressDownloadTotalNumberOfEvents;
+    int progressDownloadTotalNumberOfPhotosInOneEvent;
+    int progressDownloadEventCount;
+    int progressDownloadPhotoCount;
+    
+    UIProgressView* progressUploadView;
+    int progressUploadTotalCount;
+    int progressUploadPhotoCount;
 }
 
 - (id)initWithStyle:(UITableViewStyle)style
@@ -333,6 +343,11 @@
         if ([agree.text caseInsensitiveCompare:@"agree"] == NSOrderedSame)
         {
             [spinner startAnimating];
+            progressUploadPhotoCount = 0;
+            progressUploadTotalCount = 0;
+            
+            progressUploadView.hidden = false;
+            
             isRemoveSourceForUploadAll = true; //so if /ChronicleMap/myEvent not on dropbox yet, delete fail will know the case
             [[self myRestClient] deletePath:[NSString stringWithFormat:@"/ChronicleMap/%@", [ATHelper getSelectedDbFileName]]];
             UIAlertView *alert = [[UIAlertView alloc] initWithTitle:NSLocalizedString(@"Photo upload started and [New] number is decreasing.\n If number reach 0 then full back up is done.\n If number stop at non-zero, then tap [Photo Backup] row to continue.",nil) message:@"" delegate:nil cancelButtonTitle:NSLocalizedString(@"OK",nil) otherButtonTitles:nil];
@@ -353,6 +368,10 @@
         onlyShowOnceForIssueWithDropbox = true;
         showDownloadAllLoadMetadataErrorAlert = true;
         totalDownloadFromDropboxSuccessCount = 0;
+        progressDownloadEventCount = 0;
+
+        progressDownloadOveralView.hidden = false;
+        progressDownloadDetailView.hidden = false;
         
         [self dequeueEventIdAndStartDownloadPhotos];
     }
@@ -372,8 +391,11 @@
     
     if ([eventIdQueueToCopyPhotoFromDropbox count] == 0)
     {
-        UIAlertView *alert = [[UIAlertView alloc] initWithTitle:NSLocalizedString(@"Restore completed!",nil)
-                                                        message: @"Please tap Restore Photos again to make sure all photos are downloaded!"
+        NSString* restoreMsg = [NSString stringWithFormat:NSLocalizedString(@"%d files are downloaded! (Repeat this action until [0 file is downloaded] is displayed.)",nil),totalDownloadFromDropboxSuccessCount];
+        if (totalDownloadFromDropboxSuccessCount == 0)
+            restoreMsg = NSLocalizedString(@"0 file is downloaded! All photo files on Dropbox have been restored to this APP.",nil);
+        UIAlertView *alert = [[UIAlertView alloc] initWithTitle:NSLocalizedString(@"Restore Finish!",nil)
+                                                        message: restoreMsg
                                                        delegate:nil cancelButtonTitle:NSLocalizedString(@"OK",nil) otherButtonTitles:nil];
         [alert show];
         return;
@@ -381,6 +403,12 @@
     //   [spinner startAnimating];
     currentEventId = [eventIdQueueToCopyPhotoFromDropbox firstObject];
     [eventIdQueueToCopyPhotoFromDropbox removeObjectAtIndex:0];
+    
+    //Progress implementation. My case is simple, so I do not use NSProgress object introduced in iOS7
+    progressDownloadEventCount ++;
+    float increaseRate = (float)progressDownloadEventCount/(float)progressDownloadTotalNumberOfEvents;
+    progressDownloadOveralView.progress = increaseRate;
+    
     totalDownloadFromDropboxSuccessCount = totalDownloadFromDropboxSuccessCount + downloadFromDropboxSuccessCount;
     downloadFromDropboxSuccessCount = 0;
     downloadFromDropboxFailCount = 0;
@@ -623,6 +651,17 @@
                 break;
             case ROW_SYNC_FROM_DROPBOX:
                 cell.textLabel.text = RESTORE_PHOTO_TITLE;
+                if (progressDownloadOveralView == nil)
+                {
+                    progressDownloadOveralView = [[UIProgressView alloc] initWithFrame:CGRectMake(30, 45, 200, 30)];
+                    [cell.contentView addSubview:progressDownloadOveralView];
+                    progressDownloadOveralView.hidden = true;
+                    progressDownloadDetailView = [[UIProgressView alloc] initWithFrame:CGRectMake(30, 55, 200, 30)];
+                    [cell.contentView addSubview:progressDownloadDetailView];
+                    progressDownloadDetailView.hidden = true;
+                }
+                progressDownloadOveralView.progress = 0.0f;
+                progressDownloadDetailView.progress = 0.0f;
                 break;
             default:
                 break;
@@ -634,6 +673,13 @@
             int numberOfDeletedPhoto = [dataController getDeletedPhotoQueueSize];
             cell.textLabel.text = [NSString stringWithFormat:NSLocalizedString(@"Photo Backup - New:%d  Del:%d",nil),numberOfNewPhotos,numberOfDeletedPhoto ];
             PhotoToDropboxCell = cell;
+            if (progressUploadView == nil)
+            {
+                progressUploadView = [[UIProgressView alloc] initWithFrame:CGRectMake(30, 38, 200, 30)];
+                [cell.contentView addSubview:progressUploadView];
+                progressUploadView.hidden = true;
+            }
+            progressUploadView.progress = 0.0f;
         }
         if (row == ROW_SYNC_FROM_DROPBOX)
             photoFromDropboxCell = cell;
@@ -718,7 +764,14 @@
 {
     return 30;
 }
-
+- (CGFloat)tableView:(UITableView *)tableView heightForRowAtIndexPath:(NSIndexPath *)indexPath
+{
+    if (indexPath.section ==SECTION_SYNC_MYEVENTS_PHOTO_TO_DROPBOX &&  indexPath.row == ROW_SYNC_FROM_DROPBOX)
+    {
+        return 60;
+    }
+    else return 44; //44 is default value in object-c tablecell view
+}
 - (ATDataController*)getDataController
 {
     if (privateDataController == nil)
@@ -872,6 +925,8 @@
         if (dbNewPhotoCount + dbDeletedPhotoCount > 0)
         {
             [spinner startAnimating]; //stop when chain complete or any error
+            progressUploadView.hidden = false;
+            progressUploadTotalCount = dbNewPhotoCount + dbDeletedPhotoCount;
         }
         if (dbNewPhotoCount > 0) //will process both queue
             [[self myRestClient] createFolder:@"/ChronicleMap"]; //createFolder success/alreadyExist delegate will start the chain action, which will include delete Queue
@@ -942,7 +997,7 @@
             [[DBSession sharedSession] linkFromController:self];
             return;
         }
-        int totalEventWithPhoto = 0;
+        progressDownloadTotalNumberOfEvents = 0;
         eventIdQueueToCopyPhotoFromDropbox = [[NSMutableArray alloc] initWithCapacity:10];
         //get total number of photos on device
         ATAppDelegate *appDelegate = (ATAppDelegate *)[[UIApplication sharedApplication] delegate];
@@ -952,12 +1007,12 @@
         {
             if (evt.eventType == EVENT_TYPE_HAS_PHOTO)
             {
-                totalEventWithPhoto++;
+                progressDownloadTotalNumberOfEvents ++;
                 [eventIdQueueToCopyPhotoFromDropbox addObject:evt.uniqueId];
                 
             }
         }
-        if (totalEventWithPhoto == 0)
+        if (progressDownloadTotalNumberOfEvents == 0)
         {
             UIAlertView *alert = [[UIAlertView alloc]initWithTitle: [NSString stringWithFormat:NSLocalizedString(@"Content %@ is empty or do not have photos to download.",nil), [ATHelper getSelectedDbFileName]]
                                                            message: NSLocalizedString(@"This content may not have photos.",nil)
@@ -1172,11 +1227,13 @@
     [[self getDataController] emptyNewPhotoQueue:[NSString stringWithFormat:@"%@/%@" ,currentEventId, currentPhotoName]];
     int dbNewPhotoCount = [[self getDataController] getNewPhotoQueueSizeExcludeThumbNail];
     int dbDeletedPhotoCount = [[self getDataController] getDeletedPhotoQueueSize];
+    progressUploadPhotoCount ++;
     if (![currentPhotoName isEqualToString:@"thumbnail"])
     {
         uploadSuccessExcludeThumbnailCount++;
         PhotoToDropboxCell.textLabel.text = [NSString stringWithFormat:NSLocalizedString(@"Photo Backup - New:%d  Del:%d",nil),dbNewPhotoCount, dbDeletedPhotoCount];
     }
+    progressUploadView.progress = (float)progressUploadPhotoCount/(float)progressUploadTotalCount;
     [self startProcessNewPhotoQueueChainAction]; //start upload next file until
 }
 
@@ -1306,15 +1363,18 @@
         currentEventMetapath = metadata.path;
         downloadFromDropboxStartCount = [photoNameQueueForCurrentEventIdFromDropbox count];
         //Following loop will be block waiting if has photo
-
+        progressDownloadDetailView.progress = 0.0f;
+        progressDownloadTotalNumberOfPhotosInOneEvent = 0;
+        progressDownloadPhotoCount = 0;
         for (DBMetadata* file in photoNameQueueForCurrentEventIdFromDropbox)
         {
             NSString* partialPath = [currentEventMetapath substringFromIndex:14]; //metadata.path is "/ChronicleMap/myEvents/eventid"
             NSString* localPhotoPath = [[[ATHelper getRootDocumentoryPath]  stringByAppendingPathComponent:partialPath] stringByAppendingPathComponent:file.filename];
             
             if (![[NSFileManager defaultManager] fileExistsAtPath:localPhotoPath]){
-                NSLog(@"    --- local %@ already=%d  success=%d   fail=%d",[localPhotoPath substringFromIndex:85], downloadAlreadyExistCount,downloadFromDropboxSuccessCount,downloadFromDropboxFailCount);
+                //NSLog(@"    --- local %@ already=%d  success=%d   fail=%d",[localPhotoPath substringFromIndex:85], downloadAlreadyExistCount,downloadFromDropboxSuccessCount,downloadFromDropboxFailCount);
                 [[self myRestClient] loadFile:[NSString stringWithFormat:@"%@/%@", currentEventMetapath, file.filename ] intoPath:localPhotoPath];
+                progressDownloadTotalNumberOfPhotosInOneEvent ++;
             }
             else
             {
@@ -1370,6 +1430,8 @@
     }
 	//[self promptCopyFromDropboxStatus];
     downloadFromDropboxSuccessCount++;
+    progressDownloadPhotoCount ++;
+    progressDownloadDetailView.progress = (float)progressDownloadPhotoCount/(float)progressDownloadTotalNumberOfPhotosInOneEvent;
     if (downloadFromDropboxSuccessCount + downloadAlreadyExistCount + downloadFromDropboxFailCount >= downloadFromDropboxStartCount)
         [self dequeueEventIdAndStartDownloadPhotos];
 }
