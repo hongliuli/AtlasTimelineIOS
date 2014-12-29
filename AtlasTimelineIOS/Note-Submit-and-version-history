@@ -19,8 +19,12 @@ With Xcode5, most works
 ###########################
 
 3.14
+    - Re-implemented Restore Photos from dropbox: sequentially download for each event, but inside a event parally download photos. This change resolved the weired download behavious.
+    - add progress bar for restore and backup photos to dropbox
     - add crittercism bug reporting
-    - Fix bug: add new event will not show on event list view in map mode unless restart app
+    - Fix bug: 
+        . add new event will not show on event list view in map mode unless restart app
+        . photo desc editor to dismiss keyboard afer tap cancel/continue/delete
 
 3.13
     - Display Drive/Walk direction from any location or event to the currently selected event, a great feature for planing trip and during trip
