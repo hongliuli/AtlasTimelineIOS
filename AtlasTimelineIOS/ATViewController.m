@@ -49,7 +49,7 @@
 #define RESIZE_HEIGHT 450
 #define THUMB_WIDTH 120
 #define THUMB_HEIGHT 70
-#define JPEG_QUALITY 0.5
+#define JPEG_QUALITY 1.0
 
 #define FREE_VERSION_QUOTA 50
 
@@ -77,6 +77,7 @@
 #define EPISODE_VIEW_HIGHT_SMALL 140
 #define EPISODE_ROW_HEIGHT 30
 
+#define PHOTO_META_FILE_NAME @"MetaFileForOrderAndDesc"
 #define PHOTO_META_SORT_LIST_KEY @"sort_key"
 #define PHOTO_META_DESC_MAP_KEY @"desc_key"
 
@@ -146,6 +147,7 @@
     UILabel* _lblDirectionDistance;
     NSArray* _topDistanceLblCon; //will animated on this
     NSTimer* _timerDirectionRouteDisplay;
+    CLLocationCoordinate2D currentCenterCoordinate;
 }
 
 @synthesize mapView = _mapView;
@@ -241,8 +243,11 @@
     [self.searchBar setPlaceholder:NSLocalizedString(@"Address", nil)];
     if ([appDelegate.eventListSorted count] == 0)
     {
+        /*
         UIAlertView *alert = [[UIAlertView alloc] initWithTitle:NSLocalizedString(@"Add your first event",nil) message:NSLocalizedString(@"Add event by long press on a map location, or search an address. You can also import [TestEvents] in [Settings->Incoming Contents/Episodes] to learn more.",nil) delegate:nil cancelButtonTitle:NSLocalizedString(@"OK",nil) otherButtonTitles:nil];
         [alert show];
+         */
+        [self addFirstDemoEvent];
     }
     if (eventListView == nil) //viewDidAppear will be called when navigate back (such as from timeline/search view and full screen event editor, so need to check. Always be careful of viewDidAppear to not duplicate instances
     {
@@ -251,6 +256,81 @@
         [self.mapView addSubview:eventListView];
     }
     [self refreshEventListView:false];
+}
+
+- (void)addFirstDemoEvent {
+    ATEventDataStruct *ent = [[ATEventDataStruct alloc] init];
+    [self currentLocationClicked:nil];
+    ent.lat = currentCenterCoordinate.latitude;
+    ent.lng = currentCenterCoordinate.longitude;
+    ent.eventDesc = NSLocalizedString(@"To add your own event, long press on a map location, or search an address.\nThis is a demo event/album we created for you. To learn more, please tap on any photos in this demo event.",nil);
+    ent.uniqueId = nil;
+    ent.address=@"Unknown";
+    NSDate* dt = [NSDate date];
+    ent.eventDate = dt;
+    ent.eventType = 1;
+
+    NSArray* photoNewAddedList = @[PHOTO_META_FILE_NAME, @"demoPhoto1.png",@"demoPhoto2.png",@"demoPhoto3.png",@"demoPhoto4.png",@"demoPhoto5.png"];
+    UIImage *demoPhoto1 = [UIImage imageNamed:photoNewAddedList[1]];
+    UIImage *demoPhoto2 = [UIImage imageNamed:photoNewAddedList[2]];
+    UIImage *demoPhoto3 = [UIImage imageNamed:photoNewAddedList[3]];
+    UIImage *demoPhoto4 = [UIImage imageNamed:photoNewAddedList[4]];
+    UIImage *demoPhoto5 = [UIImage imageNamed:photoNewAddedList[5]];
+    
+
+    NSMutableDictionary* finalPhotoMetaDataMap = [[NSMutableDictionary alloc] init];
+
+    NSMutableDictionary* photoDescMap = [[NSMutableDictionary alloc] init];
+    
+    NSString* photo1Desc =NSLocalizedString(@"Swipe time wheel, the events in the selected period will be:\n  - listed on the left\n  - colored darker on map\nIf switch map mode to [By Map], swipe map and the events occur on screen will be listed instead.\n(Note: red/green dots above the time wheel indicate the existence of events in that period)",nil);
+    NSString* photo2Desc =NSLocalizedString(@"Create your own event or Album:\n  - Long press on a map location, or search address, then tap (!) icon to start event editor as shown in the photo\n  - Enter date, descriptions and optionally add photos, then tap save button\nNote:   To add photos from other sources such Flickr, Google Drive or Dropbox, please install related APP and save photos to your device first",nil);
+    NSString* photo3Desc =NSLocalizedString(@"View photos: Tap a photo in event editor to view photo in large size. Things can be done in this view:\n  - Add description to each photo\n  - Order photo display sequence\n    \nPick photos to attach to event sharing\n  - Delete the photo (The real deletion happen when save event change)",nil);
+    NSString* photo4Desc =NSLocalizedString(@"There are some useful features in Settings menu:\n  - Backup/Restore event data – data will be saved in our cloud and you can restore to any devices\n  - Backup/Restore photo files on Dropbox – Never lost photos\n  - Share episodes amount friends who have installed this APP",nil);
+    
+    [photoDescMap setObject:photo1Desc forKey:photoNewAddedList[1]];
+    [photoDescMap setObject:photo2Desc forKey:photoNewAddedList[2]];
+    [photoDescMap setObject:photo3Desc forKey:photoNewAddedList[3]];
+    [photoDescMap setObject:photo4Desc forKey:photoNewAddedList[4]];
+    [photoDescMap setObject:NSLocalizedString(@"Share event and selected photos to social network.",nil) forKey:photoNewAddedList[5]];
+    
+    [finalPhotoMetaDataMap setObject:photoDescMap forKey:PHOTO_META_DESC_MAP_KEY];
+    
+    [self copyDemoEventPhoto:demoPhoto1 :photoNewAddedList[1]];
+    [self copyDemoEventPhoto:demoPhoto2 :photoNewAddedList[2]];
+    [self copyDemoEventPhoto:demoPhoto3 :photoNewAddedList[3]];
+    [self copyDemoEventPhoto:demoPhoto4 :photoNewAddedList[4]];
+    [self copyDemoEventPhoto:demoPhoto5 :photoNewAddedList[5]];
+    
+    [self updateEvent:ent newAddedList:photoNewAddedList deletedList:nil photoMetaData:finalPhotoMetaDataMap];
+
+}
+
+- (void)copyDemoEventPhoto:(UIImage*)newPhoto :(NSString*)photoName
+{
+    if (newPhoto == nil)
+        return;
+
+    int imageWidth = RESIZE_WIDTH;
+    int imageHeight = RESIZE_HEIGHT;
+    
+    if (newPhoto.size.height > newPhoto.size.width)
+    {
+        imageWidth = RESIZE_HEIGHT;
+        imageHeight = RESIZE_WIDTH;
+    }
+    UIImage *newImage = newPhoto;
+    NSData* imageData = nil;
+    if (newPhoto.size.height > imageHeight || newPhoto.size.width > imageWidth)
+    {
+        newImage = [ATHelper imageResizeWithImage:newPhoto scaledToSize:CGSizeMake(imageWidth, imageHeight)];
+    }
+    //NSLog(@"widh=%f, height=%f",newPhoto.size.width, newPhoto.size.height);
+    imageData = UIImageJPEGRepresentation(newImage, JPEG_QUALITY); //quality should be configurable?
+    NSString* tmpFileNameForNewPhoto = [NSString stringWithFormat:@"%@%@", NEW_NOT_SAVED_FILE_PREFIX,photoName];
+    NSString *fullPathToNewTmpPhotoFile = [[ATHelper getNewUnsavedEventPhotoPath] stringByAppendingPathComponent:tmpFileNameForNewPhoto];
+    NSError *error;
+    [imageData writeToFile:fullPathToNewTmpPhotoFile options:nil error:&error];
+ 
 }
 
 
@@ -308,11 +388,10 @@
     [self.locationManager startUpdatingLocation];
     
     CLLocation *newLocation = [self.locationManager location];
-    CLLocationCoordinate2D centerCoordinate;
-    centerCoordinate.latitude = newLocation.coordinate.latitude;
-    centerCoordinate.longitude = newLocation.coordinate.longitude;
-    MKCoordinateSpan span = [self coordinateSpanWithMapView:self.mapView centerCoordinate:centerCoordinate andZoomLevel:14];
-    MKCoordinateRegion region = MKCoordinateRegionMake(centerCoordinate, span);
+    currentCenterCoordinate.latitude = newLocation.coordinate.latitude;
+    currentCenterCoordinate.longitude = newLocation.coordinate.longitude;
+    MKCoordinateSpan span = [self coordinateSpanWithMapView:self.mapView centerCoordinate:currentCenterCoordinate andZoomLevel:14];
+    MKCoordinateRegion region = MKCoordinateRegionMake(currentCenterCoordinate, span);
     
     // set the region like normal
     [self.mapView setRegion:region animated:YES];
@@ -2403,6 +2482,8 @@
     NSString* thumbNailFileName = nil;
     if (self.eventEditor.photoScrollView.photoList != nil && [self.eventEditor.photoScrollView.photoList count]>0)
         thumbNailFileName = self.eventEditor.photoScrollView.photoList[0];
+    else
+        thumbNailFileName = newAddedList[1]; //TODO for adding demo event the firsttime
     /*
     NSDate *now = [NSDate date];
     if (sortList !=nil && [sortList count] > 0)

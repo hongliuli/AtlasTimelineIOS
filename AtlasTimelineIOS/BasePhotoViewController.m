@@ -115,10 +115,41 @@ UIView *descEditorContentView;
     shareCountLabel.backgroundColor = [UIColor colorWithRed: 0.55 green: 0.55 blue: 0.55 alpha: 0.5];
     shareCountLabel.textColor = [UIColor whiteColor];
     
+    
+    photoDescView = [[UITextView alloc] init];
+    photoDescView.translatesAutoresizingMaskIntoConstraints = NO;
     int screenWidth = [ATConstants screenWidth];
     int textWidth = screenWidth * 0.7;
-    photoDescView = [[UITextView alloc] initWithFrame:CGRectMake((screenWidth - textWidth)/2, 20 , textWidth, 110)];
-    photoDescView.center = CGPointMake(self.view.frame.size.width / 2, 60);
+    
+    id topGuide = self.topLayoutGuide;
+    NSDictionary* viewDictionary = NSDictionaryOfVariableBindings(topGuide,photoDescView);
+    
+    NSLayoutConstraint* centerConstraint = [NSLayoutConstraint
+                                            constraintWithItem:photoDescView
+                                            attribute:NSLayoutAttributeCenterX
+                                            relatedBy:NSLayoutRelationEqual
+                                            toItem:self.view
+                                            attribute:NSLayoutAttributeCenterX
+                                            multiplier:1.0f constant:0.0f];
+    [self.view addConstraint:centerConstraint];
+    NSLayoutConstraint* widthConstraint = [NSLayoutConstraint
+                                           constraintWithItem:photoDescView
+                                           attribute:NSLayoutAttributeWidth
+                                           relatedBy:NSLayoutRelationEqual
+                                           toItem:nil
+                                           attribute:NSLayoutAttributeNotAnAttribute
+                                           multiplier:1.0f constant:textWidth];
+    [self.view addConstraint:widthConstraint];
+    //Constraints to put view just under navitation bar, using VFL (visual form language)
+    NSArray* topConstraints = [NSLayoutConstraint
+                               constraintsWithVisualFormat:@"V:[topGuide]-5-[photoDescView(150)]" options:0 metrics:nil views:viewDictionary];
+    // ######  NOTE: V:|[topGUide]... is wrong, do not need | with top/bottom guide
+    [self.view addConstraints:topConstraints];
+    [UIView animateWithDuration:0.5
+                     animations:^{
+                         [self.view layoutIfNeeded];
+                     } completion:nil];
+    
     photoDescView.backgroundColor = [UIColor colorWithRed: 0 green: 0 blue: 0 alpha: 0.5];
     photoDescView.textColor = [UIColor whiteColor];
     //photoDescView.textAlignment = NSTextAlignmentCenter;
@@ -406,10 +437,8 @@ UIView *descEditorContentView;
 
 -(void)didRotateFromInterfaceOrientation:(UIInterfaceOrientation)interfaceOrientation
 {
-    int screenWidth = [ATConstants screenWidth];
-    int textWidth = screenWidth * 0.7;
-    [photoDescView setFrame:CGRectMake((screenWidth - textWidth)/2, 20 , textWidth, 120)];
-    
+    //[photoDescView setFrame:CGRectMake((screenWidth - textWidth)/2, 20 , textWidth, 120)];
+    [photoDescView setNeedsUpdateConstraints];
     [sortIdexLabel setFrame:CGRectMake(50, [ATConstants screenHeight] - 140 , 120, 30)];
     [shareCountLabel setFrame:CGRectMake(80, [ATConstants screenHeight] - 110 , 180, 30)];
     [shareIconView setFrame:CGRectMake(50, [ATConstants screenHeight] - 110 , 30, 30)];

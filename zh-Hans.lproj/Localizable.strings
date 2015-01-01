@@ -8,7 +8,7 @@
 
 "%@ - %dh %dmin"="%@ - %d:%d分";
 "%@ - %dh"="%@ - %d小时";
-"%d files are downloaded! (Repeat this action until [0 files are downloaded] is displayed.)"="下载了%d个照片文件！（重复此操作，直到显示［下载了0个照片文件］）";
+"%d files are downloaded! (Repeat this action until [0 file is downloaded] is displayed.)"="下载了%d个照片文件！（重复此操作，直到显示［下载了0个照片文件］）";
 "0 file is downloaded! All photo files on Dropbox have been restored to this APP."="下载了0个照片文件！Dropbox上所有［霞客行］照片文件已下载完毕。";
 "[+%d/-%d unsaved!]"="[+%d/-%d 没有保存!]";
 "7 Days"="7 天";
@@ -80,6 +80,7 @@
 "Could not copy to Dropbox"="不能拷贝到Dropbox";
 "Could not import from Dropbox"="不能从Dropbox恢复照片";
 "Create Episode"="创建片段";
+"Create your own event or Album:\n  - Long press on a map location, or search address, then tap (!) icon to start event editor as shown in the photo\n  - Enter date, descriptions and optionally add photos, then tap save button\nNote:   To add photos from other sources such Flickr, Google Drive or Dropbox, please install related APP and save photos to your device first"="怎样创建事件:\n  - 在地图地址上长按，或者搜寻地址，点击 (!) 符号启动如图中所示事件编辑器\n  - 输入事件描述，添加照片等等";
 "Del"="删除";
 "Delete"="删除";
 "Delete [%@] From Server"="从服务器上删除[%@]";
@@ -211,8 +212,10 @@
 "Share Episode Failed!"="分享片段失败!";
 "Share Episode Success!"="分享片段成功!";
 "Share Event"="分享事件";
+"Share event and selected photos to social network."="分享事件和照片";
 "Share my Episodes to Friends"="分享我的片段给朋友";
 "Support Us"="支持我们";
+"Swipe time wheel, the events in the selected period will be:\n  - listed on the left\n  - colored darker on map\nIf switch map mode to [By Map], swipe map and the events occur on screen will be listed instead.\n(Note: red/green dots above the time wheel indicate the existence of events in that period)"="刷动时间轮，在时间轴上被选事件就会:\n  - 出现在左边列表\n  - 在地图上变为深红色\n如果切换到 [按地图列表], 出现在左边列表中的事件就是刷动地图而出现在屏幕上的事件.\n(注: 时间轮上方的小红点小绿点代表该时间段有事件)";
 "Sync %i events to %@ on server"="同步 %i 个事件到服务器的[%@]";
 "Tap (+) or double-tab here to zoom in"="点击 (+) 或双击这里来放大时间范围";
 "Tap (-) or double-tab here to zoom out"="点击 (-) 或双击这里来缩小时间范围";
@@ -221,6 +224,7 @@
 "The access to Address Book has previously been denied"="访问通讯录曾被拒绝";
 "The correct date format is MM/dd/yyyy Era (such as %@)"="正确日期格式：MM/dd/yyyy Era (例如 %@)";
 "The events in this episode is no longer in myEvents, please remove this episode."="这个片段中的该事件已不在myEvents中，请删除.";
+"There are some useful features in Settings menu:\n  - Backup/Restore event data – data will be saved in our cloud and you can restore to any devices\n  - Backup/Restore photo files on Dropbox – Never lost photos\n  - Share episodes amount friends who have installed this APP"="[菜单］中有用的功能:\n  - 备份／恢复事件数据\n  - 备份／恢复照片到Dropbox\n  - 在APP朋友中分享事件片段，行程安排";
 "This content may not have photos."="该内容可能没有照片.";
 "This episode is empty!"="该片段是空的!";
 "This is what is happening on your screen:"="下面解释你当前屏幕上所显示了什么:";
@@ -230,6 +234,7 @@
 "Time Wheel"="时间轮";
 "Timeline/Search"="年列表／搜索事件";
 "Tap another event or long press any location on map as start point to get direction here."="在地图上点击另一个事件或者长按任何地址作为起始点，以便显示到达这里的路线。";
+"To add your own event, long press on a map location, or search an address.\nThis is a demo event/album we created for you. To learn more, please tap on any photos in this demo event."="添加事件方法： 长按在地图上的某点，或在上方的框中搜寻地址.\n这是我们为你创建的模拟事件。点击上面照片看更多说明。";
 "Use keyboard to enter date"="使用键盘输入事件日期";
 "Verify Success!"="验证代码成功!";
 "Verify Failed!"="验证代码失败!";
@@ -261,6 +266,7 @@
 "Update %@.."="更新 %@..";
 "Update %@"="更新 %@";
 "Verify"="验证代码";
+"View photos: Tap a photo in event editor to view photo in large size. Things can be done in this view:\n  - Add description to each photo\n  - Order photo display sequence\n    \nPick photos to attach to event sharing\n  - Delete the photo (The real deletion happen when save event change)"="点击编辑器中的照片，显示大照片。这时可做这些功能：\n  - 为每张照片添加描述文字\n  - 排序照片\n  － 选择分享照片\n  - 选择要删除的照片";
 "Zoom to Week (Default is Month)"="缩放到星期 (缺省是月)";
 "Zooming out the timeline reached 1000-years range limit!"="已经到达最高缩小级别-1000年!";
 "Zoom the time:"="缩放时间:";
