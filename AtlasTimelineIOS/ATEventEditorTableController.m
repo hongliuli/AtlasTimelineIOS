@@ -685,10 +685,17 @@ forRowAtIndexPath: (NSIndexPath*)indexPath
 - (IBAction)saveAction:(id)sender {
     ATAppDelegate *appDelegate = (ATAppDelegate *)[[UIApplication sharedApplication] delegate];
     NSDateFormatter *dateFormater = appDelegate.dateFormater;
-    ATEventDataStruct *ent = [[ATEventDataStruct alloc] init];
+    ATEventDataStruct *ent = self.eventData;
+    if (self.eventData == nil)
+    {
+        ent = [[ATEventDataStruct alloc] init];
+        ent.uniqueId = nil;
+    }
     ent.eventDesc = self.description.text;
     ent.address = self.address.text;
-    ent.uniqueId = nil;
+    ent.lat = self.coordinate.latitude;
+    ent.lng = self.coordinate.longitude;
+
     NSDate* dt = [dateFormater dateFromString:self.dateTxt.text ];
     if (dt == nil)  //this could happen if edit a BC date where DatePicker is not allowed popup
     {

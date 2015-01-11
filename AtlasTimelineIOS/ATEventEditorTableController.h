@@ -44,6 +44,8 @@
 @property BOOL isFirstTimeAddPhoto;
 @property BOOL photoDescChangedFlag;
 
+@property ATEventDataStruct* eventData;
+
 - (IBAction)saveAction:(id)sender;
 - (IBAction)deleteAction:(id)sender;
 - (IBAction)cancelAction:(id)sender;

@@ -116,7 +116,6 @@
     UITextView* txtNewEpisodeName;
     
     ATInAppPurchaseViewController* purchase; // have to be global because itself has delegate to use it self
-    ATEventAnnotation* selectedEventAnnotation;
     NSMutableDictionary* timeLinkOverlayDepthColorMap; // latlngTimeLinkDepthMapForOverlay;
     int timeLinkDepthDirectionFuture;
     int timeLinkDepthDirectionPast;
@@ -1857,7 +1856,9 @@
                     }];
      ***********/
     selectedAnnotationIdentifier = [self getImageIdentifier:ann.eventDate :ann.description];
-    ATEventDataStruct* ent = [[ATEventDataStruct alloc] init];
+    ATEventDataStruct* ent = [appDelegate.uniqueIdToEventMap objectForKey:ann.uniqueId];
+    if (ent == nil)
+        ent = [[ATEventDataStruct alloc] init];
     ent.address = ann.address;
     ent.lat = ann.coordinate.latitude;
     ent.lng = ann.coordinate.longitude;
@@ -1887,7 +1888,6 @@
 - (void) startEventEditor:(MKAnnotationView*)view
 {
     ATEventAnnotation* ann = selectedEventAnnDataOnMap; // [view annotation];
-    selectedEventAnnotation = ann;
     self.selectedAnnotation = ann;
     ATAppDelegate *appDelegate = (ATAppDelegate *)[[UIApplication sharedApplication] delegate];
     UIStoryboard* storyboard = appDelegate.storyBoard;
@@ -1948,6 +1948,11 @@
     self.eventEditor.eventType = ann.eventType;
     self.eventEditor.hasPhotoFlag = EVENT_TYPE_NO_PHOTO; //not set to ann.eventType because we want to use this flag to decide if need save image again
     self.eventEditor.eventId = ann.uniqueId;
+    if (ann.uniqueId != nil)
+        self.eventEditor.eventData = [appDelegate.uniqueIdToEventMap objectForKey:ann.uniqueId];
+    else
+        self.eventEditor.eventData = nil;
+    
     [ATEventEditorTableController setEventId:ann.uniqueId];
     //if (ann.eventType == EVENT_TYPE_HAS_PHOTO)
     [self.eventEditor createPhotoScrollView: ann.uniqueId ];
@@ -2471,8 +2476,6 @@
     }
     
     [self mapViewShowHideAction]; //de-select annotation will flip it, so double flip
-    newData.lat = self.selectedAnnotation.coordinate.latitude;
-    newData.lng = self.selectedAnnotation.coordinate.longitude;
     ATEventEntity* newEntity = [self.dataController updateEvent:self.selectedAnnotation.uniqueId EventData:newData];
     if (newEntity == nil)
         newData.uniqueId = self.selectedAnnotation.uniqueId;
@@ -2518,7 +2521,7 @@
     }
     if ([deletedList count] > 0 && [self.eventEditor.photoScrollView.photoList count] == 0)
     { //This is to fix floating photo if removed last photo in an event
-        NSString *key=[NSString stringWithFormat:@"%f|%f", selectedEventAnnotation.coordinate.latitude, selectedEventAnnotation.coordinate.longitude];
+        NSString *key=[NSString stringWithFormat:@"%f|%f", newData.lat, newData.lng];
         [selectedAnnotationSet removeObjectForKey:key];
     }
     
@@ -2527,19 +2530,20 @@
     [self.selectedAnnotation setAddress:newData.address];
     [self.selectedAnnotation setEventDate:newData.eventDate];
     [self.selectedAnnotation setEventType:newData.eventType];
+    //Need following when change event location (from Flickr Face version)
+    CLLocationCoordinate2D coord = CLLocationCoordinate2DMake(newData.lat, newData.lng);
     //---I want to update info in annotation pop, but following will drop a new pin and no popup
     //---Following always add pin annotation because selectedAnnotation does not what type of annotation
     [self.mapView removeAnnotation:self.selectedAnnotation];
     ATAnnotationSelected *ann = [[ATAnnotationSelected alloc] init];
     ann.uniqueId = newData.uniqueId;
-    [ann setCoordinate:self.selectedAnnotation.coordinate];
+    [ann setCoordinate:coord];
     ann.address = newData.address;
     ann.description=newData.eventDesc;
     ann.eventDate=newData.eventDate;
     ann.eventType=newData.eventType;
     [self.mapView addAnnotation:ann];
     
-    int newIndex  = NSNotFound;
     if (newEntity != nil) //we can  modify the logic, should use if selectedAnnotation.UniqueId == null to decide it is add action
     {
         //add in sorted order so timeline view can generate sections
@@ -2553,9 +2557,7 @@
     }
     else //for update, still need to remove and add incase  date is updated
     {
-        newIndex = [list indexOfObject:newData]; //implemented isEqual
-        if (newIndex != NSNotFound)
-            [list replaceObjectAtIndex:newIndex withObject:newData];
+        //sort again because date may changed
         [list sortUsingComparator:^NSComparisonResult(id a, id b) {
             NSDate *first = [(ATEventEntity*)a eventDate];
             NSDate *second = [(ATEventEntity*)b eventDate];

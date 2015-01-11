@@ -163,6 +163,8 @@
         [evt setValue:data.address forKey:@"address"];
         [evt setValue:data.eventDate forKey:@"eventDate"];
         [evt setValue:[NSNumber numberWithInt:data.eventType] forKey:@"eventType"];
+        [evt setValue:[NSNumber numberWithFloat:data.lat] forKey:@"lat"];
+        [evt setValue:[NSNumber numberWithFloat:data.lng] forKey:@"lng"];
         if (![context save:&error]) {
             NSLog(@" ----- Whoops, couldn't update: %@", [error localizedDescription]); }
     }
