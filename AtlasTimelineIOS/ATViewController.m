@@ -2595,7 +2595,8 @@
             }
         }
     }
-    [photoMetaData writeToFile:photoMetaFilePath atomically:TRUE];
+    if (photoMetaData != nil)
+        [photoMetaData writeToFile:photoMetaFilePath atomically:TRUE];
 }
 //delegate required implementation
 - (void)addToEpisode{
