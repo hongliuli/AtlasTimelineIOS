@@ -97,9 +97,10 @@ UIView *descEditorContentView;
     [self.view bringSubviewToFront:self.toolbar];
     [self.view bringSubviewToFront:self.pageControl];
     
+
     hasPhotoDescLabel = [[UILabel alloc] initWithFrame:CGRectMake([ATConstants screenWidth] - 80, 50 , 35, 40)];
     [hasPhotoDescLabel setBackgroundColor:[UIColor colorWithRed: 0 green: 0 blue: 0 alpha: 0.6]];
-     hasPhotoDescLabel.numberOfLines = 4;
+    hasPhotoDescLabel.numberOfLines = 4;
     [hasPhotoDescLabel.layer setCornerRadius:4.0f];
     [hasPhotoDescLabel.layer setMasksToBounds:YES];
     hasPhotoDescLabel.textColor = [UIColor whiteColor];
@@ -118,6 +119,7 @@ UIView *descEditorContentView;
     
     photoDescView = [[UITextView alloc] init];
     photoDescView.translatesAutoresizingMaskIntoConstraints = NO;
+    [self.view addSubview:photoDescView];
     int screenWidth = [ATConstants screenWidth];
     int textWidth = screenWidth * 0.7;
     
@@ -139,17 +141,13 @@ UIView *descEditorContentView;
                                            toItem:nil
                                            attribute:NSLayoutAttributeNotAnAttribute
                                            multiplier:1.0f constant:textWidth];
-    [self.view addConstraint:widthConstraint];
+    [photoDescView addConstraint:widthConstraint];
     //Constraints to put view just under navitation bar, using VFL (visual form language)
     NSArray* topConstraints = [NSLayoutConstraint
-                               constraintsWithVisualFormat:@"V:[topGuide]-5-[photoDescView(150)]" options:0 metrics:nil views:viewDictionary];
+                               constraintsWithVisualFormat:@"V:[topGuide]-5-[photoDescView(80)]" options:0 metrics:nil views:viewDictionary];
     // ######  NOTE: V:|[topGUide]... is wrong, do not need | with top/bottom guide
     [self.view addConstraints:topConstraints];
-    [UIView animateWithDuration:0.5
-                     animations:^{
-                         [self.view layoutIfNeeded];
-                     } completion:nil];
-    
+
     photoDescView.backgroundColor = [UIColor colorWithRed: 0 green: 0 blue: 0 alpha: 0.5];
     photoDescView.textColor = [UIColor whiteColor];
     //photoDescView.textAlignment = NSTextAlignmentCenter;
@@ -163,14 +161,8 @@ UIView *descEditorContentView;
     
     [self.view addSubview:shareIconView];
     [self.view addSubview:shareCountLabel];
-    [self.view addSubview:photoDescView];
-    shareCountLabel.hidden = true;
     
-    sortIdexLabel = [[UILabel alloc] initWithFrame:CGRectMake(50, [ATConstants screenHeight] - 140 , 120, 30)];
-    sortIdexLabel.backgroundColor = [UIColor colorWithRed: 0.55 green: 0.55 blue: 0.55 alpha: 0.5];
-    sortIdexLabel.textColor = [UIColor whiteColor];
-    [self.view addSubview:sortIdexLabel];
-    sortIdexLabel.hidden = true;
+    shareCountLabel.hidden = true;
     
     [self showHideIcons:[ATEventEditorTableController selectedPhotoIdx]];
 }
