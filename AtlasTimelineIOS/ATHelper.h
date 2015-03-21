@@ -40,6 +40,7 @@
 + (BOOL)isBCDate:(NSDate*)date;
 + (NSDictionary*) getScaleStartEndDate:(NSDate*)focusedDate;
 + (BOOL) isAtLeast8;
++ (BOOL) isAtLeastIOS8;
 
 // file/photos related
 + (void) createPhotoDocumentoryPath;

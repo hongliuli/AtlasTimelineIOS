@@ -874,7 +874,7 @@
     CGRect timeZoomLineFrame;
     int timeWindowWidth = [ATConstants timeScrollWindowWidth];
     int timeWindowX = [ATConstants timeScrollWindowX];
-    timeZoomLineFrame = CGRectMake(timeWindowX - 15,self.view.bounds.size.height - [ATConstants timeScrollWindowHeight] - 18, timeWindowWidth + 30,10);
+    timeZoomLineFrame = CGRectMake(timeWindowX - 15,self.view.bounds.size.height - [ATConstants timeScrollWindowHeight], timeWindowWidth + 30,30);
     if (self.timeZoomLine != nil)
         [self.timeZoomLine removeFromSuperview]; //incase orientation change
     self.timeZoomLine = [[ATTimeZoomLine alloc] initWithFrame:timeZoomLineFrame];
@@ -1018,7 +1018,7 @@
 {
     int timeWindowY = self.view.bounds.size.height - [ATConstants timeScrollWindowHeight];
     int timeLineY = timeWindowY - 18;
-    [UIView animateWithDuration:0.5
+    [UIView animateWithDuration:0.3
                           delay:0.0
                         options:UIViewAnimationCurveEaseOut
                      animations:^(void) {
@@ -1045,7 +1045,7 @@
 - (void) animatedShowPart1
 {
     int timeWindowY = self.view.bounds.size.height - [ATConstants timeScrollWindowHeight];
-    int timeLineY = timeWindowY - 18;
+    int timeLineY = timeWindowY;
     [UIView animateWithDuration:0.3
                           delay:0.0
                         options:UIViewAnimationCurveEaseOut
