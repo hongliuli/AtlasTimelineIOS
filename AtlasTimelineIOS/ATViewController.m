@@ -1017,7 +1017,7 @@
 - (void) animatedHidePart1
 {
     int timeWindowY = self.view.bounds.size.height - [ATConstants timeScrollWindowHeight];
-    int timeLineY = timeWindowY - 18;
+    int timeLineY = timeWindowY;
     [UIView animateWithDuration:0.3
                           delay:0.0
                         options:UIViewAnimationCurveEaseOut
