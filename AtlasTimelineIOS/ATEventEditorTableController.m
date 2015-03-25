@@ -199,7 +199,7 @@ forRowAtIndexPath: (NSIndexPath*)indexPath
         [customView addSubview:label];
         
         UIButton *shareButton = [UIButton buttonWithType:UIButtonTypeCustom];
-        shareButton.frame = CGRectMake(310, 0, 40, 30);
+        shareButton.frame = CGRectMake(310, 0, 30, 30);
         [shareButton setImage:[UIImage imageNamed:@"share.png"] forState:UIControlStateNormal];
         [shareButton addTarget:self action:@selector(shareButtonAction:) forControlEvents:UIControlEventTouchUpInside];
         [customView addSubview:shareButton];
