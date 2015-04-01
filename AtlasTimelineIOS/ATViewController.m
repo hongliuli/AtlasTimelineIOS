@@ -11,8 +11,10 @@
 #define ALERT_FOR_SAVE 1
 #define ALERT_FOR_POPOVER_ERROR 2
 #define ALERT_FOR_DIRECTION_MODE 3
+#define ALERT_FOR_NEW_APP 4
 
 #define PHOTO_META_FILE_NAME @"MetaFileForOrderAndDesc"
+#define ALERT_FOR_SYNC_PROMPT_DISABLE 999
 
 #import <QuartzCore/QuartzCore.h>
 
@@ -232,6 +234,27 @@
     switchEventListViewModeToVisibleOnMapFlag = false;
     eventListInVisibleMapArea = nil;
     [self refreshEventListView:false];
+    
+    NSUserDefaults* userDefault = [NSUserDefaults standardUserDefaults];
+    if ( ![@"霞客行" isEqualToString:NSLocalizedString(@"Chronicle Map",nil)]) //China has no access to Flickr/Picasa
+    {
+        if ([userDefault objectForKey:@"ALERT_FOR_SYNC_PROMPT_DISABLE"] == nil)
+        {
+            UIAlertView *alert = [[UIAlertView alloc] initWithTitle:NSLocalizedString(@"New Apps for Flickr/Picasaweb/Facebook photo users !",nil)
+                                                            message:@"We strongly recommend you to use our new apps listed below if you store photos on Flickr, Picasaweb or Facebook Albums:\n   "
+                                                           delegate:self
+                                                  cancelButtonTitle:NSLocalizedString(@"OK",nil)
+                                                  otherButtonTitles:nil];
+            [alert addButtonWithTitle:@"Flickrface"];
+            [alert addButtonWithTitle:@"Picasaface"];
+            [alert addButtonWithTitle:@"FB Album (coming soon)"];
+            [alert addButtonWithTitle:@"Don't Remind Me"];
+            alert.tag = ALERT_FOR_NEW_APP;
+            [alert show];
+        }
+    }
+    
+    //[userDefault removeObjectForKey:@"ALERT_FOR_SYNC_PROMPT_DISABLE"];
 
 }
 -(void) viewDidAppear:(BOOL)animated
@@ -590,6 +613,31 @@
     
 }
 - (void)alertView:(UIAlertView *)alertView clickedButtonAtIndex:(NSInteger)buttonIndex {
+    if (alertView.tag == ALERT_FOR_NEW_APP)
+    {
+        if (buttonIndex == 0) //OK
+        {
+            return;
+        }
+        if (buttonIndex == 1) //Flickrface
+        {
+            [[UIApplication sharedApplication] openURL:[NSURL URLWithString:@"https://itunes.apple.com/us/app/flickrface-flickr-on-timeline/id962157378?ls=1&mt=8"]];
+        }
+        if (buttonIndex == 2) //Picasaface
+        {
+            [[UIApplication sharedApplication] openURL:[NSURL URLWithString:@"https://itunes.apple.com/us/app/picasaface-chronicle-your/id973202980?ls=1&mt=8"]];
+        }
+        if (buttonIndex == 3) //Facebook
+        {
+            //NSLog(@"3");
+        }
+        if (buttonIndex == 4) //No reminder
+        {
+            NSUserDefaults* userDefault = [NSUserDefaults standardUserDefaults];
+            [userDefault setObject:@"dummy" forKey:@"ALERT_FOR_SYNC_PROMPT_DISABLE"];
+        }
+        return;
+    }
     if (alertView.tag == ALERT_FOR_DIRECTION_MODE)
     {
         if (buttonIndex == 0)
