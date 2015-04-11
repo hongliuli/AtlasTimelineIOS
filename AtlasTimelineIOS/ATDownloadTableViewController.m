@@ -5,7 +5,6 @@
 //  Created by Hong on 2/17/13.
 //  Copyright (c) 2013 hong. All rights reserved.
 //
-#define DOWNLOAD_START_ALERT 1
 #define DOWNLOAD_REPLACE_MY_SOURCE_ALERT 2
 #define DOWNLOAD_AGAIN_ALERT 3
 #define DOWNLOAD_CONFIRM 4
@@ -176,7 +175,7 @@ int swipPromptCount;
 
         if (swipPromptCount >= 1)
         {
-            UIAlertView *alert = [[UIAlertView alloc] initWithTitle:NSLocalizedString(@"Please swipe right",nil) message:[NSString stringWithFormat:@""] delegate:nil cancelButtonTitle:NSLocalizedString(@"OK",nil) otherButtonTitles:nil];
+            UIAlertView *alert = [[UIAlertView alloc] initWithTitle:NSLocalizedString(@"Please swipe left",nil) message:[NSString stringWithFormat:@""] delegate:nil cancelButtonTitle:NSLocalizedString(@"OK",nil) otherButtonTitles:nil];
             [alert show];
             swipPromptCount = 0;
         }
@@ -190,19 +189,18 @@ int swipPromptCount;
 - (void)swipeableTableViewCell:(SWTableViewCell *)cell didTriggerRightUtilityButtonWithIndex:(NSInteger)index {
     int row = cell.tag;
     selectedAtlasName = filteredList[row];
+    if ([selectedAtlasName hasPrefix:@"1*"])
+        selectedAtlasName = [selectedAtlasName substringFromIndex:2];
+    NSString* tmpAtlasName = selectedAtlasName;
+    if ([tmpAtlasName rangeOfString:@"*"].location != NSNotFound)
+    {
+        NSArray* nameList = [tmpAtlasName componentsSeparatedByString:@"*"];
+        tmpAtlasName = nameList[0];
+        
+    }
     switch (index) {
         case 0:
         {
-            if ([selectedAtlasName hasPrefix:@"1*"])
-                selectedAtlasName = [selectedAtlasName substringFromIndex:2];
-            NSString* tmpAtlasName = selectedAtlasName;
-            if ([tmpAtlasName rangeOfString:@"*"].location != NSNotFound)
-            {
-                NSArray* nameList = [tmpAtlasName componentsSeparatedByString:@"*"];
-                tmpAtlasName = nameList[0];
-
-            }
-            
             UIAlertView *alert = [[UIAlertView alloc]initWithTitle: [NSString stringWithFormat:NSLocalizedString(@"Delete [%@] From Server",nil),tmpAtlasName]
                                                            message: NSLocalizedString(@"If you have downloaded it before, the offline one will stay until you remove the app. Are you sure to delete it from server?",nil)
                                                           delegate: self
@@ -215,11 +213,9 @@ int swipPromptCount;
         }
         case 1:
         {
-            if ([selectedAtlasName hasPrefix:@"1*"])
-                selectedAtlasName = [selectedAtlasName substringFromIndex:2];
             if ([cell.textLabel.textColor isEqual:[UIColor lightGrayColor]])
             {
-                UIAlertView *alert = [[UIAlertView alloc]initWithTitle: [NSString stringWithFormat:NSLocalizedString(@"%@ was downloaded before",nil),selectedAtlasName]
+                UIAlertView *alert = [[UIAlertView alloc]initWithTitle: [NSString stringWithFormat:NSLocalizedString(@"%@ was downloaded before",nil),tmpAtlasName]
                                                                message: NSLocalizedString(@"Are you sure to replace your offline copy?",nil)
                                                               delegate: self
                                                      cancelButtonTitle:NSLocalizedString(@"Cancel",nil)
@@ -229,13 +225,7 @@ int swipPromptCount;
             }
             else
             {
-                UIAlertView *alert = [[UIAlertView alloc]initWithTitle: [NSString stringWithFormat:NSLocalizedString(@"Import %@",nil),selectedAtlasName]
-                                                               message: NSLocalizedString(@"Import may take a few minutes, continue?.",nil)
-                                                              delegate: self
-                                                     cancelButtonTitle:NSLocalizedString(@"Cancel",nil)
-                                                     otherButtonTitles:NSLocalizedString(@"Continue",nil),nil];
-                alert.tag = DOWNLOAD_START_ALERT;
-                [alert show];
+                [self startDownload];
                 
             }
 
@@ -290,7 +280,7 @@ int swipPromptCount;
         }
         else
         {
-            if (alertView.tag == DOWNLOAD_START_ALERT || alertView.tag == DOWNLOAD_AGAIN_ALERT)
+            if ( alertView.tag == DOWNLOAD_AGAIN_ALERT)
                 [self startDownload];
             if (alertView.tag == DOWNLOAD_REPLACE_MY_SOURCE_ALERT )
             {
@@ -333,8 +323,15 @@ int swipPromptCount;
     NSError* error;
     downloadedJson = [NSJSONSerialization JSONObjectWithData:downloadedData options:kNilOptions error:&error];
     
-    UIAlertView *alert = [[UIAlertView alloc]initWithTitle: [NSString stringWithFormat:NSLocalizedString(@"Downloaded %@ has %i events",nil),selectedAtlasName,[downloadedJson count]]
-                                message: [NSString stringWithFormat:NSLocalizedString(@"WARNING: Local %@'s %@ events will be replaced!",nil),selectedAtlasName,displayLocalCnt]
+    NSString* tmpAtlasName = selectedAtlasName;
+    if ([tmpAtlasName rangeOfString:@"*"].location != NSNotFound)
+    {
+        NSArray* nameList = [tmpAtlasName componentsSeparatedByString:@"*"];
+        tmpAtlasName = nameList[0];
+        
+    }
+    UIAlertView *alert = [[UIAlertView alloc]initWithTitle: [NSString stringWithFormat:NSLocalizedString(@"[%@] has %i events",nil),tmpAtlasName,[downloadedJson count]]
+                                message: [NSString stringWithFormat:NSLocalizedString(@"WARNING: Local %@'s %@ events will be replaced!",nil),tmpAtlasName,displayLocalCnt]
                                 delegate: self
                                 cancelButtonTitle:NSLocalizedString(@"Cancel",nil)
                                 otherButtonTitles:NSLocalizedString(@"Replace",nil),nil];
