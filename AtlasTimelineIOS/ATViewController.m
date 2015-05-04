@@ -236,23 +236,23 @@
     [self refreshEventListView:false];
     
     NSUserDefaults* userDefault = [NSUserDefaults standardUserDefaults];
-    if ( ![@"霞客行" isEqualToString:NSLocalizedString(@"Chronicle Map",nil)]) //China has no access to Flickr/Picasa
-    {
+    //if ( ![@"霞客行" isEqualToString:NSLocalizedString(@"Chronicle Map",nil)]) //China has no access to Flickr/Picasa
+    //{
         if ([userDefault objectForKey:@"ALERT_FOR_SYNC_PROMPT_DISABLE"] == nil)
         {
-            UIAlertView *alert = [[UIAlertView alloc] initWithTitle:NSLocalizedString(@"New Apps for Flickr/Picasaweb/Facebook photo users !",nil)
-                                                            message:@"We strongly recommend you to use our new apps listed below if you store photos on Flickr, Picasaweb or Facebook Albums:\n   "
+            UIAlertView *alert = [[UIAlertView alloc] initWithTitle:NSLocalizedString(@"This app is best used as a trip, event and photo organizer. If you store photos on Flickr, Picasa or Facebook you can use below apps instead:",nil)
+                                                            message:@""
                                                            delegate:self
                                                   cancelButtonTitle:NSLocalizedString(@"OK",nil)
                                                   otherButtonTitles:nil];
-            [alert addButtonWithTitle:@"Flickrface"];
-            [alert addButtonWithTitle:@"Picasaface"];
-            [alert addButtonWithTitle:@"FB Album (coming soon)"];
-            [alert addButtonWithTitle:@"Don't Remind Me"];
+            [alert addButtonWithTitle:@"For  Flickr"];
+            [alert addButtonWithTitle:@"For Picasa"];
+            [alert addButtonWithTitle:@"For Facebook"];
+            [alert addButtonWithTitle:NSLocalizedString(@"Don't Remind Me",nil)];
             alert.tag = ALERT_FOR_NEW_APP;
             [alert show];
         }
-    }
+    //}
     
     //[userDefault removeObjectForKey:@"ALERT_FOR_SYNC_PROMPT_DISABLE"];
 
@@ -629,7 +629,13 @@
         }
         if (buttonIndex == 3) //Facebook
         {
-            //NSLog(@"3");
+            UIAlertView *alert = [[UIAlertView alloc] initWithTitle:NSLocalizedString(@"Coming Soon!",nil)
+                                                            message:NSLocalizedString(@"",nil)
+                                                           delegate:nil
+                                                  cancelButtonTitle:NSLocalizedString(@"OK",nil)
+                                                  otherButtonTitles:nil];
+            [alert show];
+            
         }
         if (buttonIndex == 4) //No reminder
         {
@@ -911,13 +917,22 @@
         appDelegate.focusedDate = [[NSDate alloc] init];
     [self.timeScrollWindow setNewFocusedDateFromAnnotation:appDelegate.focusedDate needAdjusted:FALSE];
     
+    //TODO tmpXcode5ScreenWidth should be decommissioned when use xcode6
+    UIInterfaceOrientation orientation = [UIApplication sharedApplication].statusBarOrientation;
+    int tmpXcode5ScreenWidth = [[UIScreen mainScreen] bounds].size.width;
+    if (orientation == UIInterfaceOrientationLandscapeLeft || orientation == UIInterfaceOrientationLandscapeRight) {
+        tmpXcode5ScreenWidth = [[UIScreen mainScreen] bounds].size.height;
+    }
+
+    
     //NOTE the trick to set background image for a bar buttonitem
     if (locationbtn == nil)
         locationbtn = [UIButton buttonWithType:UIButtonTypeCustom];
     else
         [locationbtn removeFromSuperview];
-    locationbtn.frame = CGRectMake([ATConstants screenWidth] - 50, 90, 30, 30);
-    [locationbtn setImage:[UIImage imageNamed:@"currentLocation.jpg"] forState:UIControlStateNormal];
+    //locationbtn.frame = CGRectMake([ATConstants screenWidth] - 50, 90, 30, 30);
+    locationbtn.frame = CGRectMake(tmpXcode5ScreenWidth - 50, 90, 30, 30);
+    [locationbtn setImage:[UIImage imageNamed:@"currentLocation.png"] forState:UIControlStateNormal];
     [locationbtn addTarget:self action:@selector(currentLocationClicked:) forControlEvents:UIControlEventTouchUpInside];
     [self.mapView addSubview:locationbtn];
     
