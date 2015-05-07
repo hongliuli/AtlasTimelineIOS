@@ -615,6 +615,19 @@ UIPopoverController *verifyViewPopover;
     NSString *version = [[UIDevice currentDevice] systemVersion];
     return [version compare:@"8.0" options:NSNumericSearch] != NSOrderedAscending;
 }
+
++ (BOOL) isPOIEvent:(ATEventDataStruct*) evt
+{
+    return [self isPOIEventByDate:evt.eventDate];
+}
++ (BOOL) isPOIEventByDate:(NSDate*)eventDate
+{
+    ATAppDelegate *appDelegate = (ATAppDelegate *)[[UIApplication sharedApplication] delegate];
+    NSDateFormatter* fmt = appDelegate.dateFormater;
+    NSDate* date = [fmt dateFromString:@"1/1/0001 AD"];
+    return [eventDate isEqualToDate:date]; //NOTE: poi event always has 1/1/0001 as event date
+}
+
 //---- set/get options
 + (BOOL) getOptionDateFieldKeyboardEnable
 {

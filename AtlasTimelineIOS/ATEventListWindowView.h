@@ -11,5 +11,5 @@
 
 @interface ATEventListWindowView: UIView <UITableViewDelegate, UITableViewDataSource,UIScrollViewDelegate>
 @property (nonatomic, retain) UITableView *tableView;
-- (void) refresh:(NSMutableArray*)eventList :(BOOL)eventListViewInMapModeFlag;
+- (void) refresh:(NSMutableArray*)eventList :(BOOL)eventListViewInMapModeFlag :(BOOL)callFromScrollTimewheel;
 @end

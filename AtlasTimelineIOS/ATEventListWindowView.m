@@ -83,7 +83,8 @@ UIFont *boldFont;
     //NSLog(@" ===== cellForRow %d  internalList count %d ",indexPath.row, [internalEventList count]);
     
     ATEventDataStruct* evt = internalEventList[indexPath.row];
-    //REMEMBER internalEventList has added row to first and last for arrow button (code
+    //REMEMBER internalEventList has added row to first and last for arrow button (code refresh() method to add two rows
+    /* Do not show up-down arrow
     if (indexPath.row == 0) // first one is up arrow
     {
         UITableViewCell* cell = [[UITableViewCell alloc] initWithFrame:CGRectMake(0, 0, [ATConstants eventListViewCellWidth], 40)];
@@ -118,7 +119,7 @@ UIFont *boldFont;
         cell.backgroundColor= [UIColor clearColor];
         return cell;
     }
-    
+    */
     ATEventListViewCell* cell = [tableView dequeueReusableCellWithIdentifier:@"Cell"];
     //ATEventListViewCell *cell = nil;
     if (cell == nil)
@@ -144,6 +145,14 @@ UIFont *boldFont;
     }
     NSString* titleStr = @"";
     NSString* descToDisplay = [NSString stringWithFormat:@"%@\n%@",dateStr, descStr ];
+    
+    if ([ATHelper isPOIEvent:evt])
+    {
+        int titleEndLocation = [descStr rangeOfString:@"\n"].location;
+        titleStr = [descStr substringToIndex:titleEndLocation];
+        cell.eventDescView.text = titleStr;
+        return cell;
+    }
     
     NSMutableAttributedString *attString=[[NSMutableAttributedString alloc] initWithString:descToDisplay];
     [attString addAttribute:NSForegroundColorAttributeName value:greyColor range:NSMakeRange(0, [dateStr length])];
@@ -187,6 +196,7 @@ UIFont *boldFont;
 }
 - (CGFloat)tableView:(UITableView *)tableView heightForRowAtIndexPath:(NSIndexPath *)indexPath
 {
+    /* Do not show up-down arrow
     if (indexPath.row == 0 || indexPath.row == [internalEventList count] - 1)
     {
         //Do not show arrow button if reach last or begin of events
@@ -196,7 +206,14 @@ UIFont *boldFont;
             return 40;
     }
     else
+     */
+    {
+        ATEventDataStruct* evt = internalEventList[indexPath.row];
+        if ([ATHelper isPOIEvent:evt])
+            return 30;
+        else
         return [ATConstants eventListViewCellHeight];
+    }
 }
 
 - (BOOL) shouldHideArrowButtonRow:(int)row
@@ -226,6 +243,7 @@ UIFont *boldFont;
     ATViewController* mapView = appDelegate.mapViewController;
     ATEventDataStruct* evt = internalEventList[indexPath.row];
     
+    /* Do not show up-down arrow
     if (indexPath.row == 0) //tapped on up arrow button
     {
         //NSLog(@"******* up arrow, find previouse event to scroll to");
@@ -246,7 +264,9 @@ UIFont *boldFont;
         [mapView setNewFocusedDateAndUpdateMapWithNewCenter : evt :-1]; //do not change map zoom level
         [mapView refreshEventListView:false];
     }
-    else{ //Do not change focused event for up/down arrow cause
+    else
+     */
+    { //Do not change focused event for up/down arrow cause
         
         appDelegate.focusedDate = evt.eventDate;
         appDelegate.focusedEvent = evt;  //appDelegate.focusedEvent is added when implement here
@@ -268,19 +288,25 @@ UIFont *boldFont;
     
 }
 
-- (void) refresh:(NSMutableArray*)eventList :(BOOL)eventListViewInMapModeFlagArg //called by mapview::refreshEventListView()
+- (void) refresh:(NSMutableArray*)eventList :(BOOL)eventListViewInMapModeFlagArg :(BOOL)callFromTimewheel //called by mapview::refreshEventListView()
 {
     eventListViewInMapModeFlag = eventListViewInMapModeFlagArg;
     ATAppDelegate *appDelegate = (ATAppDelegate *)[[UIApplication sharedApplication] delegate];
+    /* Do not show up-down arrow
     [eventList addObject:[[ATEventDataStruct alloc] init]];
     [eventList insertObject:[[ATEventDataStruct alloc] init] atIndex:0];
+     */
     internalEventList = eventList;
     [self.tableView reloadData];
     [self.tableView layoutIfNeeded]; //must have for following work
     if (appDelegate.focusedEvent == nil)
         return;
+    /* Do not show up-down arrow
     int selectedEventIdx = 1; //previouse is 0. after add Up/Down arrow cell, change to 1 is better
     for (int i=1; i< [eventList count] - 1; i++)
+     */
+    int selectedEventIdx = 0;
+    for (int i=0; i< [eventList count]; i++)
     {
         ATEventDataStruct* evt = eventList[i];
         if ([evt.uniqueId isEqual:appDelegate.focusedEvent.uniqueId])
@@ -289,7 +315,7 @@ UIFont *boldFont;
             break;
         }
     }
-    if (selectedEventIdx < [internalEventList count])
+    if (selectedEventIdx < [internalEventList count] && callFromTimewheel)
         [self.tableView scrollToRowAtIndexPath: [NSIndexPath indexPathForRow:selectedEventIdx inSection:0]
                               atScrollPosition:UITableViewScrollPositionMiddle animated:YES];
 }

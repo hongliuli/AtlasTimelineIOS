@@ -23,10 +23,11 @@
 @property(strong, nonatomic) NSMutableDictionary* uniqueIdToEventMap;
 @property(strong, nonatomic) NSMutableArray* friendList; //just put here to pass it from friendPickerView to friendAddView
 @property(strong, nonatomic) NSString* episodeToBeShared;//just to pass it to FriendPickerView
-@property int selectedPeriodInDays;
+@property(nonatomic)int selectedPeriodInDays;
 @property(strong, nonatomic) NSDate* focusedDate;
 @property(strong, nonatomic) ATEventDataStruct* focusedEvent;
 @property(strong, nonatomic) UIStoryboard* storyBoard;
+@property(nonatomic) int zoomLevel; //set in regionDid..., used by eventViewScrollWindow for more efficently get zoom level
 
 @property NSString* optionEnableDateMagnifierMove;
 

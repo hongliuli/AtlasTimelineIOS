@@ -12,6 +12,7 @@
 #define ALERT_FOR_POPOVER_ERROR 2
 #define ALERT_FOR_DIRECTION_MODE 3
 #define ALERT_FOR_NEW_APP 4
+#define MAX_NUMBER_OF_POI_IN_EVENT_VIEW 10
 
 #define PHOTO_META_FILE_NAME @"MetaFileForOrderAndDesc"
 #define ALERT_FOR_SYNC_PROMPT_DISABLE 999
@@ -21,6 +22,7 @@
 #import "ATViewController.h"
 #import "ATDefaultAnnotation.h"
 #import "ATAnnotationSelected.h"
+#import "ATAnnotationPoi.h"
 #import "ATAnnotationFocused.h"
 #import "ATDataController.h"
 #import "ATEventEntity.h"
@@ -44,6 +46,7 @@
 #define MERCATOR_RADIUS 85445659.44705395
 #define ZOOM_LEVEL_TO_HIDE_DESC 4
 #define ZOOM_LEVEL_TO_HIDE_EVENTLIST_VIEW 5
+#define ZOOM_LEVEL_TO_HIDE_POI_IN_EVENTLIST_VIEW 7
 #define ZOOM_LEVEL_TO_SEND_WHITE_FLAG_BEHIND_IN_REGION_DID_CHANGE 9
 
 #define DISTANCE_TO_HIDE 80
@@ -150,6 +153,10 @@
     NSArray* _topDistanceLblCon; //will animated on this
     NSTimer* _timerDirectionRouteDisplay;
     CLLocationCoordinate2D currentCenterCoordinate;
+    
+    NSMutableArray* poiList;
+    NSMutableDictionary* poiAnnViewDic; //uniqueId->annView, need this because select an poi from event list view will not refresh poi ann (for regualar event, refresh occurs every time select)
+    MKAnnotationView* prevSelectedPoiAnnView;
 }
 
 @synthesize mapView = _mapView;
@@ -174,6 +181,23 @@
        // [self.locationManager requestAlwaysAuthorization];
     }
     
+    ATAppDelegate *appDelegate = (ATAppDelegate *)[[UIApplication sharedApplication] delegate];
+    NSDateFormatter* fmt = appDelegate.dateFormater;
+    NSDate* poiDate = [fmt dateFromString:@"01/01/0001 AD"];
+    if (poiList == nil)
+        poiList = [[NSMutableArray alloc] init];
+    for (int i = 0; i<=1000; i ++)
+    {
+        ATEventDataStruct* evt = [[ATEventDataStruct alloc] init];
+        int r = arc4random() % 100000000;
+        printf("Random number: %u", r);
+        evt.uniqueId = [NSString stringWithFormat:@"%d", r];
+        evt.eventDate = poiDate;
+        evt.eventDesc = [NSString stringWithFormat:@"title %d\ndesc for %d",r,r];
+        evt.lat = arc4random() % 90;
+        evt.lng = arc4random() % 180;
+        [poiList addObject:evt];
+    }
     self.mapViewShowWhatFlag = MAPVIEW_SHOW_ALL;
     int searchBarHeight = [ATConstants searchBarHeight];
     int searchBarWidth = [ATConstants searchBarWidth];
@@ -280,6 +304,21 @@
         [self.mapView addSubview:eventListView];
     }
     [self refreshEventListView:false];
+    
+    //add poi
+    for (ATEventDataStruct* ent in poiList)
+    {
+        CLLocationCoordinate2D coord = CLLocationCoordinate2DMake((CLLocationDegrees)ent.lat, (CLLocationDegrees)ent.lng);
+        ATAnnotationPoi *eventAnnotation = [[ATAnnotationPoi alloc] initWithLocation:coord];
+        eventAnnotation.uniqueId = ent.uniqueId;
+        if (ent.eventDate == nil)
+            NSLog(@"---- nil date");
+        eventAnnotation.address = ent.address;
+        eventAnnotation.description=ent.eventDesc;
+        eventAnnotation.eventDate=ent.eventDate;
+        eventAnnotation.eventType = ent.eventType;
+        [self.mapView addAnnotation:eventAnnotation];
+    }
 }
 
 -(void)setSwitchButtonTimeMode
@@ -1154,6 +1193,12 @@
         return;
     if ([gestureRecognizer numberOfTouches] == 1)
     {
+        if (prevSelectedPoiAnnView != nil)
+        {
+            UIView* poiView = [prevSelectedPoiAnnView viewWithTag:9991];
+            if (poiView != nil)
+               [poiView removeFromSuperview];
+        }
         [self mapViewShowHideAction];
     }
 }
@@ -1242,6 +1287,32 @@
 - (MKAnnotationView *)mapView:(MKMapView *)theMapView viewForAnnotation:(id <MKAnnotation>)annotation
 {
     ATDefaultAnnotation* ann = (ATDefaultAnnotation*)annotation;
+    
+    if ([annotation isKindOfClass:[ATAnnotationPoi class]]){
+        //if ([self zoomLevel] <= ZOOM_LEVEL_TO_HIDE_EVENTLIST_VIEW)
+         //   return nil; //this will return a standard pin, which is not what I want
+
+        NSString* poiAnnImageFile = @"small-red-ball-icon.png";
+        MKAnnotationView* annView = (MKAnnotationView *) [self.mapView dequeueReusableAnnotationViewWithIdentifier:poiAnnImageFile];
+
+        if (!annView)
+        {
+            annView = [[MKAnnotationView alloc]
+                                               initWithAnnotation:annotation reuseIdentifier:poiAnnImageFile];
+
+            UIImage *markerImage = [UIImage imageNamed:poiAnnImageFile];
+            annView.image = markerImage;
+            //[annView addSubview:numberLabel];
+        }
+        
+        annView.annotation = annotation;
+        if (poiAnnViewDic == nil)
+            poiAnnViewDic = [[NSMutableDictionary alloc] init];
+        
+        [poiAnnViewDic setObject:annView forKey:ann.uniqueId];
+        
+        return annView;
+    }
     
     
     // Following will filter out MKUserLocation annotation
@@ -1526,6 +1597,8 @@
     {
         [self updateEventListViewWithEventsOnMap];
     }
+    else
+        [self updateEventListViewWithPoiOnMapOnly];
     //******************
     
     if (animated) //means not caused by user scroll on map
@@ -1540,9 +1613,20 @@
     [self.mapView bringSubviewToFront:eventListView]; //so eventListView will always cover map marker photo/txt icon (tmpLbl)
     
     //show annotation info window programmatically, especially for when select on event list view
-    if (selectedEventAnnInEventListView != nil)
+    //Also show poi view programmatically for select an poi from event list view
+    //  Both has two different condition because poi ann list will never refresh so viewForAnnotation will not be called
+    if (currentSelectedEvent != nil)
     {
-        [self.mapView selectAnnotation:selectedEventAnnInEventListView.annotation animated:YES];
+        if (selectedEventAnnInEventListView != nil) //for select event from view list come here
+        {
+            ATEventAnnotation* ann = selectedEventAnnInEventListView.annotation;
+            [self.mapView selectAnnotation:ann animated:YES];
+        }
+        else if ([ATHelper isPOIEvent:currentSelectedEvent])
+        {
+            MKAnnotationView* selectedPoiAnnEventInEventListView = [poiAnnViewDic objectForKey:currentSelectedEvent.uniqueId ];
+            [self displayPOIView:selectedPoiAnnEventInEventListView];
+        }
         
         self.timeScrollWindow.hidden=false;
         eventListView.hidden = false;
@@ -1556,11 +1640,31 @@
         currentSelectedEvent = nil;
     }
     //bookmark zoom level so app restart will restore state
+    int currentZoomLevel = [self zoomLevel];
+    ATAppDelegate *appDelegate = (ATAppDelegate *)[[UIApplication sharedApplication] delegate];
+    appDelegate.zoomLevel = currentZoomLevel;
     NSUserDefaults* userDefault = [NSUserDefaults standardUserDefaults];
-    [userDefault setObject:[NSString stringWithFormat:@"%d",[self zoomLevel] ] forKey:@"BookmarkMapZoomLevel"];
+    [userDefault setObject:[NSString stringWithFormat:@"%d",currentZoomLevel] forKey:@"BookmarkMapZoomLevel"];
     [userDefault synchronize];
     
 }
+-(void) displayPOIView:(MKAnnotationView*)selectedPoiAnnEventInEventListView
+{
+    int poiViewWidth = 200;
+    int poiViewHeidht = 220;
+    UIView* poiView = [[UIView alloc] initWithFrame:CGRectMake(- poiViewWidth / 2,- poiViewHeidht, poiViewWidth, poiViewHeidht)];
+    [poiView setBackgroundColor:[UIColor colorWithPatternImage:[UIImage imageNamed:@"help.png"]]];
+    [poiView setTag:9991];
+    [selectedPoiAnnEventInEventListView addSubview:poiView];
+    if (prevSelectedPoiAnnView != nil && prevSelectedPoiAnnView != selectedPoiAnnEventInEventListView)
+    {
+        UIView* removeView = [prevSelectedPoiAnnView viewWithTag:9991];
+        if (removeView != nil)
+            [removeView removeFromSuperview];
+    }
+    prevSelectedPoiAnnView = selectedPoiAnnEventInEventListView;
+}
+
 //////// From WWDC 2013 video "Map Kit in Perspective"
 -(void)goToNextCamera
 {
@@ -1678,16 +1782,34 @@
         
         //big performance hit
         ATAppDelegate *appDelegate = (ATAppDelegate *)[[UIApplication sharedApplication] delegate];
-        for(MKAnnotationView* annView in nearbySet)
+        int eventStartPosition = 0;
+        for(ATEventAnnotation* annView in nearbySet)
         {
             if ([annView isKindOfClass:[MKUserLocation class]])
                 continue; //filter out MKUserLocation pin
-            ATDefaultAnnotation* ann = (ATDefaultAnnotation*)annView;
-            if (ann != nil && ann.uniqueId != nil)
+            ATEventAnnotation* ann = annView;
+            if ([ann isKindOfClass:[ATAnnotationPoi class]] && eventStartPosition <= MAX_NUMBER_OF_POI_IN_EVENT_VIEW)
             {
-                ATEventDataStruct* evt = [appDelegate.uniqueIdToEventMap objectForKey:ann.uniqueId];
-                if (evt != nil)
-                    [eventListInVisibleMapArea insertObject:evt atIndex:0];
+                ATEventDataStruct* evt = [[ATEventDataStruct alloc] init];
+                evt.uniqueId = ann.uniqueId;
+                evt.lat = ann.coordinate.latitude;
+                evt.lng = ann.coordinate.longitude;
+                evt.eventDate = ann.eventDate;
+                evt.eventDesc = ann.description;
+                evt.address = ann.address;
+                
+                [eventListInVisibleMapArea insertObject:evt atIndex:0];
+                eventStartPosition++;
+            }
+            else
+            {
+                ATDefaultAnnotation* ann = (ATDefaultAnnotation*)annView;
+                if (ann != nil && ann.uniqueId != nil)
+                {
+                    ATEventDataStruct* evt = [appDelegate.uniqueIdToEventMap objectForKey:ann.uniqueId];
+                    if (evt != nil)
+                        [eventListInVisibleMapArea insertObject:evt atIndex:eventStartPosition];
+                }
             }
         }
         
@@ -1695,6 +1817,47 @@
     if (eventListView.hidden == false)
         [self refreshEventListView:false];
 }
+
+- (void) updateEventListViewWithPoiOnMapOnly
+{
+    if (eventListInVisibleMapArea == nil)
+        eventListInVisibleMapArea = [[NSMutableArray alloc] init];
+    else
+        [eventListInVisibleMapArea removeAllObjects];
+    
+    if ([self zoomLevel] >= ZOOM_LEVEL_TO_HIDE_POI_IN_EVENTLIST_VIEW)
+    {
+        
+        NSSet *nearbySet = [self.mapView annotationsInMapRect:self.mapView.visibleMapRect];
+        
+        //big performance hit
+        int eventStartPosition = 0;
+        for(ATEventAnnotation* annView in nearbySet)
+        {
+            if ([annView isKindOfClass:[MKUserLocation class]])
+                continue; //filter out MKUserLocation pin
+            ATEventAnnotation* ann = annView;
+            if ([ann isKindOfClass:[ATAnnotationPoi class]] && eventStartPosition <= MAX_NUMBER_OF_POI_IN_EVENT_VIEW)
+            {
+                ATEventDataStruct* evt = [[ATEventDataStruct alloc] init];
+                evt.uniqueId = ann.uniqueId;
+                evt.lat = ann.coordinate.latitude;
+                evt.lng = ann.coordinate.longitude;
+                evt.eventDate = ann.eventDate;
+                evt.eventDesc = ann.description;
+                evt.address = ann.address;
+                
+                [eventListInVisibleMapArea insertObject:evt atIndex:0];
+                eventStartPosition++;
+            }
+        }
+        
+    }
+    if (eventListView.hidden == false)
+        [self refreshEventListView:false];
+}
+
+
 - (void) showDescriptionLabelViews:(MKMapView*)mapView
 {
     for (id key in selectedAnnotationSet) {
@@ -2024,6 +2187,10 @@
     ent.eventType = ann.eventType;
     ent.eventDesc = ann.description;
     ent.uniqueId = ann.uniqueId;
+    
+    if ([ATHelper isPOIEvent:ent])
+        return;
+    
     appDelegate.focusedEvent = ent;
     
     [self setNewFocusedDateAndUpdateMap:ent needAdjusted:TRUE]; //No reason, have to do focusedRow++ when focused a event in time wheel
@@ -2462,7 +2629,12 @@
     selectedAnnotationViewsFromDidAddAnnotation = nil;
     //NSLog(@"refreshAnnotation called");
     NSMutableArray * annotationsToRemove = [ self.mapView.annotations mutableCopy ] ;
-    //TODO filter out those annotation outside the periodRange ...
+    //DO not refresh POI events
+    for (ATEventAnnotation* ann in self.mapView.annotations)
+    {
+        if ([ann isKindOfClass:[ATAnnotationPoi class]])
+            [annotationsToRemove removeObject:ann];
+    }
     [ annotationsToRemove removeObject:self.mapView.userLocation ] ;
     [ self.mapView removeAnnotations:annotationsToRemove ] ;
     [self.mapView addAnnotations:annotationsToRemove];
@@ -3258,6 +3430,14 @@
         self.mapViewShowWhatFlag = MAPVIEW_SHOW_ALL;
     //self.mapViewShowWhatFlag ++;
     [self mapViewShowHideAction];
+    
+    //for POI annotation, show information directly
+    ATEventAnnotation* ann = [view annotation];
+    if ([ann isKindOfClass:[ATAnnotationPoi class]])
+    {
+        [self displayPOIView:view];
+
+    }
 }
 - (void)mapView:(MKMapView *)mapView didDeselectAnnotationView:(MKAnnotationView *)view
 {
@@ -3269,6 +3449,9 @@
         //self.mapViewShowWhatFlag ++;
         self.mapViewShowWhatFlag = 3;
     [self mapViewShowHideAction];
+    UIView* poiView = [view viewWithTag:9991];
+    if (poiView != nil)
+        [poiView removeFromSuperview];
 }
 
 - (double)longitudeToPixelSpaceX:(double)longitude
@@ -3358,6 +3541,8 @@
     if (callFromScrollTimewheel && switchEventListViewModeToVisibleOnMapFlag)
         return; //while in map eventListView mode, move timewheel will call this function as well, but do nothing. eventListInVisibleMapArea is set to nil in switch button action
     ATAppDelegate *appDelegate = (ATAppDelegate *)[[UIApplication sharedApplication] delegate];
+    if (appDelegate.selectedPeriodInDays == 0)
+        return; //TODO add this because call updateEventListViewWithPoiOnMapOnly() in regionDid.. will crash when start app
     int offset = 110;
     //try to move evetlistview to right side screenWidht - eventListViewCellWidth, but a lot of trouble, not know why
     //  even make x to 30, it will move more than 30, besides, not left side tap works
@@ -3367,7 +3552,7 @@
     
     NSMutableArray* eventListViewList = eventListInVisibleMapArea;
     
-    if (eventListInVisibleMapArea == nil && switchEventListViewModeToVisibleOnMapFlag == false) //it means eventlistView will show events inside timewheel period
+    if (switchEventListViewModeToVisibleOnMapFlag == false) //it means eventlistView will show events inside timewheel period
     {
         NSDictionary* scaleDateDic = [ATHelper getScaleStartEndDate:appDelegate.focusedDate];
         NSDate* scaleStartDay = [scaleDateDic objectForKey:@"START"];
@@ -3384,34 +3569,41 @@
         
         
         eventListViewList = [[NSMutableArray alloc] init];
-        
+
         int cnt = [allEventSortedList count];
-        if (cnt == 0 )
+        if (cnt == 0 && (eventListInVisibleMapArea == nil || [eventListInVisibleMapArea count] == 0) )
         {
             [eventListView setFrame:newFrame];
             [eventListView.tableView setFrame:newFrame];
-            [eventListView refresh:eventListViewList: switchEventListViewModeToVisibleOnMapFlag];
+            [eventListView refresh:eventListViewList: switchEventListViewModeToVisibleOnMapFlag :callFromScrollTimewheel];
             return;
         }
         ATEventDataStruct* latestEvent = allEventSortedList[0];
         ATEventDataStruct* earlistEvent = allEventSortedList[cnt -1];
         
         //case special: where startDate/EndDate range is totally outside the event date range, or even no event at all
-        if ([scaleStartDay compare:latestEvent.eventDate] == NSOrderedDescending || [scaleEndDay compare: earlistEvent.eventDate] == NSOrderedAscending)
+        if (([scaleStartDay compare:latestEvent.eventDate] == NSOrderedDescending || [scaleEndDay compare: earlistEvent.eventDate] == NSOrderedAscending)
+            &&  (eventListInVisibleMapArea == nil || [eventListInVisibleMapArea count] == 0) )
         {
             [eventListView setFrame:newFrame];
             [eventListView.tableView setFrame:newFrame];
-            [eventListView refresh: eventListViewList :switchEventListViewModeToVisibleOnMapFlag];
+            [eventListView refresh: eventListViewList :switchEventListViewModeToVisibleOnMapFlag :callFromScrollTimewheel];
             return;
         }
         //come here when there start/end date range has intersect with allEventSorted
         BOOL completeFlag = false;
+        int insertStartPosition = 0;
+        if  (eventListInVisibleMapArea != nil && [eventListInVisibleMapArea count] > 0)
+        {
+            [eventListViewList addObjectsFromArray:eventListInVisibleMapArea];
+            insertStartPosition = [eventListInVisibleMapArea  count];
+        }
         for (int i=0; i<cnt;i++)
         {
             ATEventDataStruct* evt = allEventSortedList[i];
             if ([self date:evt.eventDate isBetweenDate :scaleStartDay andDate:scaleEndDay])
             {
-                [eventListViewList insertObject:evt atIndex:0]; //so event will order by date in regular sequence
+                [eventListViewList insertObject:evt atIndex:insertStartPosition]; //so event will order by date in regular sequence
                 completeFlag = true;
             }
             else
@@ -3465,7 +3657,7 @@
     
     [eventListView.tableView setFrame:CGRectMake(0,0,newFrame.size.width,newFrame.size.height)];
     if (eventListViewList != nil)
-        [eventListView refresh: eventListViewList :switchEventListViewModeToVisibleOnMapFlag];
+        [eventListView refresh: eventListViewList :switchEventListViewModeToVisibleOnMapFlag :callFromScrollTimewheel];
 }
 
 - (BOOL)date:(NSDate*)date isBetweenDate:(NSDate*)beginDate andDate:(NSDate*)endDate

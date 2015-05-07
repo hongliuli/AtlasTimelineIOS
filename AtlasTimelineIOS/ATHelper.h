@@ -7,6 +7,7 @@
 //
 
 #import <Foundation/Foundation.h>
+#import "ATEventDataStruct.h"
 
 @interface ATHelper : NSObject
 + (BOOL)isStringNumber:(NSString*) numberStr;
@@ -41,6 +42,8 @@
 + (NSDictionary*) getScaleStartEndDate:(NSDate*)focusedDate;
 + (BOOL) isAtLeast8;
 + (BOOL) isAtLeastIOS8;
++ (BOOL) isPOIEvent:(ATEventDataStruct*)event;
++ (BOOL) isPOIEventByDate:(NSDate*)eventDate;
 
 // file/photos related
 + (void) createPhotoDocumentoryPath;
