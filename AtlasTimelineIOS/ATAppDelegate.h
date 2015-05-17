@@ -30,6 +30,7 @@
 @property(nonatomic) int zoomLevel; //set in regionDid..., used by eventViewScrollWindow for more efficently get zoom level
 
 @property NSString* optionEnableDateMagnifierMove;
+@property BOOL hideAddPhotoIconFlag; //an add-hoc way, but I have no other way
 
 -(void) emptyEventList;
 
