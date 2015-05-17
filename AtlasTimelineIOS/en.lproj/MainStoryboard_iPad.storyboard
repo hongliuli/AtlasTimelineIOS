@@ -1,11 +1,11 @@
 <?xml version="1.0" encoding="UTF-8" standalone="no"?>
-<document type="com.apple.InterfaceBuilder3.CocoaTouch.Storyboard.XIB" version="3.0" toolsVersion="6254" systemVersion="14C1510" targetRuntime="iOS.CocoaTouch.iPad" propertyAccessControl="none" initialViewController="ARr-NR-22L">
+<document type="com.apple.InterfaceBuilder3.CocoaTouch.Storyboard.XIB" version="3.0" toolsVersion="5056" systemVersion="14C1510" targetRuntime="iOS.CocoaTouch.iPad" propertyAccessControl="none" initialViewController="ARr-NR-22L">
     <dependencies>
-        <deployment identifier="iOS"/>
-        <plugIn identifier="com.apple.InterfaceBuilder.IBCocoaTouchPlugin" version="6247"/>
+        <deployment defaultVersion="1536" identifier="iOS"/>
+        <plugIn identifier="com.apple.InterfaceBuilder.IBCocoaTouchPlugin" version="3733"/>
     </dependencies>
     <scenes>
-        <!--Atlas View-->
+        <!--View Controller - Atlas View-->
         <scene sceneID="4">
             <objects>
                 <viewController title="Atlas View" id="2" customClass="ATViewController" sceneMemberID="viewController">
@@ -47,7 +47,7 @@
             </objects>
             <point key="canvasLocation" x="720" y="-415"/>
         </scene>
-        <!--Timeline View-->
+        <!--Timeline Table View Controller - Timeline View-->
         <scene sceneID="JHh-fb-iE6">
             <objects>
                 <tableViewController id="rCH-rC-6N0" customClass="ATimelineTableViewController" sceneMemberID="viewController">
@@ -337,7 +337,7 @@
             </objects>
             <point key="canvasLocation" x="6454" y="205"/>
         </scene>
-        <!--Download-->
+        <!--Download Table View Controller - Download-->
         <scene sceneID="6GU-PI-at9">
             <objects>
                 <tableViewController id="hQm-Dc-2QI" customClass="ATDownloadTableViewController" sceneMemberID="viewController">
@@ -383,7 +383,7 @@
             </objects>
             <point key="canvasLocation" x="4157" y="1618"/>
         </scene>
-        <!--Event Editor-->
+        <!--Event Editor Table Controller - Event Editor-->
         <scene sceneID="Uam-0j-sWY">
             <objects>
                 <tableViewController storyboardIdentifier="event_editor_id" title="Event Editor" id="20s-SR-c0I" customClass="ATEventEditorTableController" sceneMemberID="viewController">
@@ -512,7 +512,71 @@
                 </tableViewController>
                 <placeholder placeholderIdentifier="IBFirstResponder" id="Uph-yx-Hwg" userLabel="First Responder" sceneMemberID="firstResponder"/>
             </objects>
-            <point key="canvasLocation" x="1612" y="-2093"/>
+            <point key="canvasLocation" x="1524" y="-2153"/>
+        </scene>
+        <!--Event Editor Table Controller - Event Editor-->
+        <scene sceneID="fHe-vd-oRp">
+            <objects>
+                <tableViewController storyboardIdentifier="poi_editor_id" title="Event Editor" id="xcn-Dr-L1y" customClass="ATEventEditorTableController" sceneMemberID="viewController">
+                    <tableView key="view" clipsSubviews="YES" contentMode="scaleToFill" alwaysBounceVertical="YES" dataMode="static" style="grouped" separatorStyle="default" rowHeight="44" sectionHeaderHeight="10" sectionFooterHeight="10" id="0Vs-0E-fGS">
+                        <rect key="frame" x="0.0" y="0.0" width="768" height="1024"/>
+                        <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
+                        <color key="backgroundColor" cocoaTouchSystemColor="groupTableViewBackgroundColor"/>
+                        <toolbar key="tableHeaderView" opaque="NO" clearsContextBeforeDrawing="NO" contentMode="scaleToFill" id="xHM-lm-2qF">
+                            <rect key="frame" x="0.0" y="0.0" width="768" height="44"/>
+                            <autoresizingMask key="autoresizingMask" widthSizable="YES" flexibleMinY="YES"/>
+                            <items>
+                                <barButtonItem systemItem="cancel" id="5BO-0G-kiC">
+                                    <connections>
+                                        <action selector="cancelAction:" destination="xcn-Dr-L1y" id="pLL-Rn-kKF"/>
+                                    </connections>
+                                </barButtonItem>
+                            </items>
+                        </toolbar>
+                        <sections>
+                            <tableViewSection id="HtE-2j-gVv">
+                                <cells>
+                                    <tableViewCell contentMode="scaleToFill" selectionStyle="none" hidesAccessoryWhenEditing="NO" indentationLevel="1" indentationWidth="0.0" shouldIndentWhileEditing="NO" rowHeight="80" id="S2L-3N-R3H">
+                                        <rect key="frame" x="0.0" y="44" width="768" height="80"/>
+                                        <autoresizingMask key="autoresizingMask"/>
+                                        <tableViewCellContentView key="contentView" opaque="NO" clipsSubviews="YES" multipleTouchEnabled="YES" contentMode="center" tableViewCell="S2L-3N-R3H" id="0o8-8T-PSb">
+                                            <rect key="frame" x="0.0" y="0.0" width="768" height="79"/>
+                                            <autoresizingMask key="autoresizingMask"/>
+                                            <subviews>
+                                                <textView clipsSubviews="YES" multipleTouchEnabled="YES" tag="888" contentMode="scaleToFill" showsHorizontalScrollIndicator="NO" id="XDT-GO-Zw3">
+                                                    <rect key="frame" x="0.0" y="4" width="295" height="72"/>
+                                                    <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMaxY="YES"/>
+                                                    <color key="backgroundColor" white="0.0" alpha="0.0" colorSpace="calibratedWhite"/>
+                                                    <fontDescription key="fontDescription" type="system" pointSize="14"/>
+                                                    <textInputTraits key="textInputTraits" autocapitalizationType="sentences"/>
+                                                    <connections>
+                                                        <outlet property="delegate" destination="xcn-Dr-L1y" id="TAE-NV-vXz"/>
+                                                    </connections>
+                                                </textView>
+                                            </subviews>
+                                        </tableViewCellContentView>
+                                    </tableViewCell>
+                                </cells>
+                            </tableViewSection>
+                            <tableViewSection headerTitle="      " id="P9r-Py-bXN">
+                                <cells/>
+                            </tableViewSection>
+                        </sections>
+                        <connections>
+                            <outlet property="dataSource" destination="xcn-Dr-L1y" id="d9z-8h-h0M"/>
+                            <outlet property="delegate" destination="xcn-Dr-L1y" id="2IR-Jd-9wG"/>
+                        </connections>
+                    </tableView>
+                    <value key="contentSizeForViewInPopover" type="size" width="360" height="480"/>
+                    <splitViewDetailSimulatedSizeMetrics key="simulatedDestinationMetrics"/>
+                    <connections>
+                        <outlet property="cancelButton" destination="5BO-0G-kiC" id="Q7A-1o-q0v"/>
+                        <outlet property="description" destination="XDT-GO-Zw3" id="rif-qb-73q"/>
+                    </connections>
+                </tableViewController>
+                <placeholder placeholderIdentifier="IBFirstResponder" id="lEK-NT-aFP" userLabel="First Responder" sceneMemberID="firstResponder"/>
+            </objects>
+            <point key="canvasLocation" x="756" y="-1913"/>
         </scene>
         <!--Navigation Controller-->
         <scene sceneID="9UL-O1-FXL">
