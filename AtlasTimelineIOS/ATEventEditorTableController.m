@@ -166,8 +166,6 @@ forRowAtIndexPath: (NSIndexPath*)indexPath
         lblTotalCount.font = [UIFont fontWithName:@"Helvetica" size:13];
         lblNewAddedCount.font = [UIFont fontWithName:@"Helvetica" size:13];
         lblNewAddedCount.textColor = [UIColor redColor];
-        [customView addSubview:lblTotalCount];
-        [customView addSubview:lblNewAddedCount];
         
         // create the button object
         UIButton * photoBtn = [UIButton buttonWithType:UIButtonTypeCustom];
@@ -176,7 +174,16 @@ forRowAtIndexPath: (NSIndexPath*)indexPath
         photoBtn.frame = CGRectMake(50, editorPhotoViewHeight - 40, 48, 48);
         [photoBtn addTarget:self action:@selector(takePictureAction:) forControlEvents:UIControlEventTouchUpInside];
         photoBtn.tag = ADD_PHOTO_BUTTON_TAG_777;
-        [customView addSubview:photoBtn];
+        ATAppDelegate *appDelegate = (ATAppDelegate *)[[UIApplication sharedApplication] delegate];
+        if (!appDelegate.hideAddPhotoIconFlag)
+        {
+            [customView addSubview:photoBtn];
+            [customView addSubview:lblTotalCount];
+            [customView addSubview:lblNewAddedCount];
+        }
+        else
+            appDelegate.hideAddPhotoIconFlag = false;
+        
         customViewForPhoto = customView;
         //tricky, see another comments with word "tricky"
         if (self.photoScrollView != nil && nil == [customViewForPhoto viewWithTag:ADDED_PHOTOSCROLL_TAG_900])

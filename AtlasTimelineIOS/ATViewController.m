@@ -157,6 +157,7 @@
     NSMutableArray* poiList;
     NSMutableDictionary* poiAnnViewDic; //uniqueId->annView, need this because select an poi from event list view will not refresh poi ann (for regualar event, refresh occurs every time select)
     MKAnnotationView* prevSelectedPoiAnnView;
+    NSMutableArray *matchingItems;
 }
 
 @synthesize mapView = _mapView;
@@ -190,10 +191,10 @@
     {
         ATEventDataStruct* evt = [[ATEventDataStruct alloc] init];
         int r = arc4random() % 100000000;
-        printf("Random number: %u", r);
         evt.uniqueId = [NSString stringWithFormat:@"%d", r];
         evt.eventDate = poiDate;
         evt.eventDesc = [NSString stringWithFormat:@"title %d\ndesc for %d",r,r];
+        evt.eventType = arc4random() % 5; //used i for star rating
         evt.lat = arc4random() % 90;
         evt.lng = arc4random() % 180;
         [poiList addObject:evt];
@@ -223,6 +224,14 @@
     [helpbtn addTarget:self action:@selector(tutorialClicked:) forControlEvents:UIControlEventTouchUpInside];
     UIBarButtonItem *helpButton = [[UIBarButtonItem alloc] initWithCustomView:helpbtn];
     self.navigationItem.rightBarButtonItems = @[settringButton, helpButton];
+    
+    UIButton *poiLoadViewBtn = [UIButton buttonWithType:UIButtonTypeCustom];
+    poiLoadViewBtn.frame = CGRectMake(0, 0, 30, 30);
+    [poiLoadViewBtn setImage:[UIImage imageNamed:@"car-icon.png"] forState:UIControlStateNormal];
+    [poiLoadViewBtn addTarget:self action:@selector(searchPoiClicked:) forControlEvents:UIControlEventTouchUpInside];
+    UIBarButtonItem *poiButton = [[UIBarButtonItem alloc] initWithCustomView:poiLoadViewBtn];
+    self.navigationItem.rightBarButtonItems = @[settringButton, helpButton, poiButton];
+    
     //   }
     
     
@@ -288,7 +297,7 @@
     [ATHelper setOptionDateFieldKeyboardEnable:false]; //always set default to not allow keyboard
     ATAppDelegate *appDelegate = (ATAppDelegate *)[[UIApplication sharedApplication] delegate];
     [self.navigationItem.leftBarButtonItem setTitle:NSLocalizedString(@"Timeline/Search",nil)];
-    [self.searchBar setPlaceholder:NSLocalizedString(@"Address", nil)];
+    [self.searchBar setPlaceholder:NSLocalizedString(@"Poi or Address", nil)];
     if ([appDelegate.eventListSorted count] == 0)
     {
         /*
@@ -1326,7 +1335,7 @@
             // if an existing pin view was not available, create one
             MKPinAnnotationView* customPinView = [[MKPinAnnotationView alloc]
                                                   initWithAnnotation:annotation reuseIdentifier:[ATConstants DefaultAnnotationIdentifier]];
-            customPinView.pinColor = MKPinAnnotationColorPurple;
+            customPinView.pinColor = MKPinAnnotationColorRed;
             customPinView.animatesDrop = YES;
             customPinView.canShowCallout = YES;
             
@@ -1650,6 +1659,9 @@
 }
 -(void) displayPOIView:(MKAnnotationView*)selectedPoiAnnEventInEventListView
 {
+    [self startPOIEditor:selectedPoiAnnEventInEventListView];
+    prevSelectedPoiAnnView = selectedPoiAnnEventInEventListView;
+    /*
     int poiViewWidth = 200;
     int poiViewHeidht = 220;
     UIView* poiView = [[UIView alloc] initWithFrame:CGRectMake(- poiViewWidth / 2,- poiViewHeidht, poiViewWidth, poiViewHeidht)];
@@ -1663,6 +1675,7 @@
             [removeView removeFromSuperview];
     }
     prevSelectedPoiAnnView = selectedPoiAnnEventInEventListView;
+     */
 }
 
 //////// From WWDC 2013 video "Map Kit in Perspective"
@@ -2212,7 +2225,7 @@
 
 - (void) startEventEditor:(MKAnnotationView*)view
 {
-    ATEventAnnotation* ann = selectedEventAnnDataOnMap; // [view annotation];
+    ATEventAnnotation* ann = view.annotation;// selectedEventAnnDataOnMap; // [view annotation];
     self.selectedAnnotation = ann;
     ATAppDelegate *appDelegate = (ATAppDelegate *)[[UIApplication sharedApplication] delegate];
     UIStoryboard* storyboard = appDelegate.storyBoard;
@@ -2282,6 +2295,71 @@
     
     [ATEventEditorTableController setEventId:ann.uniqueId];
     //if (ann.eventType == EVENT_TYPE_HAS_PHOTO)
+    [self.eventEditor createPhotoScrollView: ann.uniqueId ];
+}
+
+- (void) startPOIEditor:(MKAnnotationView*)view
+{
+    ATEventAnnotation* ann = view.annotation;// selectedEventAnnDataOnMap; // [view annotation];
+    self.selectedAnnotation = ann;
+    ATAppDelegate *appDelegate = (ATAppDelegate *)[[UIApplication sharedApplication] delegate];
+    UIStoryboard* storyboard = appDelegate.storyBoard;
+
+    self.eventEditor = [storyboard instantiateViewControllerWithIdentifier:@"poi_editor_id"];
+    self.eventEditor.delegate = self;
+    
+    if (UI_USER_INTERFACE_IDIOM() == UIUserInterfaceIdiomPad) {
+        BOOL optionIPADFullScreen = [ATHelper getOptionEditorFullScreen];
+        if (optionIPADFullScreen)
+        {
+            [self.navigationController presentViewController:self.eventEditor animated:YES completion:nil];
+        }
+        else
+        {
+            self.eventEditorPopover = [[UIPopoverController alloc] initWithContentViewController:self.eventEditor];
+            self.eventEditorPopover.popoverContentSize = CGSizeMake(380,480);
+            
+            //Following view.window=nil case is weird. When tap on text/image to start eventEditor, system will crash after around 10 times. Googling found it will happen when view.window=nil, so have to alert user and call refreshAnn in alert delegate to fix it. (will not work without put into alert delegate)
+            BOOL isAtLeastIOS8 = [ATHelper isAtLeastIOS8];
+            if (isAtLeastIOS8) //##### this part took me a few week, finally found solution so I can use xcode 6now
+                [self.eventEditorPopover presentPopoverFromRect:view.frame inView:self.mapView permittedArrowDirections:UIPopoverArrowDirectionAny animated:YES];
+            else if (view.window != nil && !isAtLeastIOS8)
+                [self.eventEditorPopover presentPopoverFromRect:view.bounds inView:view permittedArrowDirections:UIPopoverArrowDirectionAny animated:YES];
+            else
+            {
+                UIAlertView *alert = [[UIAlertView alloc] initWithTitle:NSLocalizedString(@"A minor error occurs",nil)
+                                                                message:NSLocalizedString(@"Please try again!",nil)
+                                                               delegate:self
+                                                      cancelButtonTitle:NSLocalizedString(@"OK",nil)
+                                                      otherButtonTitles:nil];
+                alert.tag = ALERT_FOR_POPOVER_ERROR;
+                [alert show];
+                
+            }
+        }
+    }
+    else {
+        [self.navigationController presentViewController:self.eventEditor animated:YES completion:nil];
+    }
+    //has to set value here after above presentXxxxx method, otherwise the firsttime will display empty text
+    [self.eventEditor resetEventEditor];
+    
+    self.eventEditor.coordinate = ann.coordinate;
+    if ([ann.description isEqualToString:NEWEVENT_DESC_PLACEHOLD])
+    {
+        self.eventEditor.description.textColor = [UIColor lightGrayColor];
+    }
+    
+    self.eventEditor.description.text = ann.description;
+    self.eventEditor.hasPhotoFlag = EVENT_TYPE_NO_PHOTO; //not set to ann.eventType because we want to use this flag to decide if need save image again
+    self.eventEditor.eventId = ann.uniqueId;
+    if (ann.uniqueId != nil)
+        self.eventEditor.eventData = [appDelegate.uniqueIdToEventMap objectForKey:ann.uniqueId];
+    else
+        self.eventEditor.eventData = nil;
+    
+    [ATEventEditorTableController setEventId:ann.uniqueId];
+    appDelegate.hideAddPhotoIconFlag = true;
     [self.eventEditor createPhotoScrollView: ann.uniqueId ];
 }
 
@@ -3371,42 +3449,56 @@
 
 -(void)searchBarSearchButtonClicked:(UISearchBar *)theSearchBar
 {
-    [theSearchBar resignFirstResponder];
-    CLGeocoder *geocoder = [[CLGeocoder alloc] init];
-    [geocoder geocodeAddressString:theSearchBar.text completionHandler:^(NSArray *placemarks, NSError *error) {
-        //Error checking
-        
-        CLPlacemark *placemark = [placemarks objectAtIndex:0];
-        if (placemark == nil)
+    MKLocalSearchRequest *request =
+    [[MKLocalSearchRequest alloc] init];
+    request.naturalLanguageQuery = theSearchBar.text;
+    request.region = _mapView.region;
+    
+    matchingItems = [[NSMutableArray alloc] init];
+    
+    MKLocalSearch *search =
+    [[MKLocalSearch alloc]initWithRequest:request];
+    
+    [search startWithCompletionHandler:^(MKLocalSearchResponse
+                                         *response, NSError *error) {
+        if (response.mapItems.count == 0)
+            NSLog(@"No Matches");
+        else
         {
-            UIAlertView *alert = [[UIAlertView alloc] initWithTitle:@"Search address failed!"
-                                                            message:@"Either network is not available or can't find the address!"
-                                                           delegate:nil
-                                                  cancelButtonTitle:@"OK"
-                                                  otherButtonTitles:nil];
-            [alert show];
-            return;
+            ATAppDelegate *appDelegate = (ATAppDelegate *)[[UIApplication sharedApplication] delegate];
+            for (MKMapItem *item in response.mapItems)
+            {
+                [matchingItems addObject:item];
+
+                NSDateFormatter* fmt = appDelegate.dateFormater;
+                NSDate* poiDate = [fmt dateFromString:@"01/01/0001 AD"];
+                
+                ATDefaultAnnotation *pa = [[ATDefaultAnnotation alloc] initWithLocation:item.placemark.coordinate];
+                pa.eventDate = poiDate;
+                pa.description=item.name;//@"add by search";
+                pa.address = theSearchBar.text; //TODO should get from placemarker
+                [_mapView addAnnotation:pa];
+                
+                
+                
+                [_mapView addAnnotation:pa];
+            }
         }
-        MKCoordinateRegion region;
-        region.center.latitude = placemark.region.center.latitude;
-        region.center.longitude = placemark.region.center.longitude;
         
-        CLLocationCoordinate2D searchPoint = CLLocationCoordinate2DMake(region.center.latitude, region.center.longitude);
-        ATDefaultAnnotation *pa = [[ATDefaultAnnotation alloc] initWithLocation:searchPoint];
-        pa.eventDate = [NSDate date];
-        pa.description=NEWEVENT_DESC_PLACEHOLD;//@"add by search";
-        pa.address = theSearchBar.text; //TODO should get from placemarker
-        [_mapView addAnnotation:pa];
-        
-        MKCoordinateSpan span;
-        double radius = placemark.region.radius / 1000; // convert to km
-        
-        //NSLog(@"[searchBarSearchButtonClicked] Radius is %f", radius);
-        span.latitudeDelta = radius / 112.0;
-        
-        region.span = span;
-        
-        [self.mapView setRegion:region animated:YES];
+        if ([response.mapItems count] == 1)
+        {
+            MKMapItem* item = response.mapItems[0];
+            MKCoordinateRegion region;
+            region.center.latitude = item.placemark.coordinate.latitude;
+            region.center.longitude = item.placemark.coordinate.longitude;
+            MKCoordinateSpan span;
+            double radius = item.placemark.region.radius / 1000; // convert to km
+            
+            //NSLog(@"[searchBarSearchButtonClicked] Radius is %f", radius);
+            span.latitudeDelta = radius / 112.0;
+            region.span = span;
+            [self.mapView setRegion:region animated:YES];
+        }
     }];
 }
 
@@ -3430,7 +3522,6 @@
         self.mapViewShowWhatFlag = MAPVIEW_SHOW_ALL;
     //self.mapViewShowWhatFlag ++;
     [self mapViewShowHideAction];
-    
     //for POI annotation, show information directly
     ATEventAnnotation* ann = [view annotation];
     if ([ann isKindOfClass:[ATAnnotationPoi class]])

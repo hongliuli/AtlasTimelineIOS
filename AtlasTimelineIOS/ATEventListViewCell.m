@@ -34,6 +34,7 @@
         
         self.checkIcon = [[UIImageView alloc] initWithFrame:CGRectMake([ATConstants eventListViewCellWidth] -25, 7, 20, 20)];
         [self.checkIcon setImage:[UIImage imageNamed:@"focuseIcon.png"]];
+        [self.checkIcon setTag:9999];
         [self.contentView addSubview:self.checkIcon];
         
         self.eventDescView = [[UITextView alloc] initWithFrame:textFrame];

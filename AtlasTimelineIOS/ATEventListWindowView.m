@@ -14,6 +14,7 @@
 #import "ATHelper.h"
 #import "ATConstants.h"
 #import "ATEventListViewCell.h"
+#import "ATEventListViewPoiCell.h"
 
 #define EVENT_TYPE_NO_PHOTO 0
 #define EVENT_TYPE_HAS_PHOTO 1
@@ -33,6 +34,7 @@ NSDateFormatter *dateFormatter;
 
 UIColor *greyColor;
 UIFont *boldFont;
+int selectedRowIndex;
 
 - (id)initWithFrame:(CGRect)frame
 {
@@ -61,6 +63,7 @@ UIFont *boldFont;
         greyColor=[UIColor darkGrayColor];
         boldFont=[UIFont fontWithName:@"Arial-BoldMT" size:13];
     }
+    selectedRowIndex = -1;
     return self;
 }
 
@@ -120,7 +123,38 @@ UIFont *boldFont;
         return cell;
     }
     */
-    ATEventListViewCell* cell = [tableView dequeueReusableCellWithIdentifier:@"Cell"];
+    
+    NSString* dateStr = [dateFormatter stringFromDate:evt.eventDate];
+    NSString* descStr = evt.eventDesc;
+    if ([descStr length] > 150)
+    {
+        descStr = [evt.eventDesc substringToIndex:150];
+    }
+    NSString* titleStr = @"";
+    NSString* descToDisplay = [NSString stringWithFormat:@"%@\n%@",dateStr, descStr ];
+    
+    ATEventListViewCell* cell = (ATEventListViewCell*)[tableView dequeueReusableCellWithIdentifier:@"Cell"];
+    if ([ATHelper isPOIEvent:evt])
+    {
+        ATEventListViewPoiCell* cellPoi = (ATEventListViewPoiCell*)[tableView dequeueReusableCellWithIdentifier:@"PoiCell"];
+        if (cellPoi == nil)
+        {
+            cellPoi = [[ATEventListViewPoiCell alloc] initWithFrame:CGRectMake(0, 0, [ATConstants eventListViewCellWidth], [ATConstants eventListViewCellHeight])];
+            int titleEndLocation = [descStr rangeOfString:@"\n"].location;
+            titleStr = [descStr substringToIndex:titleEndLocation];
+            cellPoi.eventDescView.text = titleStr;
+            [cellPoi.checkIcon setHidden:false];
+            if ([indexPath row] == selectedRowIndex)
+            {
+                [cellPoi setBackgroundColor:[UIColor colorWithRed:0.0 green:0.0 blue:1.0 alpha:0.50]];
+                selectedRowIndex = -1;
+            }
+            else
+                [cellPoi setBackgroundColor:[UIColor colorWithRed:0.0 green:0.0 blue:1.0 alpha:0.10]];
+        }
+        return cellPoi;
+    }
+    
     //ATEventListViewCell *cell = nil;
     if (cell == nil)
     {
@@ -135,23 +169,6 @@ UIFont *boldFont;
         cell.contentView.backgroundColor = [UIColor colorWithRed:1 green:1 blue:1 alpha:0.7];
         //cell.backgroundColor = [UIColor colorWithRed:1 green:1 blue:1 alpha:0.7];
         //[cell.layer setBorderColor:(__bridge CGColorRef)([UIColor lightGrayColor])];
-    }
-    
-    NSString* dateStr = [dateFormatter stringFromDate:evt.eventDate];
-    NSString* descStr = evt.eventDesc;
-    if ([descStr length] > 150)
-    {
-        descStr = [evt.eventDesc substringToIndex:150];
-    }
-    NSString* titleStr = @"";
-    NSString* descToDisplay = [NSString stringWithFormat:@"%@\n%@",dateStr, descStr ];
-    
-    if ([ATHelper isPOIEvent:evt])
-    {
-        int titleEndLocation = [descStr rangeOfString:@"\n"].location;
-        titleStr = [descStr substringToIndex:titleEndLocation];
-        cell.eventDescView.text = titleStr;
-        return cell;
     }
     
     NSMutableAttributedString *attString=[[NSMutableAttributedString alloc] initWithString:descToDisplay];
@@ -278,6 +295,7 @@ UIFont *boldFont;
         [mapView showTimeLinkOverlay];
 
         mapView.mapViewShowWhatFlag = MAPVIEW_SHOW_ALL; //ad-hoc fix to make sure thumbnail on map always show when select on eventlist view
+        selectedRowIndex = [indexPath row];
 
         //bookmark selected event
         NSUserDefaults* userDefault = [NSUserDefaults standardUserDefaults];
