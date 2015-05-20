@@ -11,13 +11,14 @@
 #import "ATDataController.h"
 #import "ATEventEditorTableController.h"
 #import "ATPreferenceViewController.h"
+#import "ATPOIChooseViewController.h"
 #import <StoreKit/StoreKit.h>
 @class ATAppDelegate;
 @class ATEventAnnotation;
 @class ATTimeScrollWindowNew;
 @class ATTimeZoomLine;
 
-@interface ATViewController : UIViewController <MKMapViewDelegate, CLLocationManagerDelegate, EventEditorDelegate, UISearchBarDelegate,UIAlertViewDelegate>
+@interface ATViewController : UIViewController <MKMapViewDelegate, CLLocationManagerDelegate, EventEditorDelegate, UISearchBarDelegate,UIAlertViewDelegate, POIChooseViewControllerDelegate>
 {
     ATDataController *dataController;
 

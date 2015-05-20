@@ -628,6 +628,103 @@ UIPopoverController *verifyViewPopover;
     return [eventDate isEqualToDate:date]; //NOTE: poi event always has 1/1/0001 as event date
 }
 
++ (NSArray*) createdPoiListFromString:(NSString*)poiListString
+{
+    NSMutableArray* eventList = [[NSMutableArray alloc] initWithCapacity:400];
+    ATAppDelegate *appDelegate = (ATAppDelegate *)[[UIApplication sharedApplication] delegate];
+    NSDateFormatter* fmt = appDelegate.dateFormater;
+    NSDate* poiDate = [fmt dateFromString:@"01/01/0001 AD"];
+    if (poiListString != nil)
+    {
+        //[Date] must be the first Metadata for each event in file, and must already sorted?
+        NSArray* eventStrList = [poiListString componentsSeparatedByString: @"[Place]"];
+
+        for (NSString* eventStr in eventStrList)
+        {
+            if ([@"" isEqualToString:eventStr] || [@"\n" isEqualToString:eventStr])
+                continue;
+            ATEventDataStruct* evt = [[ATEventDataStruct alloc] init];
+            //###### event in file must have order [Place]boston_trail -> [Tags] -> [Loc] ->[Rate]-> [Desc]
+            NSString* tmp = [eventStr stringByTrimmingCharactersInSet:[NSCharacterSet whitespaceAndNewlineCharacterSet]];
+            
+            evt.eventDate = poiDate;
+            NSRange toNextRange = [tmp rangeOfString:@"[Tags]" options: NSCaseInsensitiveSearch];
+            if (toNextRange.location == NSNotFound) {
+                NSLog(@"  ##### readFromFile - [Tags] was not found in %@", tmp);
+                UIAlertView *alert = [[UIAlertView alloc] initWithTitle:NSLocalizedString(@"Read Event File Addr error",nil) message:NSLocalizedString(tmp,nil)
+                                                               delegate:self  cancelButtonTitle:NSLocalizedString(@"OK",nil) otherButtonTitles:nil];
+                [alert show];
+                return nil;
+            }
+            NSRange placeRange = NSMakeRange(0, toNextRange.location);
+            evt.uniqueId = [tmp substringWithRange:placeRange];
+            tmp = [tmp substringFromIndex:toNextRange.location];
+            
+            toNextRange = [tmp rangeOfString:@"[Loc]" options: NSCaseInsensitiveSearch];
+            if (toNextRange.location == NSNotFound) {
+                NSLog(@"  ##### readFromFile - [Loc] was not found in %@", tmp);
+                UIAlertView *alert = [[UIAlertView alloc] initWithTitle:NSLocalizedString(@"Read Event File Loc error",nil) message:NSLocalizedString(tmp,nil)
+                                                               delegate:self  cancelButtonTitle:NSLocalizedString(@"OK",nil) otherButtonTitles:nil];
+                [alert show];
+                return nil;
+            }
+            //now [Tags] start from 0
+            NSRange addrRange = NSMakeRange(6, toNextRange.location - 6);
+            evt.address = [tmp substringWithRange:addrRange];
+            tmp = [tmp substringFromIndex:toNextRange.location];
+            
+            //now [Loc] start from 0
+            toNextRange = [tmp rangeOfString:@"[Rate]"];
+            if (toNextRange.location == NSNotFound) {
+                NSLog(@" ##### readFromFile - [Rate] was not found in %@", tmp);
+                UIAlertView *alert = [[UIAlertView alloc] initWithTitle:NSLocalizedString(@"Read Event File Desc error",nil) message:NSLocalizedString(tmp,nil)
+                                                               delegate:self  cancelButtonTitle:NSLocalizedString(@"OK",nil) otherButtonTitles:nil];
+                [alert show];
+                return nil;
+            }
+            NSRange locRange = NSMakeRange(5, toNextRange.location - 5);
+            NSString* loc = [tmp substringWithRange:locRange];
+            loc = [loc stringByTrimmingCharactersInSet:[NSCharacterSet whitespaceAndNewlineCharacterSet]];
+            NSArray* latlng = [loc componentsSeparatedByString:@","];
+            if (latlng == nil || [latlng count] != 2)
+            {
+                NSLog(@" ###### [loc] data has error %@",tmp);
+                UIAlertView *alert = [[UIAlertView alloc] initWithTitle:NSLocalizedString(@"Read Event File Loc error",nil) message:NSLocalizedString(tmp,nil)
+                                                               delegate:self  cancelButtonTitle:NSLocalizedString(@"OK",nil) otherButtonTitles:nil];
+                [alert show];
+                return nil;
+            }
+            evt.lat = [latlng[0] doubleValue];
+            evt.lng = [latlng[1] doubleValue];
+            
+            tmp = [tmp substringFromIndex:toNextRange.location];
+            
+            //now start from [Rate]
+            toNextRange = [tmp rangeOfString:@"[Desc]" options: NSCaseInsensitiveSearch];
+            NSRange rateRange = NSMakeRange(6, toNextRange.location - 6);
+            NSString* rateTxt = [tmp substringWithRange:rateRange];
+            evt.eventType = [rateTxt integerValue];
+            tmp = [tmp substringFromIndex:toNextRange.location];
+            
+            //now tmp start from [Desc]
+            evt.eventDesc = [tmp substringFromIndex:6];
+            
+            [eventList addObject:evt];
+        }
+    }
+    
+    
+    
+    NSArray* ret = [eventList sortedArrayUsingComparator:^NSComparisonResult(id a, id b) {
+        NSDate *first = [(ATEventDataStruct*)a eventDate];
+        NSDate *second = [(ATEventDataStruct*)b eventDate];
+        return [first compare:second]== NSOrderedAscending;
+    }];
+    return ret;
+    
+}
+
+
 //---- set/get options
 + (BOOL) getOptionDateFieldKeyboardEnable
 {

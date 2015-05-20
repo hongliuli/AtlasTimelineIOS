@@ -44,6 +44,7 @@
 + (BOOL) isAtLeastIOS8;
 + (BOOL) isPOIEvent:(ATEventDataStruct*)event;
 + (BOOL) isPOIEventByDate:(NSDate*)eventDate;
++ (NSArray*) createdPoiListFromString:(NSString*)poiListString;
 
 // file/photos related
 + (void) createPhotoDocumentoryPath;

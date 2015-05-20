@@ -531,7 +531,7 @@
     // Return the number of rows in the section.
     int retCount = 0;
     if (section == SECTION_LOGIN_EMAIL)
-        retCount = 1;
+        retCount = 2;
     else if (section == SECTION_CONTENT_MANAGE)
         retCount = 3;
     else if (section == SECTION_SYNC_MYEVENTS_TO_SERVER)
@@ -599,7 +599,10 @@
     }
     else if (section == SECTION_LOGIN_EMAIL)
     {
-        cell.textLabel.text = NSLocalizedString(@"Options",nil);
+        if (row == 0)
+            cell.textLabel.text = NSLocalizedString(@"Tour Attractions",nil);
+        else
+            cell.textLabel.text = NSLocalizedString(@"Options",nil);
     }
     else if (section == SECTION_MISC)
     {
@@ -851,7 +854,10 @@
 -(void) handleLoginEmailSection:(UITableView*)tableView :(NSIndexPath *)indexPath
 {
     //also see prepareForSeque() where pass values
-    [self performSegueWithIdentifier:@"options" sender:nil];
+    if (indexPath.row == 0)
+        [self performSegueWithIdentifier:@"choose_poi" sender:nil];
+    else
+        [self performSegueWithIdentifier:@"options" sender:nil];
 }
 -(void) handleSynchServerSection:(UITableView*)tableView :(NSIndexPath *)indexPath
 {

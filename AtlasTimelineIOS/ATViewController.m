@@ -153,8 +153,7 @@
     NSArray* _topDistanceLblCon; //will animated on this
     NSTimer* _timerDirectionRouteDisplay;
     CLLocationCoordinate2D currentCenterCoordinate;
-    
-    NSMutableArray* poiList;
+
     NSMutableDictionary* poiAnnViewDic; //uniqueId->annView, need this because select an poi from event list view will not refresh poi ann (for regualar event, refresh occurs every time select)
     MKAnnotationView* prevSelectedPoiAnnView;
     NSMutableArray *matchingItems;
@@ -184,6 +183,8 @@
     
     ATAppDelegate *appDelegate = (ATAppDelegate *)[[UIApplication sharedApplication] delegate];
     NSDateFormatter* fmt = appDelegate.dateFormater;
+
+    /*
     NSDate* poiDate = [fmt dateFromString:@"01/01/0001 AD"];
     if (poiList == nil)
         poiList = [[NSMutableArray alloc] init];
@@ -199,6 +200,7 @@
         evt.lng = arc4random() % 180;
         [poiList addObject:evt];
     }
+     */
     self.mapViewShowWhatFlag = MAPVIEW_SHOW_ALL;
     int searchBarHeight = [ATConstants searchBarHeight];
     int searchBarWidth = [ATConstants searchBarWidth];
@@ -315,18 +317,28 @@
     [self refreshEventListView:false];
     
     //add poi
-    for (ATEventDataStruct* ent in poiList)
+    NSUserDefaults* userDefaults = [NSUserDefaults standardUserDefaults];
+    NSString* lastOpenedPoiGroupName = [userDefaults objectForKey:@"SELECTED_POI_GROUP_NAME"];
+    if (lastOpenedPoiGroupName != nil)
     {
-        CLLocationCoordinate2D coord = CLLocationCoordinate2DMake((CLLocationDegrees)ent.lat, (CLLocationDegrees)ent.lng);
-        ATAnnotationPoi *eventAnnotation = [[ATAnnotationPoi alloc] initWithLocation:coord];
-        eventAnnotation.uniqueId = ent.uniqueId;
-        if (ent.eventDate == nil)
-            NSLog(@"---- nil date");
-        eventAnnotation.address = ent.address;
-        eventAnnotation.description=ent.eventDesc;
-        eventAnnotation.eventDate=ent.eventDate;
-        eventAnnotation.eventType = ent.eventType;
-        [self.mapView addAnnotation:eventAnnotation];
+        NSString* poiStr = [userDefaults objectForKey:lastOpenedPoiGroupName];
+        if (poiStr != nil)
+        {
+            NSArray* poiList = [ATHelper createdPoiListFromString:poiStr];
+            for (ATEventDataStruct* ent in poiList)
+            {
+                CLLocationCoordinate2D coord = CLLocationCoordinate2DMake((CLLocationDegrees)ent.lat, (CLLocationDegrees)ent.lng);
+                ATAnnotationPoi *eventAnnotation = [[ATAnnotationPoi alloc] initWithLocation:coord];
+                eventAnnotation.uniqueId = ent.uniqueId;
+                if (ent.eventDate == nil)
+                    NSLog(@"---- nil date");
+                eventAnnotation.address = ent.address;
+                eventAnnotation.description=ent.eventDesc;
+                eventAnnotation.eventDate=ent.eventDate;
+                eventAnnotation.eventType = ent.eventType;
+                [self.mapView addAnnotation:eventAnnotation];
+            }
+        }
     }
 }
 
@@ -418,6 +430,42 @@
  
 }
 
+- (void)poiGroupChooseViewController: (ATPOIChooseViewController *)controller
+                  didSelectPoiGroup:(NSArray *)poiList{
+    NSMutableArray * annotationsToRemove = [ self.mapView.annotations mutableCopy ] ;
+    //remove POI events
+    for (ATEventAnnotation* ann in self.mapView.annotations)
+    {
+        if (![ann isKindOfClass:[ATAnnotationPoi class]])
+            [annotationsToRemove removeObject:ann];
+    }
+    [[self mapView] removeAnnotations:annotationsToRemove];
+    for (ATEventDataStruct* ent in poiList)
+    {
+        CLLocationCoordinate2D coord = CLLocationCoordinate2DMake((CLLocationDegrees)ent.lat, (CLLocationDegrees)ent.lng);
+        ATAnnotationPoi *eventAnnotation = [[ATAnnotationPoi alloc] initWithLocation:coord];
+        eventAnnotation.uniqueId = ent.uniqueId;
+        if (ent.eventDate == nil)
+            NSLog(@"---- nil date");
+        eventAnnotation.address = ent.address;
+        eventAnnotation.description=ent.eventDesc;
+        eventAnnotation.eventDate=ent.eventDate;
+        eventAnnotation.eventType = ent.eventType;
+        [self.mapView addAnnotation:eventAnnotation];
+    }
+    if ([poiList count] > 0)
+    {
+        ATEventDataStruct* evt = poiList[0];
+        CLLocationCoordinate2D coord;
+        coord.latitude = evt.lat;
+        coord.longitude = evt.lng;
+        MKCoordinateSpan span = [self coordinateSpanWithMapView:self.mapView centerCoordinate:coord andZoomLevel:3];
+        MKCoordinateRegion region = MKCoordinateRegionMake(coord, span);
+        
+        // set the region like normal
+        [self.mapView setRegion:region animated:YES];
+    }
+}
 
 -(void) settingsClicked:(id)sender  //IMPORTANT only iPad will come here, iPhone has push segue on storyboard
 {
