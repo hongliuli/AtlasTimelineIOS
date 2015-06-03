@@ -150,11 +150,12 @@
                         <segue destination="oTu-NL-xds" kind="push" identifier="share_my_episode" id="Xce-HP-e9y"/>
                         <segue destination="6q7-Uu-AoE" kind="push" identifier="options" id="FUi-Vr-YW0"/>
                         <segue destination="lIB-ut-Hq6" kind="push" identifier="choose_active_offline_content" id="b8K-Av-Hmm"/>
+                        <segue destination="MQX-pb-fim" kind="push" identifier="choose_poi" id="thq-EO-QyE"/>
                     </connections>
                 </tableViewController>
                 <placeholder placeholderIdentifier="IBFirstResponder" id="B0O-Yx-Wzk" userLabel="First Responder" sceneMemberID="firstResponder"/>
             </objects>
-            <point key="canvasLocation" x="1465" y="-584"/>
+            <point key="canvasLocation" x="1503" y="-595"/>
         </scene>
         <!--Choose Source Table View Controller - Select Source-->
         <scene sceneID="f7n-mT-9t3">
@@ -195,7 +196,7 @@
                             <outlet property="delegate" destination="oTu-NL-xds" id="j4m-EO-ijJ"/>
                         </connections>
                     </tableView>
-                    <navigationItem key="navigationItem" title="Choose Sources" id="MoI-j0-w2p"/>
+                    <navigationItem key="navigationItem" title="Share Episode" id="MoI-j0-w2p"/>
                     <value key="contentSizeForViewInPopover" type="size" width="360" height="420"/>
                     <simulatedStatusBarMetrics key="simulatedStatusBarMetrics"/>
                     <connections>
@@ -205,7 +206,7 @@
                 </tableViewController>
                 <placeholder placeholderIdentifier="IBFirstResponder" id="evL-CS-UNo" userLabel="First Responder" sceneMemberID="firstResponder"/>
             </objects>
-            <point key="canvasLocation" x="2285" y="-848"/>
+            <point key="canvasLocation" x="2396" y="-903"/>
         </scene>
         <!--Download Table View Controller - Download-->
         <scene sceneID="kOg-LO-kc1">
@@ -793,15 +794,15 @@
                         <sections>
                             <tableViewSection id="itm-tI-5l6">
                                 <cells>
-                                    <tableViewCell contentMode="scaleToFill" selectionStyle="none" hidesAccessoryWhenEditing="NO" indentationLevel="1" indentationWidth="0.0" shouldIndentWhileEditing="NO" rowHeight="90" id="oPX-aD-xPe">
-                                        <rect key="frame" x="0.0" y="44" width="320" height="90"/>
+                                    <tableViewCell contentMode="scaleToFill" selectionStyle="none" hidesAccessoryWhenEditing="NO" indentationLevel="1" indentationWidth="0.0" shouldIndentWhileEditing="NO" rowHeight="324" id="oPX-aD-xPe">
+                                        <rect key="frame" x="0.0" y="44" width="320" height="324"/>
                                         <autoresizingMask key="autoresizingMask"/>
                                         <tableViewCellContentView key="contentView" opaque="NO" clipsSubviews="YES" multipleTouchEnabled="YES" contentMode="center" tableViewCell="oPX-aD-xPe" id="FjP-NG-OGf">
-                                            <rect key="frame" x="0.0" y="0.0" width="320" height="89"/>
+                                            <rect key="frame" x="0.0" y="0.0" width="320" height="323"/>
                                             <autoresizingMask key="autoresizingMask"/>
                                             <subviews>
                                                 <textView clipsSubviews="YES" multipleTouchEnabled="YES" tag="888" contentMode="scaleToFill" showsHorizontalScrollIndicator="NO" id="tty-tE-n8l">
-                                                    <rect key="frame" x="0.0" y="0.0" width="295" height="89"/>
+                                                    <rect key="frame" x="0.0" y="0.0" width="320" height="318"/>
                                                     <color key="backgroundColor" white="0.0" alpha="0.0" colorSpace="calibratedWhite"/>
                                                     <fontDescription key="fontDescription" type="system" pointSize="14"/>
                                                     <textInputTraits key="textInputTraits" autocapitalizationType="sentences"/>
@@ -834,6 +835,52 @@
                 <placeholder placeholderIdentifier="IBFirstResponder" id="JRZ-aT-b4J" userLabel="First Responder" sceneMemberID="firstResponder"/>
             </objects>
             <point key="canvasLocation" x="1001" y="256"/>
+        </scene>
+        <!--Choose POI Table View Controller - Select Source-->
+        <scene sceneID="nYv-1h-d9H">
+            <objects>
+                <tableViewController title="Choose POI" modalPresentationStyle="currentContext" id="MQX-pb-fim" userLabel="Choose POI Table View Controller - Select Source" customClass="ATPOIChooseViewController" sceneMemberID="viewController">
+                    <tableView key="view" clipsSubviews="YES" contentMode="scaleToFill" alwaysBounceVertical="YES" dataMode="prototypes" style="plain" separatorStyle="default" rowHeight="44" sectionHeaderHeight="22" sectionFooterHeight="22" id="qhi-PS-FeM">
+                        <rect key="frame" x="0.0" y="0.0" width="320" height="568"/>
+                        <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
+                        <color key="backgroundColor" white="1" alpha="1" colorSpace="calibratedWhite"/>
+                        <prototypes>
+                            <tableViewCell contentMode="scaleToFill" selectionStyle="blue" hidesAccessoryWhenEditing="NO" indentationLevel="1" indentationWidth="0.0" reuseIdentifier="PeriodCell" textLabel="YWb-dU-y8w" detailTextLabel="7i2-Wy-rpo" style="IBUITableViewCellStyleSubtitle" id="RRO-Zr-d0y">
+                                <rect key="frame" x="0.0" y="86" width="320" height="44"/>
+                                <autoresizingMask key="autoresizingMask"/>
+                                <tableViewCellContentView key="contentView" opaque="NO" clipsSubviews="YES" multipleTouchEnabled="YES" contentMode="center" tableViewCell="RRO-Zr-d0y" id="Sks-1Z-TfJ">
+                                    <rect key="frame" x="0.0" y="0.0" width="320" height="43"/>
+                                    <autoresizingMask key="autoresizingMask"/>
+                                    <subviews>
+                                        <label opaque="NO" clipsSubviews="YES" multipleTouchEnabled="YES" contentMode="left" text="Title" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" id="YWb-dU-y8w">
+                                            <rect key="frame" x="15" y="2" width="36" height="22"/>
+                                            <autoresizingMask key="autoresizingMask"/>
+                                            <fontDescription key="fontDescription" type="boldSystem" pointSize="18"/>
+                                            <color key="textColor" cocoaTouchSystemColor="darkTextColor"/>
+                                            <color key="highlightedColor" red="1" green="1" blue="1" alpha="1" colorSpace="calibratedRGB"/>
+                                        </label>
+                                        <label opaque="NO" clipsSubviews="YES" multipleTouchEnabled="YES" contentMode="left" text="Subtitle" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" id="7i2-Wy-rpo">
+                                            <rect key="frame" x="15" y="24" width="50" height="17"/>
+                                            <autoresizingMask key="autoresizingMask"/>
+                                            <fontDescription key="fontDescription" type="system" pointSize="14"/>
+                                            <color key="textColor" red="0.50196078430000002" green="0.50196078430000002" blue="0.50196078430000002" alpha="1" colorSpace="calibratedRGB"/>
+                                            <color key="highlightedColor" red="1" green="1" blue="1" alpha="1" colorSpace="calibratedRGB"/>
+                                        </label>
+                                    </subviews>
+                                </tableViewCellContentView>
+                            </tableViewCell>
+                        </prototypes>
+                        <connections>
+                            <outlet property="dataSource" destination="MQX-pb-fim" id="CAP-3a-fWJ"/>
+                            <outlet property="delegate" destination="MQX-pb-fim" id="kNS-NF-Eas"/>
+                        </connections>
+                    </tableView>
+                    <navigationItem key="navigationItem" title="Choose POI" id="nqy-pC-04o"/>
+                    <value key="contentSizeForViewInPopover" type="size" width="360" height="420"/>
+                </tableViewController>
+                <placeholder placeholderIdentifier="IBFirstResponder" id="cWr-de-4EE" userLabel="First Responder" sceneMemberID="firstResponder"/>
+            </objects>
+            <point key="canvasLocation" x="2177" y="-819"/>
         </scene>
     </scenes>
     <simulatedMetricsContainer key="defaultSimulatedMetrics">

@@ -9,6 +9,7 @@
 #import "PhotoViewController.h"
 #import "ATEventEditorTableController.h"
 #import "ATConstants.h"
+#import "ATAppDelegate.h"
 
 #define NOT_THUMBNAIL -1;
 
@@ -89,6 +90,10 @@ UIView *descEditorContentView;
     fixedSpace.width = 10;
     
     NSArray *items = [NSArray arrayWithObjects: doneButton, fixedSpace, setThumbnailButton, fixedSpace, setShareButton, fixedSpace, setEditButton,fixedSpace, fixedSpace, deleteButton, nil];
+    ATAppDelegate *appDelegate = (ATAppDelegate *)[[UIApplication sharedApplication] delegate];
+    if (appDelegate.isForPOIEditorFlag)
+        items = [NSArray arrayWithObjects: doneButton, nil];
+    
     [self.toolbar setItems:items animated:NO];
     
     UITapGestureRecognizer *tap = [[UITapGestureRecognizer alloc]

@@ -157,6 +157,7 @@
     NSMutableDictionary* poiAnnViewDic; //uniqueId->annView, need this because select an poi from event list view will not refresh poi ann (for regualar event, refresh occurs every time select)
     MKAnnotationView* prevSelectedPoiAnnView;
     NSMutableArray *matchingItems;
+    BOOL onlyRunViewDidAppearOnce;
 }
 
 @synthesize mapView = _mapView;
@@ -170,6 +171,7 @@
 - (void)viewDidLoad
 {
     [super viewDidLoad];
+    onlyRunViewDidAppearOnce = FALSE;
     switchEventListViewModeToVisibleOnMapFlag = false; //eventListView for timewheel is more reasonable, so make it as default always, even not save to userDefault
     [ATHelper createPhotoDocumentoryPath];
     _directionRouteColorResultSet = @[[UIColor blueColor],[UIColor orangeColor],[UIColor greenColor],[UIColor purpleColor]];
@@ -181,9 +183,6 @@
        // [self.locationManager requestAlwaysAuthorization];
     }
     
-    ATAppDelegate *appDelegate = (ATAppDelegate *)[[UIApplication sharedApplication] delegate];
-    NSDateFormatter* fmt = appDelegate.dateFormater;
-
     /*
     NSDate* poiDate = [fmt dateFromString:@"01/01/0001 AD"];
     if (poiList == nil)
@@ -217,7 +216,7 @@
     //add two button at right (can not do in storyboard for multiple button): setting and Help, available in iOS5
     //   if (UI_USER_INTERFACE_IDIOM() == UIUserInterfaceIdiomPad)
     //   {
-    UIBarButtonItem *settringButton = [[UIBarButtonItem alloc] initWithTitle:NSLocalizedString(@"Settings",nil) style:UIBarButtonItemStyleBordered target:self action:@selector(settingsClicked:)];
+    UIBarButtonItem *settringButton = [[UIBarButtonItem alloc] initWithImage:[UIImage imageNamed:@"ios-menu-icon.png"]  style:UIBarButtonItemStyleBordered target:self action:@selector(settingsClicked:)];
     
     //NOTE the trick to set background image for a bar buttonitem
     UIButton *helpbtn = [UIButton buttonWithType:UIButtonTypeCustom];
@@ -227,12 +226,15 @@
     UIBarButtonItem *helpButton = [[UIBarButtonItem alloc] initWithCustomView:helpbtn];
     self.navigationItem.rightBarButtonItems = @[settringButton, helpButton];
     
+    /*
     UIButton *poiLoadViewBtn = [UIButton buttonWithType:UIButtonTypeCustom];
     poiLoadViewBtn.frame = CGRectMake(0, 0, 30, 30);
-    [poiLoadViewBtn setImage:[UIImage imageNamed:@"car-icon.png"] forState:UIControlStateNormal];
-    [poiLoadViewBtn addTarget:self action:@selector(searchPoiClicked:) forControlEvents:UIControlEventTouchUpInside];
+    [poiLoadViewBtn setImage:[UIImage imageNamed:@"star-red-orig.png"] forState:UIControlStateNormal];
+    [poiLoadViewBtn addTarget:self action:@selector(choosePoiClicked:) forControlEvents:UIControlEventTouchUpInside];
     UIBarButtonItem *poiButton = [[UIBarButtonItem alloc] initWithCustomView:poiLoadViewBtn];
-    self.navigationItem.rightBarButtonItems = @[settringButton, helpButton, poiButton];
+     */
+    //self.navigationItem.rightBarButtonItems = @[settringButton, helpButton, poiButton];
+    self.navigationItem.rightBarButtonItems = @[settringButton, helpButton];
     
     //   }
     
@@ -316,11 +318,18 @@
     }
     [self refreshEventListView:false];
     
-    //add poi
     NSUserDefaults* userDefaults = [NSUserDefaults standardUserDefaults];
     NSString* lastOpenedPoiGroupName = [userDefaults objectForKey:@"SELECTED_POI_GROUP_NAME"];
-    if (lastOpenedPoiGroupName != nil)
+    if (lastOpenedPoiGroupName != nil && !onlyRunViewDidAppearOnce)
     {
+        //add poi (first remove existing poi if exists)
+        NSMutableArray * annotationsToRemove = [ self.mapView.annotations mutableCopy ] ;
+        for (ATEventAnnotation* ann in self.mapView.annotations)
+        {
+            if (![ann isKindOfClass:[ATAnnotationPoi class]])
+                [annotationsToRemove removeObject:ann];
+        }
+        [[self mapView] removeAnnotations:annotationsToRemove];
         NSString* poiStr = [userDefaults objectForKey:lastOpenedPoiGroupName];
         if (poiStr != nil)
         {
@@ -339,6 +348,7 @@
                 [self.mapView addAnnotation:eventAnnotation];
             }
         }
+        onlyRunViewDidAppearOnce = TRUE;
     }
 }
 
@@ -459,12 +469,17 @@
         CLLocationCoordinate2D coord;
         coord.latitude = evt.lat;
         coord.longitude = evt.lng;
-        MKCoordinateSpan span = [self coordinateSpanWithMapView:self.mapView centerCoordinate:coord andZoomLevel:3];
+        MKCoordinateSpan span = [self coordinateSpanWithMapView:self.mapView centerCoordinate:coord andZoomLevel:5];
         MKCoordinateRegion region = MKCoordinateRegionMake(coord, span);
         
         // set the region like normal
         [self.mapView setRegion:region animated:YES];
     }
+}
+
+-(void)choosePoiClicked:(id)sender
+{
+    [self performSegueWithIdentifier:@"choose_attractions" sender:nil];
 }
 
 -(void) settingsClicked:(id)sender  //IMPORTANT only iPad will come here, iPhone has push segue on storyboard
@@ -939,15 +954,23 @@
 - (void)setMapCenter:(ATEventDataStruct*)ent :(int)zoomLevel
 {
     // clamp large numbers to 28
-    CLLocationCoordinate2D centerCoordinate;
+    CLLocationCoordinate2D centerCoordinate= [self.mapView centerCoordinate];
     centerCoordinate.latitude=ent.lat;
     centerCoordinate.longitude=ent.lng;
     zoomLevel = MIN(zoomLevel, 28);
     
+    if ([ATHelper isPOIEvent:ent])
+    {
+        CLLocationCoordinate2D coord;
+        coord.latitude = ent.lat;
+        coord.longitude = ent.lng;
+        [self.mapView setCenterCoordinate:coord animated:YES];
+        return; //if clicke on POI in event list view, just change center, no zoomin
+    }
     if (zoomLevel < 0) //do not change zoom level if pass in negative zoom level. This used by Event List View select a event
     {
         if (switchEventListViewModeToVisibleOnMapFlag)
-            [self.mapView setCenterCoordinate:centerCoordinate animated:YES];
+            [self.mapView setCenterCoordinate:[self.mapView centerCoordinate] animated:YES];
         else
         {
             CLLocationCoordinate2D coord;
@@ -1349,7 +1372,7 @@
         //if ([self zoomLevel] <= ZOOM_LEVEL_TO_HIDE_EVENTLIST_VIEW)
          //   return nil; //this will return a standard pin, which is not what I want
 
-        NSString* poiAnnImageFile = @"small-red-ball-icon.png";
+        NSString* poiAnnImageFile = @"star-red.png";
         MKAnnotationView* annView = (MKAnnotationView *) [self.mapView dequeueReusableAnnotationViewWithIdentifier:poiAnnImageFile];
 
         if (!annView)
@@ -1840,7 +1863,7 @@
     {
         
         NSSet *nearbySet = [self.mapView annotationsInMapRect:self.mapView.visibleMapRect];
-        
+
         //big performance hit
         ATAppDelegate *appDelegate = (ATAppDelegate *)[[UIApplication sharedApplication] delegate];
         int eventStartPosition = 0;
@@ -1851,6 +1874,8 @@
             ATEventAnnotation* ann = annView;
             if ([ann isKindOfClass:[ATAnnotationPoi class]] && eventStartPosition <= MAX_NUMBER_OF_POI_IN_EVENT_VIEW)
             {
+                if (![self isCloseToCenterDistance:ann])
+                    continue;
                 ATEventDataStruct* evt = [[ATEventDataStruct alloc] init];
                 evt.uniqueId = ann.uniqueId;
                 evt.lat = ann.coordinate.latitude;
@@ -1900,6 +1925,8 @@
             ATEventAnnotation* ann = annView;
             if ([ann isKindOfClass:[ATAnnotationPoi class]] && eventStartPosition <= MAX_NUMBER_OF_POI_IN_EVENT_VIEW)
             {
+                if (![self isCloseToCenterDistance:ann])
+                    continue;
                 ATEventDataStruct* evt = [[ATEventDataStruct alloc] init];
                 evt.uniqueId = ann.uniqueId;
                 evt.lat = ann.coordinate.latitude;
@@ -1916,6 +1943,44 @@
     }
     if (eventListView.hidden == false)
         [self refreshEventListView:false];
+}
+
+
+-(BOOL)isCloseToCenterDistance:(ATEventAnnotation*)annView
+{
+    //If there are too many poi on screen while in large zoom level, I only want to list those 10 closest to center in event list window. But to do it, we need get distances for all poi to center, sort and pick closest 10 poi, wich will have big performance hit
+    
+    //My approach is to pick 10 from those within certain distance to center based on zoom level:
+    //  The small the zoom level, the closer to center will be shown.
+    //  When zoom level is large than 12, then show all poi on screen
+    
+    ATAppDelegate *appDelegate = (ATAppDelegate *)[[UIApplication sharedApplication] delegate];
+    //NSLog(@"zoo level  %d",appDelegate.zoomLevel);
+    if (appDelegate.zoomLevel > 12)
+        return true; //always list all poi if zoom level is large enough
+    float distanceRatioToCenter = 2.5;
+    if (appDelegate.zoomLevel < 9)
+        distanceRatioToCenter = 4;
+    else
+        distanceRatioToCenter = 2.5;
+    CLLocationCoordinate2D center = [self.mapView centerCoordinate];
+    MKMapRect mRect = self.mapView.visibleMapRect;
+    CLLocationCoordinate2D conerPoint = [self getCoordinateFromMapRectanglePoint:MKMapRectGetMinX(mRect) y:mRect.origin.y];
+    CLLocation* centerColl = [[CLLocation alloc] initWithLatitude:center.latitude longitude:center.longitude];
+    CLLocation* conerColl = [[CLLocation alloc] initWithLatitude:conerPoint.latitude longitude:conerPoint.longitude];
+    CLLocationDistance halfWayDistance = [conerColl distanceFromLocation:centerColl] / distanceRatioToCenter;
+    
+    CLLocation* poiColl = [[CLLocation alloc] initWithLatitude:annView.coordinate.latitude longitude:annView.coordinate.longitude];
+    CLLocationDistance distance = [centerColl distanceFromLocation:poiColl];
+    if (distance < halfWayDistance)
+        return true;
+    else
+        return false;
+}
+
+-(CLLocationCoordinate2D)getCoordinateFromMapRectanglePoint:(double)x y:(double)y{
+    MKMapPoint swMapPoint = MKMapPointMake(x, y);
+    return MKCoordinateForMapPoint(swMapPoint);
 }
 
 
@@ -2276,6 +2341,7 @@
     ATEventAnnotation* ann = view.annotation;// selectedEventAnnDataOnMap; // [view annotation];
     self.selectedAnnotation = ann;
     ATAppDelegate *appDelegate = (ATAppDelegate *)[[UIApplication sharedApplication] delegate];
+    appDelegate.isForPOIEditorFlag = false;
     UIStoryboard* storyboard = appDelegate.storyBoard;
     NSDateFormatter *dateFormater = appDelegate.dateFormater;
     //if (self.eventEditor == nil) {
@@ -2351,6 +2417,7 @@
     ATEventAnnotation* ann = view.annotation;// selectedEventAnnDataOnMap; // [view annotation];
     self.selectedAnnotation = ann;
     ATAppDelegate *appDelegate = (ATAppDelegate *)[[UIApplication sharedApplication] delegate];
+    appDelegate.isForPOIEditorFlag = true;
     UIStoryboard* storyboard = appDelegate.storyBoard;
 
     self.eventEditor = [storyboard instantiateViewControllerWithIdentifier:@"poi_editor_id"];
@@ -2391,14 +2458,30 @@
     }
     //has to set value here after above presentXxxxx method, otherwise the firsttime will display empty text
     [self.eventEditor resetEventEditor];
-    
+    self.eventEditor.description.dataDetectorTypes = UIDataDetectorTypeLink;
     self.eventEditor.coordinate = ann.coordinate;
     if ([ann.description isEqualToString:NEWEVENT_DESC_PLACEHOLD])
     {
         self.eventEditor.description.textColor = [UIColor lightGrayColor];
     }
     
-    self.eventEditor.description.text = ann.description;
+    NSString* descToDisplay= ann.description;
+    NSString* descStr= ann.description;
+    NSString* titleStr = @"";
+    NSMutableAttributedString *attString=[[NSMutableAttributedString alloc] initWithString:descStr];
+    
+    int titleEndLocation = [descStr rangeOfString:@"\n"].location;
+    if (titleEndLocation < 80) //title is in file as [Desc]xxx yyy zzzz\n
+    {
+        titleStr = [descStr substringToIndex:titleEndLocation];
+        descStr = [descStr substringFromIndex:titleEndLocation];
+        descToDisplay = [NSString stringWithFormat:@"%@%@",titleStr, descStr ];
+        attString=[[NSMutableAttributedString alloc] initWithString:descToDisplay];
+        [attString addAttribute:NSFontAttributeName value:[UIFont fontWithName:@"Arial-BoldMT" size:16] range:NSMakeRange(0, [titleStr length] + 1)];
+        [attString addAttribute:NSFontAttributeName value:[UIFont fontWithName:@"Arial" size:15] range:NSMakeRange([titleStr length] + 1, [descStr length]-1)];
+    }
+    
+    self.eventEditor.description.attributedText = attString;
     self.eventEditor.hasPhotoFlag = EVENT_TYPE_NO_PHOTO; //not set to ann.eventType because we want to use this flag to decide if need save image again
     self.eventEditor.eventId = ann.uniqueId;
     if (ann.uniqueId != nil)
@@ -2407,7 +2490,6 @@
         self.eventEditor.eventData = nil;
     
     [ATEventEditorTableController setEventId:ann.uniqueId];
-    appDelegate.hideAddPhotoIconFlag = true;
     [self.eventEditor createPhotoScrollView: ann.uniqueId ];
 }
 
@@ -3680,8 +3762,12 @@
     if (callFromScrollTimewheel && switchEventListViewModeToVisibleOnMapFlag)
         return; //while in map eventListView mode, move timewheel will call this function as well, but do nothing. eventListInVisibleMapArea is set to nil in switch button action
     ATAppDelegate *appDelegate = (ATAppDelegate *)[[UIApplication sharedApplication] delegate];
+    
     if (appDelegate.selectedPeriodInDays == 0)
+    {
+        NSLog(@" ##### 0 case");
         return; //TODO add this because call updateEventListViewWithPoiOnMapOnly() in regionDid.. will crash when start app
+    }
     int offset = 110;
     //try to move evetlistview to right side screenWidht - eventListViewCellWidth, but a lot of trouble, not know why
     //  even make x to 30, it will move more than 30, besides, not left side tap works

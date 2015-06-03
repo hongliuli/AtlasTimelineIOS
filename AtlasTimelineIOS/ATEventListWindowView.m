@@ -34,7 +34,7 @@ NSDateFormatter *dateFormatter;
 
 UIColor *greyColor;
 UIFont *boldFont;
-int selectedRowIndex;
+NSString* selectedPOIEventId;
 
 - (id)initWithFrame:(CGRect)frame
 {
@@ -63,7 +63,6 @@ int selectedRowIndex;
         greyColor=[UIColor darkGrayColor];
         boldFont=[UIFont fontWithName:@"Arial-BoldMT" size:13];
     }
-    selectedRowIndex = -1;
     return self;
 }
 
@@ -132,30 +131,42 @@ int selectedRowIndex;
     }
     NSString* titleStr = @"";
     NSString* descToDisplay = [NSString stringWithFormat:@"%@\n%@",dateStr, descStr ];
-    
-    ATEventListViewCell* cell = (ATEventListViewCell*)[tableView dequeueReusableCellWithIdentifier:@"Cell"];
+
     if ([ATHelper isPOIEvent:evt])
     {
         ATEventListViewPoiCell* cellPoi = (ATEventListViewPoiCell*)[tableView dequeueReusableCellWithIdentifier:@"PoiCell"];
         if (cellPoi == nil)
         {
             cellPoi = [[ATEventListViewPoiCell alloc] initWithFrame:CGRectMake(0, 0, [ATConstants eventListViewCellWidth], [ATConstants eventListViewCellHeight])];
+            cellPoi.eventDescView.font = [UIFont fontWithName:@"Arial-BoldMT" size:15];
+            
+            cellPoi.selectionStyle = UITableViewCellStyleDefault;
+            [cellPoi.layer setCornerRadius:7.0f];
+            [cellPoi.layer setMasksToBounds:YES];
+            [cellPoi.layer setBorderWidth:1.0f];
+            [cellPoi.layer setBorderColor:[UIColor lightGrayColor].CGColor];
+            
+
             int titleEndLocation = [descStr rangeOfString:@"\n"].location;
             titleStr = [descStr substringToIndex:titleEndLocation];
             cellPoi.eventDescView.text = titleStr;
-            [cellPoi.checkIcon setHidden:false];
-            if ([indexPath row] == selectedRowIndex)
-            {
-                [cellPoi setBackgroundColor:[UIColor colorWithRed:0.0 green:0.0 blue:1.0 alpha:0.50]];
-                selectedRowIndex = -1;
-            }
-            else
-                [cellPoi setBackgroundColor:[UIColor colorWithRed:0.0 green:0.0 blue:1.0 alpha:0.10]];
+            [cellPoi.checkIcon setHidden:true];
         }
+        if ([evt.uniqueId isEqualToString:selectedPOIEventId])
+        {
+            [cellPoi setBackgroundColor:[UIColor colorWithRed:0.7 green:0.7 blue:0.9 alpha:0.7]];
+            [cellPoi.checkIcon setHidden:false];
+        }
+        else
+            [cellPoi setBackgroundColor:[UIColor colorWithRed:0.9 green:0.9 blue:1.0 alpha:0.7]];
+        UIImageView* iconView = (UIImageView*) [cellPoi viewWithTag:9999]; //modify that from parent
+        [iconView setFrame:CGRectMake(2, 2, 65, 50)];
+        [iconView setImage:[ATHelper readPhotoFromFile:evt.uniqueId eventId:evt.uniqueId]];
+        //[iconView setImage:[ATHelper readPhotoThumbFromFile:evt.uniqueId]];
         return cellPoi;
     }
     
-    //ATEventListViewCell *cell = nil;
+    ATEventListViewCell* cell = (ATEventListViewCell*)[tableView dequeueReusableCellWithIdentifier:@"Cell"];
     if (cell == nil)
     {
         cell = [[ATEventListViewCell alloc] initWithFrame:CGRectMake(0, 0, [ATConstants eventListViewCellWidth], [ATConstants eventListViewCellHeight])];
@@ -227,7 +238,7 @@ int selectedRowIndex;
     {
         ATEventDataStruct* evt = internalEventList[indexPath.row];
         if ([ATHelper isPOIEvent:evt])
-            return 30;
+            return 50;
         else
         return [ATConstants eventListViewCellHeight];
     }
@@ -295,13 +306,16 @@ int selectedRowIndex;
         [mapView showTimeLinkOverlay];
 
         mapView.mapViewShowWhatFlag = MAPVIEW_SHOW_ALL; //ad-hoc fix to make sure thumbnail on map always show when select on eventlist view
-        selectedRowIndex = [indexPath row];
-
+        selectedPOIEventId = evt.uniqueId;
+        
         //bookmark selected event
-        NSUserDefaults* userDefault = [NSUserDefaults standardUserDefaults];
-        int idx = [appDelegate.eventListSorted indexOfObject:evt];
-        [userDefault setObject:[NSString stringWithFormat:@"%d",idx ] forKey:@"BookmarkEventIdx"];
-        [userDefault synchronize];
+        if (![ATHelper isPOIEvent:evt])
+        {
+            NSUserDefaults* userDefault = [NSUserDefaults standardUserDefaults];
+            int idx = [appDelegate.eventListSorted indexOfObject:evt];
+            [userDefault setObject:[NSString stringWithFormat:@"%d",idx ] forKey:@"BookmarkEventIdx"];
+            [userDefault synchronize];
+        }
     }
     
 }

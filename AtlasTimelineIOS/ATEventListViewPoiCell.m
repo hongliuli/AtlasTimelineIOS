@@ -26,10 +26,14 @@
     self=[super initWithFrame:frame];
     if (self)
     {
-        UIImageView* iconView = (UIImageView*) [self viewWithTag:9999]; //modify that from parent
-        [iconView setFrame:CGRectMake(2, 15, 6, 6)];
-        [iconView setImage:[UIImage imageNamed:@"small-red-ball-icon.png"]];
+        self.checkIcon = [[UIImageView alloc] initWithFrame:CGRectMake([ATConstants eventListViewCellWidth] -25, 7, 20, 20)];
+        [self.checkIcon setImage:[UIImage imageNamed:@"focuseIcon.png"]];
+        [self.checkIcon setTag:9999];
+        [self.contentView addSubview:self.checkIcon];
         
+        CGRect textFrame = CGRectMake(65, 0, [ATConstants eventListViewCellWidth],[ATConstants eventListViewCellHeight]);
+        UITextView* descView = (UITextView*)[self viewWithTag:99992];
+        [descView setFrame:textFrame];
     }
     return self;
 }

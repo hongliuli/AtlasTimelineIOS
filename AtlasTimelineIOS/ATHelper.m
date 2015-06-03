@@ -19,6 +19,9 @@
 #define JPEG_QUALITY 0.5
 #define THUMB_JPEG_QUALITY 0.3
 
+#define RESIZE_WIDTH 600
+#define RESIZE_HEIGHT 450
+
 @implementation ATHelper
 
 NSDateFormatter* dateFormaterForMonth;
@@ -622,6 +625,8 @@ UIPopoverController *verifyViewPopover;
 }
 + (BOOL) isPOIEventByDate:(NSDate*)eventDate
 {
+    if (eventDate == nil)
+        return true; //TODO somehow in chinese version eventDate = nil for POI event
     ATAppDelegate *appDelegate = (ATAppDelegate *)[[UIApplication sharedApplication] delegate];
     NSDateFormatter* fmt = appDelegate.dateFormater;
     NSDate* date = [fmt dateFromString:@"1/1/0001 AD"];
@@ -657,7 +662,7 @@ UIPopoverController *verifyViewPopover;
                 return nil;
             }
             NSRange placeRange = NSMakeRange(0, toNextRange.location);
-            evt.uniqueId = [tmp substringWithRange:placeRange];
+            evt.uniqueId = [[tmp substringWithRange:placeRange] stringByTrimmingCharactersInSet:[NSCharacterSet whitespaceAndNewlineCharacterSet]];;
             tmp = [tmp substringFromIndex:toNextRange.location];
             
             toNextRange = [tmp rangeOfString:@"[Loc]" options: NSCaseInsensitiveSearch];
@@ -710,6 +715,9 @@ UIPopoverController *verifyViewPopover;
             evt.eventDesc = [tmp substringFromIndex:6];
             
             [eventList addObject:evt];
+            
+            //Should call following in background
+            [self writePoiProfilePhotoToFileFromWeb:evt.uniqueId];
         }
     }
     
@@ -724,6 +732,91 @@ UIPopoverController *verifyViewPopover;
     
 }
 
+//############ look at reader version's:
+//    startLoadPhotosFromWeb ()
+//    writePhotoToFileFromWeb()
+//
+// In my future version of app for Tour only app, I may have multiple photos for each poi
+// and have description for each photo as in Reader version do:
+//    - on web server, have photo list txt file for each poi, file name will be poi's uniqueId
+//    - each file will has same format as PhotosUrlFiles.txt
+//    - each time start poi viewer (event editor), read {uniqueId}.txt from web
+//        and download photos for this poi if the are not downloaded yet
+//
+//##################
+
+//this will assume poi profile image is on chroniclemap/resources/images/poi/{uniqueId}.jpg
++(void)writePoiProfilePhotoToFileFromWeb:(NSString*)eventId
+{
+    NSString *photoFinalDir = [[ATHelper getPhotoDocummentoryPath] stringByAppendingPathComponent:eventId];
+    //TODO may need to check if photo directory with this eventId exist or not, otherwise create as in ATHealper xxxxxx
+    
+    
+    NSString* photoForThumbnail = nil;
+    
+    NSString* photoUrlHttp = [NSString stringWithFormat:@"http://www.chroniclemap.com/resources/images/poi/%@.jpg", eventId];
+    
+    NSString* newPhotoFinalFileName = [photoFinalDir stringByAppendingPathComponent:eventId];
+    
+    if ([[NSFileManager defaultManager] fileExistsAtPath:newPhotoFinalFileName isDirectory:nil])
+    {
+        return;
+    }
+    NSError *error;
+    BOOL eventPhotoDirExistFlag = [[NSFileManager defaultManager] fileExistsAtPath:photoFinalDir isDirectory:false];
+    if (!eventPhotoDirExistFlag)
+        [[NSFileManager defaultManager] createDirectoryAtPath:photoFinalDir withIntermediateDirectories:YES attributes:nil error:&error];
+    
+    NSData * imageData = [[NSData alloc] initWithContentsOfURL:[NSURL URLWithString: photoUrlHttp]];
+    if (imageData == nil)
+    {
+        NSLog(@"=== image read nil from %@",photoUrlHttp);
+        return;
+    }
+    
+    UIImage * newPhoto = [[UIImage alloc] initWithData:imageData];
+    
+    int imageWidth = RESIZE_WIDTH;
+    int imageHeight = RESIZE_HEIGHT;
+    
+    if (newPhoto.size.height > newPhoto.size.width)
+    {
+        imageWidth = RESIZE_HEIGHT;
+        imageHeight = RESIZE_WIDTH;
+    }
+    UIImage *newImage = newPhoto;
+    imageData = nil;
+    if (newPhoto.size.height > imageHeight || newPhoto.size.width > imageWidth)
+    {
+        newImage = [ATHelper imageResizeWithImage:newPhoto scaledToSize:CGSizeMake(imageWidth, imageHeight)];
+    }
+    //NSLog(@"widh=%f, height=%f",newPhoto.size.width, newPhoto.size.height);
+    imageData = UIImageJPEGRepresentation(newImage, 1.0);
+    
+    if (imageData == nil)
+        NSLog(@" #############  Read photo fail: %@", photoUrlHttp);
+    
+    error = nil;
+    [imageData writeToFile:newPhotoFinalFileName options:nil error:&error];
+    
+    if (error != nil)
+        NSLog(@" #############  Write photo fail: %@", photoUrlHttp);
+
+    newImage = nil;
+    newPhoto = nil;
+    imageData = nil;
+    
+    
+    NSString* thumbPath = [photoFinalDir stringByAppendingPathComponent:@"thumbnail"];
+    
+    UIImage* photo = [UIImage imageWithContentsOfFile: [photoFinalDir stringByAppendingPathComponent:photoForThumbnail ]];
+    UIImage* thumbImage = [ATHelper imageResizeWithImage:photo scaledToSize:CGSizeMake(THUMB_WIDTH, THUMB_HEIGHT)];
+    imageData = UIImageJPEGRepresentation(thumbImage, 1);
+    // NSLog(@"---------last write success:%i thumbnail file size=%i",ret, imageData.length);
+    [imageData writeToFile:thumbPath atomically:NO];
+    
+    
+}
 
 //---- set/get options
 + (BOOL) getOptionDateFieldKeyboardEnable

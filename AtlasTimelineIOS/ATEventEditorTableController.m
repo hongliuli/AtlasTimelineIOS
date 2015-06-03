@@ -175,14 +175,12 @@ forRowAtIndexPath: (NSIndexPath*)indexPath
         [photoBtn addTarget:self action:@selector(takePictureAction:) forControlEvents:UIControlEventTouchUpInside];
         photoBtn.tag = ADD_PHOTO_BUTTON_TAG_777;
         ATAppDelegate *appDelegate = (ATAppDelegate *)[[UIApplication sharedApplication] delegate];
-        if (!appDelegate.hideAddPhotoIconFlag)
+        if (!appDelegate.isForPOIEditorFlag)
         {
             [customView addSubview:photoBtn];
             [customView addSubview:lblTotalCount];
             [customView addSubview:lblNewAddedCount];
         }
-        else
-            appDelegate.hideAddPhotoIconFlag = false;
         
         customViewForPhoto = customView;
         //tricky, see another comments with word "tricky"

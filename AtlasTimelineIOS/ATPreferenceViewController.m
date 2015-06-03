@@ -600,15 +600,22 @@
     else if (section == SECTION_LOGIN_EMAIL)
     {
         if (row == 0)
-            cell.textLabel.text = NSLocalizedString(@"Tour Attractions",nil);
+        {
+            cell.textLabel.text = NSLocalizedString(@"Top City Attractions",nil);
+            [cell.imageView setImage:[UIImage imageNamed:@"star-red-orig.png"]];
+        }
         else
+        {
             cell.textLabel.text = NSLocalizedString(@"Options",nil);
+        }
     }
     else if (section == SECTION_MISC)
+        
     {
         switch (row) {
             case ROW_PURCHASE:
                 cell.textLabel.text = NSLocalizedString(@"Support Us",nil);
+                [cell.imageView setImage:nil];
                 break;
             case ROW_RESTORE_PURCHASE:
                 cell.textLabel.text = NSLocalizedString(@"Restore Purchase",nil);

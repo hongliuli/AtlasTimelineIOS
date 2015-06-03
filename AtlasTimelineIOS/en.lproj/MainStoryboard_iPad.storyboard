@@ -41,11 +41,12 @@
                     <connections>
                         <outlet property="mapView" destination="dYP-aq-uwo" id="tWs-Qx-XNt"/>
                         <outlet property="searchBar" destination="wKR-fy-09a" id="4Cv-LG-jHG"/>
+                        <segue destination="Ggw-jm-iFH" kind="push" identifier="choose_attractions" id="Yf2-my-RXz"/>
                     </connections>
                 </viewController>
                 <placeholder placeholderIdentifier="IBFirstResponder" id="3" sceneMemberID="firstResponder"/>
             </objects>
-            <point key="canvasLocation" x="720" y="-415"/>
+            <point key="canvasLocation" x="736" y="-439"/>
         </scene>
         <!--Timeline Table View Controller - Timeline View-->
         <scene sceneID="JHh-fb-iE6">
@@ -544,12 +545,13 @@
                                             <rect key="frame" x="0.0" y="0.0" width="768" height="237"/>
                                             <autoresizingMask key="autoresizingMask"/>
                                             <subviews>
-                                                <textView clipsSubviews="YES" multipleTouchEnabled="YES" tag="888" contentMode="scaleToFill" showsHorizontalScrollIndicator="NO" id="XDT-GO-Zw3">
+                                                <textView clipsSubviews="YES" multipleTouchEnabled="YES" tag="888" contentMode="scaleToFill" showsHorizontalScrollIndicator="NO" editable="NO" id="XDT-GO-Zw3">
                                                     <rect key="frame" x="0.0" y="4" width="379" height="220"/>
                                                     <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMaxY="YES"/>
                                                     <color key="backgroundColor" white="0.0" alpha="0.0" colorSpace="calibratedWhite"/>
                                                     <fontDescription key="fontDescription" type="system" pointSize="14"/>
                                                     <textInputTraits key="textInputTraits" autocapitalizationType="sentences"/>
+                                                    <dataDetectorType key="dataDetectorTypes" link="YES"/>
                                                     <connections>
                                                         <outlet property="delegate" destination="xcn-Dr-L1y" id="TAE-NV-vXz"/>
                                                     </connections>
@@ -874,7 +876,7 @@
                             <outlet property="delegate" destination="Ggw-jm-iFH" id="RlT-PR-xtQ"/>
                         </connections>
                     </tableView>
-                    <navigationItem key="navigationItem" title="Choose POI" id="VZX-YC-lLx"/>
+                    <navigationItem key="navigationItem" title="Choose Attractions" id="VZX-YC-lLx"/>
                     <value key="contentSizeForViewInPopover" type="size" width="360" height="420"/>
                 </tableViewController>
                 <placeholder placeholderIdentifier="IBFirstResponder" id="lLE-i8-s25" userLabel="First Responder" sceneMemberID="firstResponder"/>
@@ -889,5 +891,6 @@
     </simulatedMetricsContainer>
     <inferredMetricsTieBreakers>
         <segue reference="UOR-Fu-dvv"/>
+        <segue reference="Yf2-my-RXz"/>
     </inferredMetricsTieBreakers>
 </document>

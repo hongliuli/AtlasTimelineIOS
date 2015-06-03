@@ -153,7 +153,7 @@ NSInteger selectedPoiGroupIdxForDeselect;
         [userDefaults setObject:responseStr forKey:poiGroupName];
     }
     
-    NSLog(@"----- response is %@", responseStr);
+    [self dismissViewControllerAnimated:NO completion:nil]; //for iPhone case
 
     
     if (responseStr != nil)
@@ -171,7 +171,6 @@ NSInteger selectedPoiGroupIdxForDeselect;
         //////TODO
         
         //TODO [refer to createdEventListFromString function in Reader version]
-        
         NSArray* poiList = [ATHelper createdPoiListFromString:responseStr];
         
         [self.delegate poiGroupChooseViewController:self didSelectPoiGroup:poiList];

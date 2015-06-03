@@ -28,7 +28,7 @@
     {
         CGRect imageFrame = CGRectMake(5, 5, [ATConstants eventListViewPhotoWidht],[ATConstants eventListViewPhotoHeight]); //a little different frame in ATEventListView.m
         CGRect textFrame = CGRectMake(5, 0, [ATConstants eventListViewCellWidth],[ATConstants eventListViewCellHeight]);
-        
+    
         self.photoImage = [[UIImageView alloc] initWithFrame:imageFrame];
         [self.contentView addSubview:self.photoImage];
         
@@ -42,6 +42,7 @@
         [self.eventDescView setEditable:false];
         [self.eventDescView setScrollEnabled:false];
         [self.contentView addSubview:self.eventDescView];
+        [self.eventDescView setTag:99992];
         [self.contentView setBackgroundColor:[UIColor clearColor]];
         [self setBackgroundColor:[UIColor clearColor]];
       
