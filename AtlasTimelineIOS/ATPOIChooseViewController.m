@@ -55,7 +55,6 @@ NSInteger selectedPoiGroupIdxForDeselect;
     {
         [userDefaults setObject:responseStr forKey:@"GROUP_POI_SAVED"];
     }
-    NSLog(@"----- response is %@", responseStr);
     if (responseStr != nil && [responseStr length] > 100)
     {
         poiGroupList = [responseStr componentsSeparatedByString:@"\n"];
@@ -95,6 +94,8 @@ NSInteger selectedPoiGroupIdxForDeselect;
     NSArray* textArr = [poi componentsSeparatedByString:@":"];
     CellIdentifier = @"PeriodCell";
     cell = [tableView  dequeueReusableCellWithIdentifier:CellIdentifier];
+
+
 
     cell.textLabel.text = textArr[0];
     if ([textArr count] > 1)
@@ -141,9 +142,24 @@ NSInteger selectedPoiGroupIdxForDeselect;
         [self.delegate poiGroupChooseViewController:self didSelectPoiGroup:poiList]; //clean map with empty array to mapview
         return;
     }
+    UIActivityIndicatorView *spinner = [[UIActivityIndicatorView alloc]initWithActivityIndicatorStyle:UIActivityIndicatorViewStyleGray];
+    
+    //TODO  following spinner does not work /////////
+    // Get center of cell (vertically)
+    int center = [cell frame].size.height / 2;
+    CGSize size = [[[cell textLabel] text] sizeWithFont:[[cell textLabel] font]];
+    [spinner setFrame:CGRectMake(size.width + 25, center - 25 / 2, 25, 25)];
+    [[cell contentView] addSubview:spinner];
+    spinner.tag = 9999;
+    //UIActivityIndicatorView* spinner = (UIActivityIndicatorView*)[cell.contentView viewWithTag:9999];
+    [spinner startAnimating];
+    [[NSRunLoop currentRunLoop] runUntilDate:[NSDate date]]; //Tricky: yield main loop so spinner will show progress
     NSString* serviceUrl = [NSString stringWithFormat:@"http://www.chroniclemap.com/resources/poi/%@.html", poiGroupName];
+    //####
+    //#### following may return nil if %@.html file is not utf-8 encoded (linux: file -bi filename)
+    //####
     NSString* responseStr  = [ATHelper httpGetFromServer:serviceUrl :false];
-
+    
     if (responseStr == nil)
     {
         responseStr = [userDefaults objectForKey:poiGroupName];
@@ -186,8 +202,9 @@ NSInteger selectedPoiGroupIdxForDeselect;
         [alert show];
         
     }
-    
-    
+
+    [spinner stopAnimating];
+    [spinner removeFromSuperview];
 }
 
 - (void)tableView:(UITableView *)tableView accessoryButtonTappedForRowWithIndexPath:(NSIndexPath *)indexPath{

@@ -132,6 +132,7 @@ NSString* selectedPOIEventId;
     NSString* titleStr = @"";
     NSString* descToDisplay = [NSString stringWithFormat:@"%@\n%@",dateStr, descStr ];
 
+
     if ([ATHelper isPOIEvent:evt])
     {
         ATEventListViewPoiCell* cellPoi = (ATEventListViewPoiCell*)[tableView dequeueReusableCellWithIdentifier:@"PoiCell"];
@@ -166,7 +167,15 @@ NSString* selectedPOIEventId;
         return cellPoi;
     }
     
-    ATEventListViewCell* cell = (ATEventListViewCell*)[tableView dequeueReusableCellWithIdentifier:@"Cell"];
+    NSString* cellType = @"blueBoardCell";
+    UIColor* boarderColor = [UIColor colorWithRed:0 green:0 blue:1 alpha:0.2];
+    if (eventListViewInMapModeFlag)
+    {
+        cellType = @"redBoardCell";
+        boarderColor = [UIColor colorWithRed:1 green:0 blue:0 alpha:0.2];
+    }
+    
+    ATEventListViewCell* cell = (ATEventListViewCell*)[tableView dequeueReusableCellWithIdentifier:cellType];
     if (cell == nil)
     {
         cell = [[ATEventListViewCell alloc] initWithFrame:CGRectMake(0, 0, [ATConstants eventListViewCellWidth], [ATConstants eventListViewCellHeight])];
@@ -176,7 +185,7 @@ NSString* selectedPOIEventId;
         [cell.layer setCornerRadius:7.0f];
         [cell.layer setMasksToBounds:YES];
         [cell.layer setBorderWidth:1.0f];
-        [cell.layer setBorderColor:[UIColor lightGrayColor].CGColor];
+        [cell.layer setBorderColor:boarderColor.CGColor];
         cell.contentView.backgroundColor = [UIColor colorWithRed:1 green:1 blue:1 alpha:0.7];
         //cell.backgroundColor = [UIColor colorWithRed:1 green:1 blue:1 alpha:0.7];
         //[cell.layer setBorderColor:(__bridge CGColorRef)([UIColor lightGrayColor])];

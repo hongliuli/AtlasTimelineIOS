@@ -226,15 +226,15 @@
     UIBarButtonItem *helpButton = [[UIBarButtonItem alloc] initWithCustomView:helpbtn];
     self.navigationItem.rightBarButtonItems = @[settringButton, helpButton];
     
-    /*
+    
     UIButton *poiLoadViewBtn = [UIButton buttonWithType:UIButtonTypeCustom];
-    poiLoadViewBtn.frame = CGRectMake(0, 0, 30, 30);
+    poiLoadViewBtn.frame = CGRectMake(0, 0, 20, 20);
     [poiLoadViewBtn setImage:[UIImage imageNamed:@"star-red-orig.png"] forState:UIControlStateNormal];
     [poiLoadViewBtn addTarget:self action:@selector(choosePoiClicked:) forControlEvents:UIControlEventTouchUpInside];
     UIBarButtonItem *poiButton = [[UIBarButtonItem alloc] initWithCustomView:poiLoadViewBtn];
-     */
-    //self.navigationItem.rightBarButtonItems = @[settringButton, helpButton, poiButton];
-    self.navigationItem.rightBarButtonItems = @[settringButton, helpButton];
+     
+    self.navigationItem.rightBarButtonItems = @[settringButton, poiButton];
+    //self.navigationItem.rightBarButtonItems = @[settringButton, helpButton];
     
     //   }
     
@@ -546,7 +546,7 @@
 }
 
 -(void) switchEventListViewMode:(id)sender
-{
+{//xxxxx
     if (switchEventListViewModeToVisibleOnMapFlag)
     {
         switchEventListViewModeToVisibleOnMapFlag = false;
@@ -554,6 +554,9 @@
         [self setSwitchButtonTimeMode];
         [self.mapView makeToast:NSLocalizedString(@"Scroll timewheel to list events in the selected period",nil) duration:4.0 position:[NSValue valueWithCGPoint:CGPointMake(350, 80)]];
         [self refreshEventListView:false];
+        [self.timeScrollWindow setHidden:FALSE];
+        [self.timeZoomLine setHidden:FALSE];
+        [self animatedShowPart1];
     }
     else
     {
@@ -561,6 +564,8 @@
         [self setSwitchButtonMapMode];
         [self.mapView makeToast:NSLocalizedString(@"Scroll map to list events moving into the screen",nil) duration:4.0 position:[NSValue valueWithCGPoint:CGPointMake(340, 80)]];
         [self updateEventListViewWithEventsOnMap];
+        [self.timeScrollWindow setHidden:TRUE];
+        [self.timeZoomLine setHidden:TRUE];
     }
 }
 
@@ -1236,9 +1241,11 @@
                      completion:NULL];
 }
 - (void) animatedShowPart1
-{
+{//xxxxxxx
     int timeWindowY = self.view.bounds.size.height - [ATConstants timeScrollWindowHeight];
     int timeLineY = timeWindowY;
+    if (!switchEventListViewModeToVisibleOnMapFlag)
+    {
     [UIView animateWithDuration:0.3
                           delay:0.0
                         options:UIViewAnimationCurveEaseOut
@@ -1263,6 +1270,24 @@
                          [switchEventListViewModeBtn setFrame:frame];
                      }
                      completion:NULL];
+    }
+    else
+    {
+        [UIView animateWithDuration:0.3
+                              delay:0.0
+                            options:UIViewAnimationCurveEaseOut
+                         animations:^(void) {
+                             switchEventListViewModeBtn.alpha = 1;
+                             eventListView.alpha = 1;
+                             CGRect frame = eventListView.frame;
+                             frame.origin.x = 0;
+                             [eventListView setFrame:frame];
+                             frame = switchEventListViewModeBtn.frame;
+                             frame.origin.x = 10;
+                             [switchEventListViewModeBtn setFrame:frame];
+                         }
+                         completion:NULL];
+    }
 }
 
 - (void)handleTapGesture:(UIGestureRecognizer *)gestureRecognizer
@@ -1371,8 +1396,9 @@
     if ([annotation isKindOfClass:[ATAnnotationPoi class]]){
         //if ([self zoomLevel] <= ZOOM_LEVEL_TO_HIDE_EVENTLIST_VIEW)
          //   return nil; //this will return a standard pin, which is not what I want
-
         NSString* poiAnnImageFile = @"star-red.png";
+        if (ann.eventType == 99)
+            poiAnnImageFile = @"small-red-ball-icon.png";
         MKAnnotationView* annView = (MKAnnotationView *) [self.mapView dequeueReusableAnnotationViewWithIdentifier:poiAnnImageFile];
 
         if (!annView)
@@ -1874,7 +1900,7 @@
             ATEventAnnotation* ann = annView;
             if ([ann isKindOfClass:[ATAnnotationPoi class]] && eventStartPosition <= MAX_NUMBER_OF_POI_IN_EVENT_VIEW)
             {
-                if (![self isCloseToCenterDistance:ann])
+                if (![self checkCityOrCountryLevelHide:ann])
                     continue;
                 ATEventDataStruct* evt = [[ATEventDataStruct alloc] init];
                 evt.uniqueId = ann.uniqueId;
@@ -1925,7 +1951,7 @@
             ATEventAnnotation* ann = annView;
             if ([ann isKindOfClass:[ATAnnotationPoi class]] && eventStartPosition <= MAX_NUMBER_OF_POI_IN_EVENT_VIEW)
             {
-                if (![self isCloseToCenterDistance:ann])
+                if (![self checkCityOrCountryLevelHide:ann])
                     continue;
                 ATEventDataStruct* evt = [[ATEventDataStruct alloc] init];
                 evt.uniqueId = ann.uniqueId;
@@ -1946,7 +1972,7 @@
 }
 
 
--(BOOL)isCloseToCenterDistance:(ATEventAnnotation*)annView
+-(BOOL)checkCityOrCountryLevelHide:(ATEventAnnotation*)annView
 {
     //If there are too many poi on screen while in large zoom level, I only want to list those 10 closest to center in event list window. But to do it, we need get distances for all poi to center, sort and pick closest 10 poi, wich will have big performance hit
     
@@ -1955,27 +1981,34 @@
     //  When zoom level is large than 12, then show all poi on screen
     
     ATAppDelegate *appDelegate = (ATAppDelegate *)[[UIApplication sharedApplication] delegate];
-    //NSLog(@"zoo level  %d",appDelegate.zoomLevel);
-    if (appDelegate.zoomLevel > 12)
-        return true; //always list all poi if zoom level is large enough
-    float distanceRatioToCenter = 2.5;
-    if (appDelegate.zoomLevel < 9)
-        distanceRatioToCenter = 4;
+    int eventType = annView.eventType;
+    //NSLog(@"zoo level  %d   eventType=%d",appDelegate.zoomLevel, eventType);
+    if ((appDelegate.zoomLevel > 11 && eventType != 99) || (appDelegate.zoomLevel > 4 && eventType == 99))
+    {
+        //need to show poi, but only show those close to map center
+        float distanceRatioToCenter = 2.5;
+        /*
+        if (appDelegate.zoomLevel < 9)
+            distanceRatioToCenter = 4;
+        else
+            distanceRatioToCenter = 2.5; //the smaller the value, the more poi  included (or larger radius)
+         */
+        CLLocationCoordinate2D center = [self.mapView centerCoordinate];
+        MKMapRect mRect = self.mapView.visibleMapRect;
+        CLLocationCoordinate2D conerPoint = [self getCoordinateFromMapRectanglePoint:MKMapRectGetMinX(mRect) y:mRect.origin.y];
+        CLLocation* centerColl = [[CLLocation alloc] initWithLatitude:center.latitude longitude:center.longitude];
+        CLLocation* conerColl = [[CLLocation alloc] initWithLatitude:conerPoint.latitude longitude:conerPoint.longitude];
+        CLLocationDistance halfWayDistance = [conerColl distanceFromLocation:centerColl] / distanceRatioToCenter;
+        
+        CLLocation* poiColl = [[CLLocation alloc] initWithLatitude:annView.coordinate.latitude longitude:annView.coordinate.longitude];
+        CLLocationDistance distance = [centerColl distanceFromLocation:poiColl];
+        if (distance < halfWayDistance)
+            return true;
+        else
+            return false;
+    }
     else
-        distanceRatioToCenter = 2.5;
-    CLLocationCoordinate2D center = [self.mapView centerCoordinate];
-    MKMapRect mRect = self.mapView.visibleMapRect;
-    CLLocationCoordinate2D conerPoint = [self getCoordinateFromMapRectanglePoint:MKMapRectGetMinX(mRect) y:mRect.origin.y];
-    CLLocation* centerColl = [[CLLocation alloc] initWithLatitude:center.latitude longitude:center.longitude];
-    CLLocation* conerColl = [[CLLocation alloc] initWithLatitude:conerPoint.latitude longitude:conerPoint.longitude];
-    CLLocationDistance halfWayDistance = [conerColl distanceFromLocation:centerColl] / distanceRatioToCenter;
-    
-    CLLocation* poiColl = [[CLLocation alloc] initWithLatitude:annView.coordinate.latitude longitude:annView.coordinate.longitude];
-    CLLocationDistance distance = [centerColl distanceFromLocation:poiColl];
-    if (distance < halfWayDistance)
-        return true;
-    else
-        return false;
+        return false; //Do not list any poi in event list view
 }
 
 -(CLLocationCoordinate2D)getCoordinateFromMapRectanglePoint:(double)x y:(double)y{
@@ -3866,11 +3899,15 @@
 
          newFrame = CGRectMake(0,offset,[ATConstants eventListViewCellWidth],numOfCellOnScreen * [ATConstants eventListViewCellHeight]);
     }
-    
-    self.timeScrollWindow.hidden=false;
+    /*
+    if (!switchEventListViewModeToVisibleOnMapFlag) {
+        self.timeScrollWindow.hidden=false;
+        self.timeZoomLine.hidden = false;
+    }
     eventListView.hidden = false;
     switchEventListViewModeBtn.hidden = false;
-    self.timeZoomLine.hidden = false;
+*/
+    [self animatedShowPart1];
     [self showDescriptionLabelViews:self.mapView];
     self.navigationController.navigationBarHidden = false;
     

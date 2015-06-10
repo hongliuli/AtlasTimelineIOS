@@ -37,9 +37,10 @@
 #define ROW_CONTENT_MG_MY_EPISODE 1
 #define ROW_CONTENT_MG_EPISODE_FROM_FRIEND 2
 
-#define ROW_VIDEO_TUTORIAL 0
-#define ROW_PURCHASE 1
-#define ROW_RESTORE_PURCHASE 2
+#define ROW_OPTIONS 0
+#define ROW_VIDEO_TUTORIAL 1
+#define ROW_PURCHASE 2
+#define ROW_RESTORE_PURCHASE 3
 #define IN_APP_PURCHASED @"IN_APP_PURCHASED"
 #define RESTORE_PHOTO_TITLE NSLocalizedString(@"Restore Photos",nil)
 
@@ -531,7 +532,7 @@
     // Return the number of rows in the section.
     int retCount = 0;
     if (section == SECTION_LOGIN_EMAIL)
-        retCount = 2;
+        retCount = 1;
     else if (section == SECTION_CONTENT_MANAGE)
         retCount = 3;
     else if (section == SECTION_SYNC_MYEVENTS_TO_SERVER)
@@ -539,7 +540,7 @@
     else if (section == SECTION_SYNC_MYEVENTS_PHOTO_TO_DROPBOX)
         retCount = 3;
     else  //SECTION_SUPPORT...
-        retCount = 3;
+        retCount = 4;
     
     return retCount;
 }
@@ -601,18 +602,18 @@
     {
         if (row == 0)
         {
-            cell.textLabel.text = NSLocalizedString(@"Top City Attractions",nil);
+            cell.textLabel.text = NSLocalizedString(@"World Top Attractions",nil);
             [cell.imageView setImage:[UIImage imageNamed:@"star-red-orig.png"]];
-        }
-        else
-        {
-            cell.textLabel.text = NSLocalizedString(@"Options",nil);
         }
     }
     else if (section == SECTION_MISC)
         
     {
         switch (row) {
+            case ROW_OPTIONS:
+                cell.textLabel.text = NSLocalizedString(@"Options",nil);
+                [cell.imageView setImage:nil];
+                break;
             case ROW_PURCHASE:
                 cell.textLabel.text = NSLocalizedString(@"Support Us",nil);
                 [cell.imageView setImage:nil];
@@ -806,6 +807,10 @@
 -(void) handleMiscSection:(UITableView*)tableView :(NSIndexPath *)indexPath
 {
     int row = indexPath.row;
+    if (row == ROW_OPTIONS)
+    {
+        [self performSegueWithIdentifier:@"options" sender:nil];
+    }
     if (row == ROW_VIDEO_TUTORIAL)
     {
         NSURL *url = [NSURL URLWithString:@"http://www.chroniclemap.com/onlinehelp"];
@@ -863,8 +868,6 @@
     //also see prepareForSeque() where pass values
     if (indexPath.row == 0)
         [self performSegueWithIdentifier:@"choose_poi" sender:nil];
-    else
-        [self performSegueWithIdentifier:@"options" sender:nil];
 }
 -(void) handleSynchServerSection:(UITableView*)tableView :(NSIndexPath *)indexPath
 {

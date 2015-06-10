@@ -470,6 +470,8 @@ UIPopoverController *verifyViewPopover;
         }
         return nil;
     }
+    //### the data on website must be utf-8 or US Acii encoded, otherwise following convert NSData to string will be nil
+    //### for example, poi/Norther Europ.html must be utf8 encoded (on linux : file -bi [filename])
     NSString* responseStr = [[NSString alloc]initWithData:urlData encoding:NSUTF8StringEncoding];
     if ([responseStr hasPrefix:@"<html>"])
     {
@@ -646,12 +648,11 @@ UIPopoverController *verifyViewPopover;
 
         for (NSString* eventStr in eventStrList)
         {
-            if ([@"" isEqualToString:eventStr] || [@"\n" isEqualToString:eventStr])
+            NSString* tmp = [eventStr stringByTrimmingCharactersInSet:[NSCharacterSet whitespaceAndNewlineCharacterSet]];
+            if ([@"" isEqualToString:tmp] || [@"\n" isEqualToString:tmp])
                 continue;
             ATEventDataStruct* evt = [[ATEventDataStruct alloc] init];
             //###### event in file must have order [Place]boston_trail -> [Tags] -> [Loc] ->[Rate]-> [Desc]
-            NSString* tmp = [eventStr stringByTrimmingCharactersInSet:[NSCharacterSet whitespaceAndNewlineCharacterSet]];
-            
             evt.eventDate = poiDate;
             NSRange toNextRange = [tmp rangeOfString:@"[Tags]" options: NSCaseInsensitiveSearch];
             if (toNextRange.location == NSNotFound) {
@@ -754,7 +755,8 @@ UIPopoverController *verifyViewPopover;
     
     NSString* photoForThumbnail = nil;
     
-    NSString* photoUrlHttp = [NSString stringWithFormat:@"http://www.chroniclemap.com/resources/images/poi/%@.jpg", eventId];
+    //######  poi photos are in public folder of dropbox of lanqiuusa@yahoo.com/hongliu123
+    NSString* photoUrlHttp = [NSString stringWithFormat:@"https://dl.dropboxusercontent.com/u/87265216/%@.jpg", eventId];
     
     NSString* newPhotoFinalFileName = [photoFinalDir stringByAppendingPathComponent:eventId];
     
