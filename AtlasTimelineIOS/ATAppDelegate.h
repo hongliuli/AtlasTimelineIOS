@@ -9,6 +9,7 @@
 #import <UIKit/UIKit.h>
 #import "ATViewController.h"
 
+@class SWRevealViewController;
 @interface ATAppDelegate : UIResponder <UIApplicationDelegate>
 
 @property (strong, nonatomic) NSString* sourceName;
@@ -31,7 +32,12 @@
 
 @property NSString* optionEnableDateMagnifierMove;
 @property BOOL isForPOIEditorFlag; //an add-hoc way, but I have no other way
+@property BOOL rightSideMenuRevealedFlag;
+
+@property (strong, nonatomic) SWRevealViewController *viewController;
 
 -(void) emptyEventList;
+-(void) setTimelineControllerAsRearController; //for SWRevealViewControlller
+-(UINavigationController*) getPreferenceViewNavController; //for SWReveal
 
 @end

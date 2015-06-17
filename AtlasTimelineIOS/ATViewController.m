@@ -39,6 +39,8 @@
 #import "ATEventListWindowView.h"
 #import "Toast+UIView.h"
 
+#import "SWRevealViewController.h"
+
 #define EVENT_TYPE_NO_PHOTO 0
 #define EVENT_TYPE_HAS_PHOTO 1
 
@@ -171,6 +173,8 @@
 - (void)viewDidLoad
 {
     [super viewDidLoad];
+    ATAppDelegate *appDelegate = (ATAppDelegate *)[[UIApplication sharedApplication] delegate];
+    appDelegate.rightSideMenuRevealedFlag = FALSE;
     onlyRunViewDidAppearOnce = FALSE;
     switchEventListViewModeToVisibleOnMapFlag = false; //eventListView for timewheel is more reasonable, so make it as default always, even not save to userDefault
     [ATHelper createPhotoDocumentoryPath];
@@ -178,7 +182,7 @@
     self.locationManager = [[CLLocationManager alloc] init];
     //add for ios8
     self.locationManager.delegate = self;
-    if ([ATHelper isAtLeast8]) {
+    if ([ATHelper isAtLeastIOS8]) {
        // [self.locationManager requestWhenInUseAuthorization];
        // [self.locationManager requestAlwaysAuthorization];
     }
@@ -208,6 +212,14 @@
     //Find this spent me long time: searchBar used titleView place which is too short, thuse tap on searchbar right side keyboard will not show up, now it is good
 	[self calculateSearchBarFrame];
     
+    SWRevealViewController *revealController = [self revealViewController];
+    [revealController panGestureRecognizer];
+    [revealController tapGestureRecognizer];
+    UIBarButtonItem *timelineBarButtonItem = [[UIBarButtonItem alloc] initWithTitle:@"List/Search"
+                                                                         style:UIBarButtonItemStyleBordered target:revealController action:@selector(revealToggle:)];
+    self.navigationItem.leftBarButtonItem = timelineBarButtonItem;
+    
+    
     // create a custom navigation bar button and set it to always says "Back"
 	UIBarButtonItem *temporaryBarButtonItem = [[UIBarButtonItem alloc] init];
 	temporaryBarButtonItem.title = NSLocalizedString(@"Back",nil);
@@ -216,7 +228,8 @@
     //add two button at right (can not do in storyboard for multiple button): setting and Help, available in iOS5
     //   if (UI_USER_INTERFACE_IDIOM() == UIUserInterfaceIdiomPad)
     //   {
-    UIBarButtonItem *settringButton = [[UIBarButtonItem alloc] initWithImage:[UIImage imageNamed:@"ios-menu-icon.png"]  style:UIBarButtonItemStyleBordered target:self action:@selector(settingsClicked:)];
+    
+  UIBarButtonItem *settringButton = [[UIBarButtonItem alloc] initWithImage:[UIImage imageNamed:@"ios-menu-icon.png"]  style:UIBarButtonItemStyleBordered target:self action:@selector(settingsClicked:)];
     
     //NOTE the trick to set background image for a bar buttonitem
     UIButton *helpbtn = [UIButton buttonWithType:UIButtonTypeCustom];
@@ -226,15 +239,15 @@
     UIBarButtonItem *helpButton = [[UIBarButtonItem alloc] initWithCustomView:helpbtn];
     self.navigationItem.rightBarButtonItems = @[settringButton, helpButton];
     
-    
+    /*
     UIButton *poiLoadViewBtn = [UIButton buttonWithType:UIButtonTypeCustom];
     poiLoadViewBtn.frame = CGRectMake(0, 0, 20, 20);
     [poiLoadViewBtn setImage:[UIImage imageNamed:@"star-red-orig.png"] forState:UIControlStateNormal];
     [poiLoadViewBtn addTarget:self action:@selector(choosePoiClicked:) forControlEvents:UIControlEventTouchUpInside];
     UIBarButtonItem *poiButton = [[UIBarButtonItem alloc] initWithCustomView:poiLoadViewBtn];
-     
-    self.navigationItem.rightBarButtonItems = @[settringButton, poiButton];
-    //self.navigationItem.rightBarButtonItems = @[settringButton, helpButton];
+     */
+    //self.navigationItem.rightBarButtonItems = @[settringButton];
+    self.navigationItem.rightBarButtonItems = @[settringButton, helpButton];
     
     //   }
     
@@ -484,6 +497,7 @@
 
 -(void) settingsClicked:(id)sender  //IMPORTANT only iPad will come here, iPhone has push segue on storyboard
 {
+    /*
     NSString* currentVer = [[[NSBundle mainBundle] infoDictionary] objectForKey:@"CFBundleVersion"];
     currentVer = [NSString stringWithFormat:@"Current Version: %@",currentVer ];
     
@@ -506,26 +520,33 @@
             [alert show];
         }
     }
-    
-    UIStoryboard * storyboard;
-    ATPreferenceViewController *preference;
-    
-    //NOTE: following I have it seems strange that "preference_nav_id" is a NavagatorController not ATPreferenceViewController, but I have to do this way. When I do I phone, it will be simpler because I do not use popover, so no "preference_nav_id" navagatorController needed
-    if (UI_USER_INTERFACE_IDIOM() == UIUserInterfaceIdiomPad)
-    {
-        storyboard = [UIStoryboard storyboardWithName:@"MainStoryboard_iPad" bundle:nil];
-        preference = [storyboard instantiateViewControllerWithIdentifier:@"preference_nav_id"];
-        self.preferencePopover = [[UIPopoverController alloc] initWithContentViewController:preference];
-        //IMPORTANT: preferenceViewController is on storyboard with specified size, so have to put 0, 0 for size, otherwise weired thing will happen. Also 700 is not idea for landscape
-        [self.preferencePopover presentPopoverFromRect:CGRectMake(800,0,0,0)
-                                                inView:self.mapView permittedArrowDirections:UIPopoverArrowDirectionUp animated:YES];
+    */
+    ATAppDelegate *appDelegate = (ATAppDelegate *)[[UIApplication sharedApplication] delegate];
+    SWRevealViewController *revealController = [self revealViewController];
+    UIViewController* controller = revealController.rightViewController;
+    if (appDelegate.rightSideMenuRevealedFlag && ![controller isKindOfClass:[ATEventEditorTableController class]])
+    { //if right side is preference already, just toggle it
+        [revealController rightRevealToggle:nil];
+        return;
     }
-    else
-    {
-        storyboard = [UIStoryboard storyboardWithName:@"MainStoryboard_iPhone" bundle:nil];
-        preference = [storyboard instantiateViewControllerWithIdentifier:@"preference_storyboard_id"];
-        [self.navigationController pushViewController:preference animated:true];
+
+    //any other case need to reload preference
+    revealController.rightViewRevealWidth = [ATConstants revealViewPreferenceWidth];
+    UINavigationController* prefNavController = [appDelegate getPreferenceViewNavController];
+    revealController.rightViewController = prefNavController;
+    ATPreferenceViewController* prefController = prefNavController.childViewControllers[0];
+    [prefController refreshDisplayStatusAndData];
+    [[prefController tableView] reloadData];
+    
+    if (!appDelegate.rightSideMenuRevealedFlag)
+    { //if was not shown (but not preference, which is eventEditor
+
+        [revealController rightRevealToggle:nil];
     }
+
+    
+   // if (!appDelegate.rightSideMenuRevealedFlag)
+    //    [revealController rightRevealToggle:nil];
 }
 
 -(void) currentLocationClicked:(id)sender
@@ -546,7 +567,7 @@
 }
 
 -(void) switchEventListViewMode:(id)sender
-{//xxxxx
+{
     if (switchEventListViewModeToVisibleOnMapFlag)
     {
         switchEventListViewModeToVisibleOnMapFlag = false;
@@ -554,9 +575,6 @@
         [self setSwitchButtonTimeMode];
         [self.mapView makeToast:NSLocalizedString(@"Scroll timewheel to list events in the selected period",nil) duration:4.0 position:[NSValue valueWithCGPoint:CGPointMake(350, 80)]];
         [self refreshEventListView:false];
-        [self.timeScrollWindow setHidden:FALSE];
-        [self.timeZoomLine setHidden:FALSE];
-        [self animatedShowPart1];
     }
     else
     {
@@ -564,10 +582,9 @@
         [self setSwitchButtonMapMode];
         [self.mapView makeToast:NSLocalizedString(@"Scroll map to list events moving into the screen",nil) duration:4.0 position:[NSValue valueWithCGPoint:CGPointMake(340, 80)]];
         [self updateEventListViewWithEventsOnMap];
-        [self.timeScrollWindow setHidden:TRUE];
-        [self.timeZoomLine setHidden:TRUE];
     }
 }
+
 
 #pragma mark - CLLocationManagerDelegate
 
@@ -1241,11 +1258,9 @@
                      completion:NULL];
 }
 - (void) animatedShowPart1
-{//xxxxxxx
+{
     int timeWindowY = self.view.bounds.size.height - [ATConstants timeScrollWindowHeight];
     int timeLineY = timeWindowY;
-    if (!switchEventListViewModeToVisibleOnMapFlag)
-    {
     [UIView animateWithDuration:0.3
                           delay:0.0
                         options:UIViewAnimationCurveEaseOut
@@ -1270,24 +1285,6 @@
                          [switchEventListViewModeBtn setFrame:frame];
                      }
                      completion:NULL];
-    }
-    else
-    {
-        [UIView animateWithDuration:0.3
-                              delay:0.0
-                            options:UIViewAnimationCurveEaseOut
-                         animations:^(void) {
-                             switchEventListViewModeBtn.alpha = 1;
-                             eventListView.alpha = 1;
-                             CGRect frame = eventListView.frame;
-                             frame.origin.x = 0;
-                             [eventListView setFrame:frame];
-                             frame = switchEventListViewModeBtn.frame;
-                             frame.origin.x = 10;
-                             [switchEventListViewModeBtn setFrame:frame];
-                         }
-                         completion:NULL];
-    }
 }
 
 - (void)handleTapGesture:(UIGestureRecognizer *)gestureRecognizer
@@ -2203,6 +2200,7 @@
         selectedEventAnnOnMap = view;
         selectedEventAnnDataOnMap = [view annotation];
         [self startEventEditor:view];
+        
         [self refreshFocusedEvent];
     }
     else
@@ -2371,7 +2369,7 @@
 
 - (void) startEventEditor:(MKAnnotationView*)view
 {
-    ATEventAnnotation* ann = view.annotation;// selectedEventAnnDataOnMap; // [view annotation];
+    ATEventAnnotation* ann = selectedEventAnnDataOnMap; // Here is key to fix max/min bug that has different event displayed (perviousely the buggy one has ann = view.annotation)
     self.selectedAnnotation = ann;
     ATAppDelegate *appDelegate = (ATAppDelegate *)[[UIApplication sharedApplication] delegate];
     appDelegate.isForPOIEditorFlag = false;
@@ -2383,6 +2381,22 @@
     self.eventEditor.delegate = self;
     //}
     
+    SWRevealViewController *revealController = [self revealViewController];
+    //
+    //TODO if current revealed right side is preference, then do nothing?
+    //
+    revealController.rightViewController = self.eventEditor;
+    revealController.rightViewRevealWidth = [ATConstants revealViewEventEditorWidth];
+
+    if (!appDelegate.rightSideMenuRevealedFlag)
+        [revealController rightRevealToggle:nil];
+    else
+    {
+        [revealController rightRevealToggle:nil];
+        [revealController rightRevealToggle:nil];
+    }
+    
+    /*
     if (UI_USER_INTERFACE_IDIOM() == UIUserInterfaceIdiomPad) {
         BOOL optionIPADFullScreen = [ATHelper getOptionEditorFullScreen];
         if (optionIPADFullScreen)
@@ -2418,6 +2432,7 @@
         //[self.navigationController presentModalViewController:self.eventEditor animated:YES]; //pushViewController: self.eventEditor animated:YES];
         [self.navigationController presentViewController:self.eventEditor animated:YES completion:nil];
     }
+    */
     //has to set value here after above presentXxxxx method, otherwise the firsttime will display empty text
     [self.eventEditor resetEventEditor];
     
@@ -2457,8 +2472,8 @@
     self.eventEditor.delegate = self;
     
     if (UI_USER_INTERFACE_IDIOM() == UIUserInterfaceIdiomPad) {
-        BOOL optionIPADFullScreen = [ATHelper getOptionEditorFullScreen];
-        if (optionIPADFullScreen)
+        //BOOL optionIPADFullScreen = [ATHelper getOptionEditorFullScreen];
+        if (false) //(optionIPADFullScreen)
         {
             [self.navigationController presentViewController:self.eventEditor animated:YES completion:nil];
         }
@@ -3016,7 +3031,6 @@
         [self.eventEditorPopover dismissPopoverAnimated:true];
 }
 - (void)restartEditor{
-    [self cancelEvent];
     [self startEventEditor:selectedEventAnnOnMap];
 }
 - (void)cancelPreference{
@@ -3232,12 +3246,12 @@
         //////[self.mapView addSubview:episodeView];
         
     }
-    
+    int episodeViewXPos = [ATConstants screenWidth] - EPISODE_VIEW_WIDTH;
     [UIView transitionWithView:self.mapView
                       duration:0.3
                        options:UIViewAnimationTransitionFlipFromRight //any animation
                     animations:^ {
-                        [episodeView setFrame:CGRectMake(0, 0, EPISODE_VIEW_WIDTH, episodeViewHeight)];
+                        [episodeView setFrame:CGRectMake(episodeViewXPos, 0, EPISODE_VIEW_WIDTH, episodeViewHeight)];
                         episodeView.backgroundColor=[UIColor colorWithRed:1 green:1 blue:0.7 alpha:0.6];
                         episodeView.layer.shadowColor = [UIColor grayColor].CGColor;
                         episodeView.layer.shadowOffset = CGSizeMake(15,15);
@@ -3899,15 +3913,10 @@
 
          newFrame = CGRectMake(0,offset,[ATConstants eventListViewCellWidth],numOfCellOnScreen * [ATConstants eventListViewCellHeight]);
     }
-    /*
-    if (!switchEventListViewModeToVisibleOnMapFlag) {
-        self.timeScrollWindow.hidden=false;
-        self.timeZoomLine.hidden = false;
-    }
-    eventListView.hidden = false;
-    switchEventListViewModeBtn.hidden = false;
-*/
-    [self animatedShowPart1];
+
+    self.timeScrollWindow.hidden=false;
+    self.timeZoomLine.hidden = false;
+
     [self showDescriptionLabelViews:self.mapView];
     self.navigationController.navigationBarHidden = false;
     

@@ -9,6 +9,7 @@
 #import "ATPOIChooseViewController.h"
 #import "ATHelper.h"
 #import "ATAppDelegate.h"
+#import "SWRevealViewController.h"
 
 @interface ATPOIChooseViewController ()
 
@@ -169,7 +170,7 @@ NSInteger selectedPoiGroupIdxForDeselect;
         [userDefaults setObject:responseStr forKey:poiGroupName];
     }
     
-    [self dismissViewControllerAnimated:NO completion:nil]; //for iPhone case
+    //[self dismissViewControllerAnimated:NO completion:nil]; //for iPhone case
 
     
     if (responseStr != nil)
@@ -205,6 +206,9 @@ NSInteger selectedPoiGroupIdxForDeselect;
 
     [spinner stopAnimating];
     [spinner removeFromSuperview];
+    
+    SWRevealViewController* revealController = [self revealViewController];
+    [revealController rightRevealToggle:nil];
 }
 
 - (void)tableView:(UITableView *)tableView accessoryButtonTappedForRowWithIndexPath:(NSIndexPath *)indexPath{

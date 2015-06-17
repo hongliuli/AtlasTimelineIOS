@@ -16,11 +16,14 @@
 #import "ATHelper.h"
 #import "iRate.h"
 #import "Crittercism.h"
+#import "ATPreferenceViewController.h"
+
+#import "SWRevealViewController.h"
 
 #define EVENT_TYPE_NO_PHOTO 0
 #define EVENT_TYPE_HAS_PHOTO 1
 
-@interface ATAppDelegate ()
+@interface ATAppDelegate ()<SWRevealViewControllerDelegate>
 //TODO should add data store initialize here and pass data store to ATTimelineTableViewController, or the controller come to here to get data store
 @property (nonatomic, strong) NSArray *periods;
 
@@ -29,6 +32,10 @@
 @implementation ATAppDelegate
 
 @synthesize window=window_, periods=_periods;
+
+SWRevealViewController *revealController;
+ATimelineTableViewController* timelineViewController;
+UINavigationController* preferenceViewNavController;
 
 - (NSDateFormatter *)dateFormater {
 	
@@ -122,6 +129,12 @@
 
 - (BOOL)application:(UIApplication *)application didFinishLaunchingWithOptions:(NSDictionary *)launchOptions
 {
+    
+    UIWindow *window = [[UIWindow alloc] initWithFrame:[[UIScreen mainScreen] bounds]];
+	self.window = window;
+
+    
+    
     [Crittercism enableWithAppID:@"548f983d51de5e9f042ec3f3"];
     ATViewController *controller;
     
@@ -133,8 +146,25 @@
     {
         self.storyBoard = [UIStoryboard storyboardWithName:@"MainStoryboard_iPhone" bundle:nil];
     }
-    controller = [self.storyBoard instantiateInitialViewController];
-    [self.window setRootViewController:controller];
+    controller = [self.storyBoard instantiateViewControllerWithIdentifier:@"map_view_id"];
+    //controller = [self.storyBoard instantiateInitialViewController];
+    
+    timelineViewController = [self.storyBoard instantiateViewControllerWithIdentifier:@"timeline_view"];
+    preferenceViewNavController = [self.storyBoard instantiateViewControllerWithIdentifier:@"preference_nav_id"];
+    UINavigationController *mapViewNavigationController = [[UINavigationController alloc] initWithRootViewController:controller];
+    
+    
+    revealController = [[SWRevealViewController alloc] initWithRearViewController:nil frontViewController:mapViewNavigationController];
+    revealController.delegate = self;
+    revealController.rearViewRevealWidth = [ATConstants revealViewTimeLineViewWidth];
+    revealController.rightViewRevealWidth = [ATConstants revealViewPreferenceWidth];
+    revealController.rightViewRevealOverdraw = 0.0f; //important, default is 60
+    [self setTimelineControllerAsRearController];
+    revealController.rightViewController = preferenceViewNavController;
+    self.viewController = revealController;
+	
+	self.window.rootViewController = self.viewController;
+    
     //NSLog(@" -------dropbox root is %@", kDBRootDropbox);
     DBSession* dbSession =[[DBSession alloc] initWithAppKey:@"vmngs8cprefdyi3"
                                                   appSecret:@"o9ct42rr0696dzq" root:kDBRootDropbox]; // either kDBRootAppFolder or kDBRootDropbox;
@@ -144,6 +174,29 @@
     
     return YES;
 }
+
+-(void) setTimelineControllerAsRearController
+{
+    UINavigationController *rearNavigationController = [[UINavigationController alloc] initWithRootViewController:timelineViewController]; //rear view is left side view
+    revealController.rearViewController = rearNavigationController;
+}
+-(UINavigationController*) getPreferenceViewNavController
+{
+    return preferenceViewNavController;
+}
+
+//SWRevealViewController delegate method
+//   from https://github.com/John-Lluch/SWRevealViewController/issues/92
+- (void)revealController:(SWRevealViewController *)revealController willMoveToPosition:(FrontViewPosition)position
+{
+    if (position == FrontViewPositionLeftSide) {      // right side will get revealed
+        self.rightSideMenuRevealedFlag = true;
+    }
+    else if (position == FrontViewPositionLeft){      // right side will close
+        self.rightSideMenuRevealedFlag = false;
+    }
+}
+
 - (BOOL)application:(UIApplication *)application handleOpenURL:(NSURL *)url {
     if ([[DBSession sharedSession] handleOpenURL:url]) {
         if ([[DBSession sharedSession] isLinked]) {

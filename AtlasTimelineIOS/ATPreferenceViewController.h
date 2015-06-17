@@ -17,4 +17,6 @@
 @property (nonatomic, strong) DBRestClient *_restClient;
 
 -(void) changeSelectedSource:(NSString*)selectedAtlasName;
+- (void)refreshDisplayStatusAndData;
+
 @end

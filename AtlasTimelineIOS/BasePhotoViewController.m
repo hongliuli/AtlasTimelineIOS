@@ -121,6 +121,10 @@ UIView *descEditorContentView;
     shareCountLabel.backgroundColor = [UIColor colorWithRed: 0.55 green: 0.55 blue: 0.55 alpha: 0.5];
     shareCountLabel.textColor = [UIColor whiteColor];
     
+    sortIdexLabel = [[UILabel alloc] initWithFrame:CGRectMake(280, [ATConstants screenHeight] - 110 , 120, 40)];
+    sortIdexLabel.backgroundColor = [UIColor colorWithRed: 0.55 green: 0.55 blue: 0.55 alpha: 0.5];
+    sortIdexLabel.textAlignment = NSTextAlignmentCenter;
+    sortIdexLabel.textColor = [UIColor whiteColor];
     
     photoDescView = [[UITextView alloc] init];
     photoDescView.translatesAutoresizingMaskIntoConstraints = NO;
@@ -166,6 +170,7 @@ UIView *descEditorContentView;
     
     [self.view addSubview:shareIconView];
     [self.view addSubview:shareCountLabel];
+    [self.view addSubview:sortIdexLabel];
     
     shareCountLabel.hidden = true;
     

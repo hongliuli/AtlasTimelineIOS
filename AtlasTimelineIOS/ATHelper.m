@@ -610,15 +610,15 @@ UIPopoverController *verifyViewPopover;
     [ret setObject:scaleEndDay forKey:@"END"];
     return ret;
 }
-+ (BOOL) isAtLeast8
-{
-    NSString *version = [[UIDevice currentDevice] systemVersion];
-    return [version compare:@"8.0" options:NSNumericSearch] != NSOrderedAscending;
-}
+
 + (BOOL) isAtLeastIOS8
 {
+    //TODO need to change after using xcode 6
+    return false;
+    /*
     NSString *version = [[UIDevice currentDevice] systemVersion];
     return [version compare:@"8.0" options:NSNumericSearch] != NSOrderedAscending;
+     */
 }
 
 + (BOOL) isPOIEvent:(ATEventDataStruct*) evt

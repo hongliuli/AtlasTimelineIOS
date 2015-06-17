@@ -8,7 +8,6 @@
 
 
 #import "ATimelineTableViewController.h"
-#import "ATCell.h"
 #import "SectionInfo.h"
 #import "SectionHeaderView.h"
 #import "ATAppDelegate.h"
@@ -53,6 +52,7 @@
 NSString* mapViewSelectedYear;
 NSMutableArray* filteredEventListSorted;
 NSMutableArray* originalEventListSorted;
+NSDateFormatter* dateFormatter;
 
 @synthesize periods=periods_, sectionInfoArray=sectionInfoArray_, atCell=newsCell_, pinchedIndexPath=pinchedIndexPath_, uniformRowHeight=rowHeight_, openSectionIndex=openSectionIndex_, initialPinchHeight=initialPinchHeight_;
 
@@ -69,7 +69,7 @@ NSMutableArray* originalEventListSorted;
 - (void)viewDidLoad {
 	
     [super viewDidLoad];
-    [self.searchDisplayController.searchBar setPlaceholder:NSLocalizedString(@"search any description and address",nil)];
+    [self.searchDisplayController.searchBar setPlaceholder:NSLocalizedString(@"Search description and address",nil)];
     [self.navigationItem setTitle:NSLocalizedString(@"Timeline/Search", nil)];
     // Add a pinch gesture recognizer to the table view.
 	UIPinchGestureRecognizer* pinchRecognizer = [[UIPinchGestureRecognizer alloc] initWithTarget:self action:@selector(handlePinch:)];
@@ -109,6 +109,10 @@ NSMutableArray* originalEventListSorted;
 	{
         [self setUpPeriodsArray: originalEventListSorted];
     }
+    dateFormatter = [[NSDateFormatter alloc] init];
+    [dateFormatter setDateStyle:NSDateFormatterMediumStyle];
+    [dateFormatter setTimeStyle:NSDateFormatterNoStyle];
+    [dateFormatter setLocale:[NSLocale currentLocale]];
 }
 
 - (void)setUpPeriodsArray:(NSMutableArray*) eventListSorted {
@@ -224,36 +228,38 @@ NSMutableArray* originalEventListSorted;
     
     static NSString *EventCellIdentifier = @"EventCellIdentifier";
     static NSString *searchCellIdentifier = @"searchCellIdentifier";
-    ATCell* cell = nil;
-    ATAppDelegate *appDelegate = (ATAppDelegate *)[[UIApplication sharedApplication] delegate];
+    ATEventDataStruct* ent;
+    UITableViewCell* cell = nil;
+
     if (tableView == self.searchDisplayController.searchResultsTableView)
 	{
-        cell = (ATCell*)[tableView dequeueReusableCellWithIdentifier:searchCellIdentifier];
+        cell = (UITableViewCell*)[tableView dequeueReusableCellWithIdentifier:searchCellIdentifier];
         
         if (cell == nil) {
-            cell = [[ATCell alloc] initWithStyle:UITableViewCellStyleDefault reuseIdentifier:searchCellIdentifier];
-            cell.accessoryType = UITableViewCellAccessoryDetailDisclosureButton;
+            cell = [[UITableViewCell alloc] initWithStyle:UITableViewCellStyleSubtitle reuseIdentifier:searchCellIdentifier];
         }
-        ATEventDataStruct* ent = [filteredEventListSorted objectAtIndex:indexPath.row];
-        cell.entity = ent;
-        cell.textLabel.text = [NSString stringWithFormat:@"[%@] - %@",[appDelegate.dateFormater stringFromDate: ent.eventDate], ent.eventDesc];
-        cell.textLabel.font = [UIFont fontWithName:@"Helvetica" size:13];
+        ent = [filteredEventListSorted objectAtIndex:indexPath.row];
     }
     else
     {
-        cell = (ATCell*)[tableView dequeueReusableCellWithIdentifier:EventCellIdentifier];
+        cell = (UITableViewCell*)[tableView dequeueReusableCellWithIdentifier:EventCellIdentifier];
     
-        if (cell == nil) { 
+        if (cell == nil) {
+            NSLog(@"######## should not come here");
             //Never comes here. I think it is because the cell in on storyboard (id is EventCellIdentifier in storyboard
         }
     
         ATPeriod *period = (ATPeriod *)[[self.sectionInfoArray objectAtIndex:indexPath.section] period];
-        cell.entity = [period.events objectAtIndex:indexPath.row];
-        cell.dateLabel.text = [appDelegate.dateFormater stringFromDate: cell.entity.eventDate];
-        cell.descLabel.text=cell.entity.eventDesc;
-        cell.addressLabel.text=cell.entity.address;
+        ent = [period.events objectAtIndex:indexPath.row];
     }
-
+    NSString* dateStr = [dateFormatter stringFromDate:ent.eventDate];
+    NSString* descStr = ent.eventDesc;
+    if ([descStr length] > 150)
+    {
+        descStr = [ent.eventDesc substringToIndex:150];
+    }
+    cell.textLabel.text = descStr;
+    cell.detailTextLabel.text = [NSString stringWithFormat:@"[%@] %@", dateStr, ent.address];
     return cell;
 }
 
@@ -293,6 +299,22 @@ NSMutableArray* originalEventListSorted;
 
 -(void)tableView:(UITableView*)tableView didSelectRowAtIndexPath:(NSIndexPath*)indexPath {
     //NSLog(@" in didSelectedRow %i", indexPath.row);
+    
+    //NSLog(@"detail view clicked row is %i" , indexPath.row);
+    ATEventDataStruct* ent = nil;
+    if (tableView == self.searchDisplayController.searchResultsTableView)
+	{
+        ent = [filteredEventListSorted objectAtIndex:indexPath.row];
+    }
+    else{
+        ATPeriod *period = (ATPeriod *)[[self.sectionInfoArray objectAtIndex:indexPath.section] period];
+        ent = [period.events objectAtIndex:indexPath.row];
+    }
+    
+    [[self getMapViewCountroller] setNewFocusedDateAndUpdateMapWithNewCenter:ent :[ATConstants defaultZoomLevel]];
+    //a tech skill: to return back to a navigator, do not use segue
+    [self.navigationController popViewControllerAnimated:YES];
+    
     [tableView deselectRowAtIndexPath:indexPath animated:YES];
 }
 
@@ -431,30 +453,14 @@ NSMutableArray* originalEventListSorted;
 }
 
 
-- (void)tableView:(UITableView *)tableView accessoryButtonTappedForRowWithIndexPath:(NSIndexPath *)indexPath
-{
-    //NSLog(@"detail view clicked row is %i" , indexPath.row);
-    ATEventDataStruct* ent = nil;
-    if (tableView == self.searchDisplayController.searchResultsTableView)
-	{
-        ATCell *cell = (ATCell*)[tableView cellForRowAtIndexPath:indexPath];
-        ent = cell.entity;
-    }
-    else{
-        ATCell *cell = (ATCell*)[self.tableView cellForRowAtIndexPath:indexPath];
-        ent = cell.entity;
-    }
-
-    [[self getMapViewCountroller] setNewFocusedDateAndUpdateMapWithNewCenter:ent :[ATConstants defaultZoomLevel]];
-    //a tech skill: to return back to a navigator, do not use segue
-    [self.navigationController popViewControllerAnimated:YES];
-    
-}
-
 -(ATViewController*) getMapViewCountroller
 {
+    ATAppDelegate *appDelegate = (ATAppDelegate *)[[UIApplication sharedApplication] delegate];
+    return appDelegate.mapViewController;
+    /*
     UINavigationController* navController = [self navigationController];
     return (ATViewController*)[navController.viewControllers objectAtIndex:0];
+     */
 }
 
 #pragma mark -

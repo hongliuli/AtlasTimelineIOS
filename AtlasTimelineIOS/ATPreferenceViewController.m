@@ -17,6 +17,7 @@
 #import "ATHelpWebView.h"
 #import "ATInAppPurchaseViewController.h"
 #import "ATOptionsTableViewController.h"
+#import "SWRevealViewController.h"
 
 #define EVENT_TYPE_NO_PHOTO 0
 #define EVENT_TYPE_HAS_PHOTO 1
@@ -131,6 +132,16 @@
     [[self  view] addSubview:spinner];
     self.detailLabel.text = _source;
     
+    SWRevealViewController* revealController = [self revealViewController];
+    UIBarButtonItem *timelineBarButtonItem = [[UIBarButtonItem alloc] initWithImage:[UIImage imageNamed:@"arrow-right.png"] style:UIBarButtonItemStylePlain target:revealController action:@selector(rightRevealToggle:)];
+    self.navigationItem.leftBarButtonItem = timelineBarButtonItem;
+    
+    [self refreshDisplayStatusAndData];
+
+}
+
+- (void)refreshDisplayStatusAndData
+{
     //Check if there are new incoming. This logic is duplicated from ATDownloadViewController
     NSUserDefaults* userDefault = [NSUserDefaults standardUserDefaults];
     NSString *userId = [userDefault objectForKey:[ATConstants UserEmailKeyName]];
@@ -154,7 +165,6 @@
         }
     }
 }
-
 - (void)sourceChooseViewController: (ATSourceChooseViewController *)controller
                    didSelectSource:(NSString *)source{
     //########################################

@@ -92,7 +92,7 @@
 {
     CGRect screenBound = [[UIScreen mainScreen] bounds];
     CGSize screenSize = screenBound.size;
-    if ([ATHelper isAtLeast8])
+    if ([ATHelper isAtLeastIOS8])
         return screenSize.width;
     else
     {
@@ -111,7 +111,7 @@
     CGRect screenBound = [[UIScreen mainScreen] bounds];
     CGSize screenSize = screenBound.size;
 
-    if ([ATHelper isAtLeast8])
+    if ([ATHelper isAtLeastIOS8])
         return screenSize.height;
     {
         UIInterfaceOrientation orientation = [UIApplication sharedApplication].statusBarOrientation;
@@ -329,8 +329,19 @@
     else
         return 40;
 }
-
-
++ (int) revealViewPreferenceWidth{
+    return 320;
+}
++ (int) revealViewEventEditorWidth{
+    BOOL fullFlag = [ATHelper getOptionEditorFullScreen];
+    if (fullFlag)
+        return 600;
+    else
+        return 340;
+}
++ (int) revealViewTimeLineViewWidth{
+    return 280;
+}
 
 + (BOOL) isLandscapeInPhone{
     UIInterfaceOrientation orientation = [UIApplication sharedApplication].statusBarOrientation;

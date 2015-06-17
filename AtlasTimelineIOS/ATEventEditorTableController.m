@@ -16,6 +16,7 @@
 #import "ATConstants.h"
 #import <QuartzCore/QuartzCore.h>
 #import <Social/Social.h>
+#import "SWRevealViewController.h"
 
 #define JPEG_QUALITY 1.0
 #define THUMB_JPEG_QUALITY 0.3
@@ -108,19 +109,15 @@ forRowAtIndexPath: (NSIndexPath*)indexPath
     
     if (UI_USER_INTERFACE_IDIOM() == UIUserInterfaceIdiomPad)
     {
-        BOOL optionIPADFullScreenEditorFlag = [ATHelper getOptionEditorFullScreen];
-        if (optionIPADFullScreenEditorFlag)
-        {
-            editorPhotoViewWidth = [ATConstants screenWidth];
-            //editorPhotoViewHeight = [ATConstants screenHeight];
-            CGRect frame = self.description.frame;
-            frame.size.width = editorPhotoViewWidth;
-            [self.description setFrame:frame];
-            
-            frame = self.address.frame;
-            frame.size.width = editorPhotoViewWidth;
-            [self.address setFrame:frame];
-        }
+        editorPhotoViewWidth = [ATConstants revealViewEventEditorWidth];
+        //editorPhotoViewHeight = [ATConstants screenHeight];
+        CGRect frame = self.description.frame;
+        frame.size.width = editorPhotoViewWidth;
+        [self.description setFrame:frame];
+        
+        frame = self.address.frame;
+        frame.size.width = editorPhotoViewWidth;
+        [self.address setFrame:frame];
     }
 }
 - (UITableViewCell *)tableView:(UITableView *)tableView cellForRowAtIndexPath:(NSIndexPath *)indexPath
@@ -204,7 +201,7 @@ forRowAtIndexPath: (NSIndexPath*)indexPath
         [customView addSubview:label];
         
         UIButton *shareButton = [UIButton buttonWithType:UIButtonTypeCustom];
-        shareButton.frame = CGRectMake(310, 0, 30, 30);
+        shareButton.frame = CGRectMake(290, 0, 30, 30);
         [shareButton setImage:[UIImage imageNamed:@"share.png"] forState:UIControlStateNormal];
         [shareButton addTarget:self action:@selector(shareButtonAction:) forControlEvents:UIControlEventTouchUpInside];
         [customView addSubview:shareButton];
@@ -225,7 +222,7 @@ forRowAtIndexPath: (NSIndexPath*)indexPath
         if ([appDelegate.sourceName isEqual:@"myEvents"]) //can create episode on myEvents only
         {
             UIButton *episodeButton = [UIButton buttonWithType:UIButtonTypeCustom];
-            episodeButton.frame = CGRectMake(240, 0, 40, 30);
+            episodeButton.frame = CGRectMake(230, 0, 40, 30);
             if ([self.delegate isInEpisode])
                 [episodeButton setImage:[UIImage imageNamed:@"add-to-episode-folder-reverse.png"] forState:UIControlStateNormal];
             else
@@ -240,7 +237,7 @@ forRowAtIndexPath: (NSIndexPath*)indexPath
         [markerPicker addTarget:self action:@selector(markerPickerAction:) forControlEvents:UIControlEventTouchUpInside];
         [customView addSubview:markerPicker];
         
-        lblShareCount = [[UILabel alloc] initWithFrame:CGRectMake(305, -25, 100, 40)];
+        lblShareCount = [[UILabel alloc] initWithFrame:CGRectMake(285, -25, 100, 40)];
         lblShareCount.font = [UIFont fontWithName:@"Helvetica" size:10];
         lblShareCount.backgroundColor = [UIColor clearColor];
         lblShareCount.text = @"";
@@ -459,12 +456,13 @@ forRowAtIndexPath: (NSIndexPath*)indexPath
     [self presentViewController:imagePicker animated:YES completion:nil];
 }
 - (IBAction)sizeButtonAction:(id)sender {
-    //xxxx
     BOOL fullFlag = [ATHelper getOptionEditorFullScreen];
     [ATHelper setOptionEditorFullScreen:!fullFlag];
-    //[self.delegate cancelEvent];
-    [self dismissViewControllerAnimated:NO completion:nil]; //for iPhone case
     [self.delegate restartEditor];
+    
+    //[self.delegate cancelEvent];
+    //[self dismissViewControllerAnimated:NO completion:nil]; //for iPhone case
+    //[self.delegate restartEditor];
 }
 - (IBAction)shareButtonAction:(id)sender {
     NSString *version = [[UIDevice currentDevice] systemVersion];
@@ -782,7 +780,9 @@ forRowAtIndexPath: (NSIndexPath*)indexPath
     }
     
     [self.delegate updateEvent:ent newAddedList:photoNewAddedList deletedList:photoDeletedList photoMetaData:finalPhotoMetaDataMap];
-    [self dismissViewControllerAnimated:NO completion:nil]; //for iPhone case
+    SWRevealViewController *revealController = [self revealViewController];
+    [revealController rightRevealToggle:nil];
+    //[self dismissViewControllerAnimated:NO completion:nil]; //for iPhone case
 }
 
 - (IBAction)deleteAction:(id)sender {
@@ -798,8 +798,9 @@ forRowAtIndexPath: (NSIndexPath*)indexPath
                                   cancelButtonTitle:@"Cancel"
                                   otherButtonTitles:@"Delete",nil];
     [alertDelete show];
-
-    [self dismissViewControllerAnimated:NO completion:nil]; //for iPhone case
+    SWRevealViewController* revealController = [self revealViewController];
+    [revealController rightRevealToggle:nil];
+    //[self dismissViewControllerAnimated:NO completion:nil]; //for iPhone case
 }
 - (IBAction)addToEpisodeAction:(id)sender {
     if (self.eventId == nil)
@@ -843,6 +844,7 @@ forRowAtIndexPath: (NSIndexPath*)indexPath
     int cnt = [photoNewAddedList count] ;
     if (cnt > 0 || self.photoDescChangedFlag || [self.photoScrollView.selectedAsSortIndexList count] > 0)
     {
+        /*
         NSString* titleTxt = [NSString stringWithFormat:NSLocalizedString(@"%d new photo(s) are not saved",nil),cnt];
         if (cnt == 0)
         {
@@ -861,11 +863,16 @@ forRowAtIndexPath: (NSIndexPath*)indexPath
         
         
         [alertCancel show];
+         */
+        
     }
     else
         [self.delegate cancelEvent];
 
-    [self dismissViewControllerAnimated:NO completion:nil]; //for iPhone case
+    SWRevealViewController *revealController = [self revealViewController];
+    [revealController rightRevealToggle:nil];
+    
+    //[self dismissViewControllerAnimated:NO completion:nil]; //for iPhone case
 }
 
 - (void)changeDateInLabel:(id)sender{
