@@ -17,7 +17,7 @@
 #import "ATHelper.h"
 #import "ATConstants.h"
 #import "ATViewController.h"
-
+#import "SWRevealViewController.h"
 
 #pragma mark -
 
@@ -113,6 +113,15 @@ NSDateFormatter* dateFormatter;
     [dateFormatter setDateStyle:NSDateFormatterMediumStyle];
     [dateFormatter setTimeStyle:NSDateFormatterNoStyle];
     [dateFormatter setLocale:[NSLocale currentLocale]];
+    
+    UISwipeGestureRecognizer *leftSwiper = [[UISwipeGestureRecognizer alloc] initWithTarget:self action:@selector(swipeLeft)];
+	leftSwiper.direction = UISwipeGestureRecognizerDirectionLeft;
+	[self.view addGestureRecognizer:leftSwiper];
+}
+
+- (void)swipeLeft {
+	SWRevealViewController *revealController = [self revealViewController];
+    [revealController revealToggle:nil];
 }
 
 - (void)setUpPeriodsArray:(NSMutableArray*) eventListSorted {
@@ -298,9 +307,8 @@ NSDateFormatter* dateFormatter;
 
 
 -(void)tableView:(UITableView*)tableView didSelectRowAtIndexPath:(NSIndexPath*)indexPath {
-    //NSLog(@" in didSelectedRow %i", indexPath.row);
     
-    //NSLog(@"detail view clicked row is %i" , indexPath.row);
+    [self.searchDisplayController.searchBar resignFirstResponder];
     ATEventDataStruct* ent = nil;
     if (tableView == self.searchDisplayController.searchResultsTableView)
 	{

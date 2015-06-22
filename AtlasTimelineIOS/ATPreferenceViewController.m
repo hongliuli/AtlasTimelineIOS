@@ -137,7 +137,16 @@
     self.navigationItem.leftBarButtonItem = timelineBarButtonItem;
     
     [self refreshDisplayStatusAndData];
+    
+    UISwipeGestureRecognizer *rightSwiper = [[UISwipeGestureRecognizer alloc] initWithTarget:self action:@selector(swipeRight)];
+	rightSwiper.direction = UISwipeGestureRecognizerDirectionRight;
+	[self.view addGestureRecognizer:rightSwiper];
 
+}
+
+- (void)swipeRight {
+	SWRevealViewController *revealController = [self revealViewController];
+    [revealController rightRevealToggle:nil];
 }
 
 - (void)refreshDisplayStatusAndData

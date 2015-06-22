@@ -119,7 +119,17 @@ forRowAtIndexPath: (NSIndexPath*)indexPath
         frame.size.width = editorPhotoViewWidth;
         [self.address setFrame:frame];
     }
+    
+    UISwipeGestureRecognizer *rightSwiper = [[UISwipeGestureRecognizer alloc] initWithTarget:self action:@selector(swipeRight)];
+	rightSwiper.direction = UISwipeGestureRecognizerDirectionRight;
+	[self.view addGestureRecognizer:rightSwiper];
 }
+
+- (void)swipeRight {
+	SWRevealViewController *revealController = [self revealViewController];
+    [revealController rightRevealToggle:nil];
+}
+
 - (UITableViewCell *)tableView:(UITableView *)tableView cellForRowAtIndexPath:(NSIndexPath *)indexPath
 {
     UITableViewCell *cell = [super tableView:tableView cellForRowAtIndexPath:indexPath];
@@ -710,7 +720,19 @@ forRowAtIndexPath: (NSIndexPath*)indexPath
         [alert show];
         return;
     }
+    NSDateFormatter* fmt = appDelegate.dateFormater;
+    NSDate* poiDate = [fmt dateFromString:@"01/01/0001 AD"];
     
+    if ([dt isEqual:poiDate])
+    {
+        UIAlertView *alert = [[UIAlertView alloc] initWithTitle:NSLocalizedString(@"Wrong Date Format",nil)
+                                                        message:[NSString stringWithFormat:NSLocalizedString(@"Date 01/01/0001 is not allowed (A special case)",nil)]
+                                                       delegate:nil
+                                              cancelButtonTitle:@"OK"
+                                              otherButtonTitles:nil];
+        [alert show];
+        return;
+    }
     //A bug fix, "\n" is treated as empty, thus the event became untapable. (a long time bug, just found 03/22/14)
     NSString* descTxt = self.description.text;
     descTxt = [descTxt stringByReplacingOccurrencesOfString:@"\n" withString:@""];
@@ -872,7 +894,7 @@ forRowAtIndexPath: (NSIndexPath*)indexPath
     SWRevealViewController *revealController = [self revealViewController];
     [revealController rightRevealToggle:nil];
     
-    //[self dismissViewControllerAnimated:NO completion:nil]; //for iPhone case
+    [self dismissViewControllerAnimated:NO completion:nil]; //for iPhone case
 }
 
 - (void)changeDateInLabel:(id)sender{

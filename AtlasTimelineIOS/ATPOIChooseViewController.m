@@ -35,7 +35,11 @@ NSInteger selectedPoiGroupIdxForDeselect;
     [super viewDidLoad];
     ATAppDelegate *appDelegate = (ATAppDelegate *)[[UIApplication sharedApplication] delegate];
     self.delegate = appDelegate.mapViewController;
+    NSString * language = [[[NSLocale preferredLanguages] objectAtIndex:0] substringToIndex:2]; //return zh for chinese
     NSString* serviceUrl = [NSString stringWithFormat:@"http://www.chroniclemap.com/resources/poi_list.html"];
+    if ([@"zh" isEqualToString:language])
+        serviceUrl = [NSString stringWithFormat:@"http://www.chroniclemap.com/resources/poi_list_zh.html"];
+    
     NSString* responseStr  = [ATHelper httpGetFromServer:serviceUrl :false];
     poiGroupList = [[NSMutableArray alloc] init];
     //polist.html has format of :
@@ -45,7 +49,6 @@ NSInteger selectedPoiGroupIdxForDeselect;
      Eastern Europe
      
      */
-    NSLog(@"----- response is %@", responseStr);
     NSUserDefaults* userDefaults = [NSUserDefaults standardUserDefaults];
     selectedPoiGroupName = [userDefaults objectForKey:@"SELECTED_POI_GROUP_NAME"];
     if (responseStr == nil)

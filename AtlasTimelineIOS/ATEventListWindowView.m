@@ -21,7 +21,6 @@
 
 #define MAPVIEW_HIDE_ALL 1
 #define MAPVIEW_SHOW_PHOTO_LABEL_ONLY 2
-#define MAPVIEW_SHOW_ALL 3
 
 @implementation ATEventListWindowView
 
@@ -149,7 +148,10 @@ NSString* selectedPOIEventId;
             
 
             int titleEndLocation = [descStr rangeOfString:@"\n"].location;
-            titleStr = [descStr substringToIndex:titleEndLocation];
+            if (titleEndLocation == NSNotFound)
+                titleStr = descStr;
+            else
+                titleStr = [descStr substringToIndex:titleEndLocation];
             cellPoi.eventDescView.text = titleStr;
             [cellPoi.checkIcon setHidden:true];
         }
@@ -307,14 +309,13 @@ NSString* selectedPOIEventId;
         
         appDelegate.focusedDate = evt.eventDate;
         appDelegate.focusedEvent = evt;  //appDelegate.focusedEvent is added when implement here
-        int zoomLeve = -1;
+        int zoomLeve = [mapView zoomLevel];
         if ([mapView zoomLevel] < 5)
             zoomLeve = 5;
         [mapView setNewFocusedDateAndUpdateMapWithNewCenter : evt :zoomLeve]; //do not change map zoom level
         [self.tableView reloadData]; //so show checkIcon for selected row
         [mapView showTimeLinkOverlay];
 
-        mapView.mapViewShowWhatFlag = MAPVIEW_SHOW_ALL; //ad-hoc fix to make sure thumbnail on map always show when select on eventlist view
         selectedPOIEventId = evt.uniqueId;
         
         //bookmark selected event
@@ -329,7 +330,7 @@ NSString* selectedPOIEventId;
     
 }
 
-- (void) refresh:(NSMutableArray*)eventList :(BOOL)eventListViewInMapModeFlagArg :(BOOL)callFromTimewheel //called by mapview::refreshEventListView()
+- (void) refresh:(NSArray*)eventList :(BOOL)eventListViewInMapModeFlagArg :(BOOL)callFromTimewheel //called by mapview::refreshEventListView()
 {
     eventListViewInMapModeFlag = eventListViewInMapModeFlagArg;
     ATAppDelegate *appDelegate = (ATAppDelegate *)[[UIApplication sharedApplication] delegate];
