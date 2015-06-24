@@ -585,7 +585,7 @@
             else if (pinchVelocity > 0 )
             {
                 appDelegate.selectedPeriodInDays = 7;
-                UIAlertView *alert = [[UIAlertView alloc] initWithTitle:NSLocalizedString(@"Reached the max Zoom-In level Week!",nil) message:NSLocalizedString(@"You can reset max Zoom-In level to MONTH in Settings -> Options.\n(MONTH zoom level is detailed enough for most uses)",nil) delegate:nil cancelButtonTitle:@"OK" otherButtonTitles:nil];
+                UIAlertView *alert = [[UIAlertView alloc] initWithTitle:NSLocalizedString(@"Reached the max Zoom-In level Week!",nil) message:NSLocalizedString(@"You can reset max Zoom-In level to MONTH in Menu -> Options.\n(MONTH zoom level is detailed enough for most uses)",nil) delegate:nil cancelButtonTitle:@"OK" otherButtonTitles:nil];
                 [alert show];
                 return;
             }
@@ -609,7 +609,7 @@
             else
             {
 
-                UIAlertView *alert = [[UIAlertView alloc] initWithTitle:NSLocalizedString(@"Reached the max Zoom-In level Month!",nil) message:NSLocalizedString(@"You can set max Zoom-In to  WEEK in Settings -> Options.\n(Zoom to week may be useful only when plan a short trip)",nil) delegate:nil cancelButtonTitle:@"OK" otherButtonTitles:nil];
+                UIAlertView *alert = [[UIAlertView alloc] initWithTitle:NSLocalizedString(@"Reached the max Zoom-In level Month!",nil) message:NSLocalizedString(@"You can set max Zoom-In to  WEEK in Menu -> Options.\n(Zoom to week may be useful only when plan a short trip)",nil) delegate:nil cancelButtonTitle:@"OK" otherButtonTitles:nil];
                 [alert show];
                 return;
             }

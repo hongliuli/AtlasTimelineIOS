@@ -93,20 +93,17 @@ NSInteger selectedPoiGroupIdxForDeselect;
     // Configure the cell...
     UITableViewCell *cell;
     
-    NSString* poi = poiGroupList[indexPath.row];
+    NSString* poiRowText = poiGroupList[indexPath.row];
 
-    NSArray* textArr = [poi componentsSeparatedByString:@":"];
     CellIdentifier = @"PeriodCell";
     cell = [tableView  dequeueReusableCellWithIdentifier:CellIdentifier];
 
 
 
-    cell.textLabel.text = textArr[0];
-    if ([textArr count] > 1)
-        cell.detailTextLabel.text = textArr[1];
-    else
-        cell.detailTextLabel.text = @"";
-    if ([selectedPoiGroupName isEqualToString:textArr[0]])
+    cell.textLabel.text = [self getPoiTitle:poiRowText];
+    cell.detailTextLabel.text = [self getPoiSubTitle:poiRowText];
+
+    if ([selectedPoiGroupName isEqualToString:[self getPoiTitle:poiRowText]])
     {
         cell.accessoryType = UITableViewCellAccessoryCheckmark;
         selectedPoiGroupIdxForDeselect = indexPath.row;
@@ -117,12 +114,10 @@ NSInteger selectedPoiGroupIdxForDeselect;
     return cell;
 }
 
-
 - (void)tableView:(UITableView *)tableView didSelectRowAtIndexPath:(NSIndexPath *)indexPath
 {
-    NSString* poiGroupName = poiGroupList[indexPath.row];
-    NSArray* poiGroupMeta = [poiGroupName componentsSeparatedByString:@":"];
-    poiGroupName = poiGroupMeta[0];
+    NSString* poiRowText = poiGroupList[indexPath.row];
+    NSString* poiGroupName = [self getPoiTitle:poiRowText];
     selectedPoiGroupName = poiGroupName;
     
     [tableView deselectRowAtIndexPath:indexPath animated:YES];
@@ -158,7 +153,7 @@ NSInteger selectedPoiGroupIdxForDeselect;
     //UIActivityIndicatorView* spinner = (UIActivityIndicatorView*)[cell.contentView viewWithTag:9999];
     [spinner startAnimating];
     [[NSRunLoop currentRunLoop] runUntilDate:[NSDate date]]; //Tricky: yield main loop so spinner will show progress
-    NSString* serviceUrl = [NSString stringWithFormat:@"http://www.chroniclemap.com/resources/poi/%@.html", poiGroupName];
+    NSString* serviceUrl = [NSString stringWithFormat:@"http://www.chroniclemap.com/resources/poi/%@.html", [self getPoiFileName:poiRowText]];
     //####
     //#### following may return nil if %@.html file is not utf-8 encoded (linux: file -bi filename)
     //####
@@ -213,6 +208,31 @@ NSInteger selectedPoiGroupIdxForDeselect;
     SWRevealViewController* revealController = [self revealViewController];
     [revealController rightRevealToggle:nil];
 }
+
+////On server, poi_list_xx.html has format: poiDisplayText|poiFileName:.......
+-(NSString*)getPoiTitle:(NSString*)poiRow
+{
+    NSArray* poiRowText = [poiRow componentsSeparatedByString:@":"];
+    NSString* poiHeaderText = poiRowText[0];
+    NSArray* textArr = [poiHeaderText componentsSeparatedByString:@"|"];
+    return textArr[0];
+}
+-(NSString*) getPoiFileName:(NSString*)poiRow
+{
+    NSArray* poiRowText = [poiRow componentsSeparatedByString:@":"];
+    NSString* poiHeaderText = poiRowText[0];
+    NSArray* textArr = [poiHeaderText componentsSeparatedByString:@"|"];
+    return textArr[1];
+}
+-(NSString*) getPoiSubTitle:(NSString*)poiRow
+{
+    NSArray* poiRowText = [poiRow componentsSeparatedByString:@":"];
+    if ([poiRowText count] > 1)
+        return poiRowText[1];
+    else
+        return @"";
+}
+
 
 - (void)tableView:(UITableView *)tableView accessoryButtonTappedForRowWithIndexPath:(NSIndexPath *)indexPath{
     NSLog(@"reaching accessoryButtonTappedForRowWithIndexPath: section %d   row %d", indexPath.section, indexPath.row);

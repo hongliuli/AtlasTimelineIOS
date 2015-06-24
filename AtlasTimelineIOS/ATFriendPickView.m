@@ -401,7 +401,7 @@ NSLog(@"============post url = %@", serviceUrl.absoluteString);
     else
     {
         UIAlertView *alert = [[UIAlertView alloc] initWithTitle:NSLocalizedString(@"Share Episode Success!",nil)
-                                                        message: [NSString stringWithFormat:NSLocalizedString(@"Episode [%@], with %i events, has been sent.\n Using ChronicleMap app, your friends can check it at Settings -> Incoming Contents/Episodes!",nil),episodeName,eventCount]
+                                                        message: [NSString stringWithFormat:NSLocalizedString(@"Episode [%@], with %i events, has been sent.\n Using ChronicleMap app, your friends can check it at Menu -> Incoming Contents/Episodes!",nil),episodeName,eventCount]
                                                        delegate:nil cancelButtonTitle:NSLocalizedString(@"OK",nil) otherButtonTitles:nil];
         [alert show];
         [self cleanCheckedFriendEmail];

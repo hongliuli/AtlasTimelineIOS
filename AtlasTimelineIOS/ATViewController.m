@@ -190,7 +190,7 @@
     }
     
     /*
-    NSDate* poiDate = [fmt dateFromString:@"01/01/0001 AD"];
+    NSDate* poiDate = [fmt dateFromString:@"12/31/9999 AD"];
     if (poiList == nil)
         poiList = [[NSMutableArray alloc] init];
     for (int i = 0; i<=1000; i ++)
@@ -406,7 +406,7 @@
     NSString* photo1Desc =NSLocalizedString(@"Swipe time wheel, the events in the selected period will be:\n  - listed on the left\n  - colored darker on map\nIf switch map mode to [By Map], swipe map and the events occur on screen will be listed instead.\n(Note: red/green dots above the time wheel indicate the existence of events in that period)",nil);
     NSString* photo2Desc =NSLocalizedString(@"Create your own event or Album:\n  - Long press on a map location, or search address, then tap (!) icon to start event editor as shown in the photo\n  - Enter date, descriptions and optionally add photos, then tap save button\nNote:   To add photos from other sources such Flickr, Google Drive or Dropbox, please install related APP and save photos to your device first",nil);
     NSString* photo3Desc =NSLocalizedString(@"View photos: Tap a photo in event editor to view photo in large size. Things can be done in this view:\n  - Add description to each photo\n  - Order photo display sequence\n    \nPick photos to attach to event sharing\n  - Delete the photo (The real deletion happen when save event change)",nil);
-    NSString* photo4Desc =NSLocalizedString(@"There are some useful features in Settings menu:\n  - Backup/Restore event data – data will be saved in our cloud and you can restore to any devices\n  - Backup/Restore photo files on Dropbox – Never lost photos\n  - Share episodes amount friends who have installed this APP",nil);
+    NSString* photo4Desc =NSLocalizedString(@"There are some useful features in Menu:\n  - Backup/Restore event data – data will be saved in our cloud and you can restore to any devices\n  - Backup/Restore photo files on Dropbox – Never lost photos\n  - Share episodes amount friends who have installed this APP",nil);
     
     [photoDescMap setObject:photo1Desc forKey:photoNewAddedList[1]];
     [photoDescMap setObject:photo2Desc forKey:photoNewAddedList[2]];
@@ -3271,7 +3271,7 @@
     UILabel* lblWording = [[UILabel alloc] initWithFrame:CGRectMake(10, 3*EPISODE_ROW_HEIGHT + 10, EPISODE_VIEW_WIDTH - 20, 9*EPISODE_ROW_HEIGHT)];
     lblWording.lineBreakMode = NSLineBreakByWordWrapping;
     lblWording.numberOfLines = 0;
-    lblWording.text = NSLocalizedString(@"An episode is a collection of events, such as an itinerary, that you can share to your friends' ChronicleMap app. (Photos are not included.)\n\nTo send an episode to a friend's ChronicleMap app, tap the episode in [Settings->Share my Episodes]\n\nYour friend can check the incoming episode in the app's [Settings->Incoming Contents/Episodes] and download to display on map.",nil);
+    lblWording.text = NSLocalizedString(@"An episode is a collection of events, such as an itinerary, that you can share to your friends' ChronicleMap app. (Photos are not included.)\n\nTo send an episode to a friend's ChronicleMap app, tap the episode in [Menu->Share my Episodes]\n\nYour friend can check the incoming episode in the app's [Menu->Incoming Contents/Episodes] and download to display on map.",nil);
     [episodeView addSubview:lblWording];
     
     int btnY = 12*EPISODE_ROW_HEIGHT + 10;

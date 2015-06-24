@@ -631,7 +631,7 @@ UIPopoverController *verifyViewPopover;
         return true; //TODO somehow in chinese version eventDate = nil for POI event
     ATAppDelegate *appDelegate = (ATAppDelegate *)[[UIApplication sharedApplication] delegate];
     NSDateFormatter* fmt = appDelegate.dateFormater;
-    NSDate* date = [fmt dateFromString:@"1/1/0001 AD"];
+    NSDate* date = [fmt dateFromString:@"12/31/9999 AD"];
     return [eventDate isEqualToDate:date]; //NOTE: poi event always has 1/1/0001 as event date
 }
 
@@ -640,7 +640,7 @@ UIPopoverController *verifyViewPopover;
     NSMutableArray* eventList = [[NSMutableArray alloc] initWithCapacity:400];
     ATAppDelegate *appDelegate = (ATAppDelegate *)[[UIApplication sharedApplication] delegate];
     NSDateFormatter* fmt = appDelegate.dateFormater;
-    NSDate* poiDate = [fmt dateFromString:@"01/01/0001 AD"];
+    NSDate* poiDate = [fmt dateFromString:@"12/31/9999 AD"];
     if (poiListString != nil)
     {
         //[Date] must be the first Metadata for each event in file, and must already sorted?

@@ -721,12 +721,12 @@ forRowAtIndexPath: (NSIndexPath*)indexPath
         return;
     }
     NSDateFormatter* fmt = appDelegate.dateFormater;
-    NSDate* poiDate = [fmt dateFromString:@"01/01/0001 AD"];
+    NSDate* poiDate = [fmt dateFromString:@"12/31/9999 AD"];
     
     if ([dt isEqual:poiDate])
     {
         UIAlertView *alert = [[UIAlertView alloc] initWithTitle:NSLocalizedString(@"Wrong Date Format",nil)
-                                                        message:[NSString stringWithFormat:NSLocalizedString(@"Date 01/01/0001 is not allowed (A special case)",nil)]
+                                                        message:[NSString stringWithFormat:NSLocalizedString(@"Date 12/31/9999 AD is not allowed (A special case)",nil)]
                                                        delegate:nil
                                               cancelButtonTitle:@"OK"
                                               otherButtonTitles:nil];
