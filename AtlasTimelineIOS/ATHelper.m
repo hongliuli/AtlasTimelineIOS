@@ -491,7 +491,7 @@ UIPopoverController *verifyViewPopover;
     if (spinner != nil)
         [spinner startAnimating];
     ATAppDelegate *appDelegate = (ATAppDelegate *)[[UIApplication sharedApplication] delegate];
-    int cnt = [downloadedJsonArray count];
+    NSUInteger cnt = [downloadedJsonArray count];
     NSMutableArray* newEventList = [[NSMutableArray alloc] initWithCapacity:cnt];
     NSDateFormatter* usDateformater = [appDelegate.dateFormater copy];
     //always use USLocale to save date in JSON, so always use it to read. this resolve a big issue when user upload with one local and download with another local setting.

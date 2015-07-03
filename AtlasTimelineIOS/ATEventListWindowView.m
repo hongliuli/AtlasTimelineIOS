@@ -147,7 +147,7 @@ NSString* selectedPOIEventId;
             [cellPoi.layer setBorderColor:[UIColor lightGrayColor].CGColor];
             
 
-            int titleEndLocation = [descStr rangeOfString:@"\n"].location;
+            NSUInteger titleEndLocation = [descStr rangeOfString:@"\n"].location;
             if (titleEndLocation == NSNotFound)
                 titleStr = descStr;
             else
@@ -169,12 +169,12 @@ NSString* selectedPOIEventId;
         return cellPoi;
     }
     
-    NSString* cellType = @"blueBoardCell";
-    UIColor* boarderColor = [UIColor colorWithRed:0 green:0 blue:1 alpha:0.2];
+    NSString* cellType = @"redBoardCell";
+    UIColor* boarderColor = [UIColor colorWithRed:1 green:0 blue:0 alpha:0.2];
     if (eventListViewInMapModeFlag)
     {
-        cellType = @"redBoardCell";
-        boarderColor = [UIColor colorWithRed:1 green:0 blue:0 alpha:0.2];
+        cellType = @"blueBoardCell";
+        boarderColor = [UIColor colorWithRed:0 green:0 blue:1 alpha:0.2];
     }
     
     ATEventListViewCell* cell = (ATEventListViewCell*)[tableView dequeueReusableCellWithIdentifier:cellType];
@@ -196,14 +196,14 @@ NSString* selectedPOIEventId;
     NSMutableAttributedString *attString=[[NSMutableAttributedString alloc] initWithString:descToDisplay];
     [attString addAttribute:NSForegroundColorAttributeName value:greyColor range:NSMakeRange(0, [dateStr length])];
     
-    int titleEndLocation = [descStr rangeOfString:@"\n"].location;
-    if (titleEndLocation < 80) //title is in file as [Desc]xxx yyy zzzz\n
+    NSUInteger titleEndLocation = [descStr rangeOfString:@"\n"].location;
+    if (titleEndLocation < 80 && titleEndLocation > 0) //title is in file as [Desc]xxx yyy zzzz\n
     {
         titleStr = [descStr substringToIndex:titleEndLocation];
         descStr = [descStr substringFromIndex:titleEndLocation];
         descToDisplay = [NSString stringWithFormat:@"%@\n%@%@", dateStr,titleStr, descStr ];
         attString=[[NSMutableAttributedString alloc] initWithString:descToDisplay];
-        int dateStrLen = [dateStr length];
+        NSUInteger dateStrLen = [dateStr length];
         [attString addAttribute:NSForegroundColorAttributeName value:greyColor range:NSMakeRange(0, dateStrLen)];
         [attString addAttribute:NSFontAttributeName value:boldFont range:NSMakeRange(dateStrLen, [titleStr length] + 1)];
     }

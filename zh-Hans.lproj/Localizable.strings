@@ -146,10 +146,12 @@
 "myEvents need to be Active"="myEvents需要被置为活跃";
 "Need your email address as ID to login when access server!"="当访问服务器时，需要你的电子邮件地址作为登录ID！";
 "Network may not be available, Please try later!"=" 网络不通，请稍后再试!";
+"Network is needed the first time access this POI group"="第一次选择这些POI需要网路下载";
 "No"="不";
 "No photos to export to your Dropbox!"="没有照片可上载到你的Dropbox!";
 "Not login"="没有登录";
 "Not Now"="下次再说";
+"Network is unavailable to Download"="没有网路下载";
 "No, Thanks"="不要再提示";
 "No Results"="无搜寻结果";
 "OK"="好的";

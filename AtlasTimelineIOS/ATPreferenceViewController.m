@@ -70,7 +70,7 @@
     NSArray* downloadedMyEventsJsonArray;
     int uploadSuccessExcludeThumbnailCount;
     int deleteCount;
-    int downloadFromDropboxStartCount;
+    long downloadFromDropboxStartCount;
     int downloadFromDropboxSuccessCount;
     int totalDownloadFromDropboxSuccessCount;
     int downloadFromDropboxFailCount;
@@ -268,7 +268,7 @@
         [alert show];
         return;
     }
-    int cnt = [appDelegate.eventListSorted count];
+    NSUInteger cnt = [appDelegate.eventListSorted count];
     
     uploadAlertView = [[UIAlertView alloc]initWithTitle: [NSString stringWithFormat:NSLocalizedString(@"Sync %i events to %@ on server",nil),cnt, [ATHelper getSelectedDbFileName]]
                                                 message: [NSString stringWithFormat:NSLocalizedString(@"WARNING: Export will replace existing %@ event data on server.",nil),_source]
@@ -433,7 +433,7 @@
     downloadFromDropboxSuccessCount = 0;
     downloadFromDropboxFailCount = 0;
     downloadAlreadyExistCount = 0;
-    NSLog(@"===== eventId dequeued: %@,  remaining=%d",currentEventId, [eventIdQueueToCopyPhotoFromDropbox count]);
+    //NSLog(@"===== eventId dequeued: %@,  remaining=%d",currentEventId, [eventIdQueueToCopyPhotoFromDropbox count]);
     //local path has to exist for loadFile to save. But local path may not exist after re-install app so need do it here
     if (![[NSFileManager defaultManager] fileExistsAtPath:[localFullPath stringByAppendingPathComponent:currentEventId]])
         [[NSFileManager defaultManager] createDirectoryAtPath:[localFullPath stringByAppendingPathComponent:currentEventId] withIntermediateDirectories:YES attributes:nil error:nil];
@@ -472,7 +472,7 @@
     [usDateFormater setLocale:[[NSLocale alloc] initWithLocaleIdentifier:@"en_US"]];
     
     NSArray *myAtlasList = appDelegate.eventListSorted;
-    int eventCount = [myAtlasList count];
+    NSInteger eventCount = [myAtlasList count];
     NSMutableArray* dictArray = [[NSMutableArray alloc] initWithCapacity:eventCount];
     for (ATEventDataStruct* item in myAtlasList)
     {
@@ -505,7 +505,7 @@
                          ,[ATHelper getSelectedDbFileName], longStr];
     //NSLog(@"============post body = %@", postStr);
     NSData *postData = [postStr dataUsingEncoding:NSUTF8StringEncoding allowLossyConversion:YES];
-    NSString *postLength = [NSString stringWithFormat:@"%d", [postData length]];
+    NSString *postLength = [NSString stringWithFormat:@"%ld", [postData length]];
     NSURL* serviceUrl = [NSURL URLWithString: [ATConstants ServerURL]];
     //NSLog(@"============post url = %@", serviceUrl.absoluteString);
     NSMutableURLRequest * request = [NSMutableURLRequest requestWithURL:serviceUrl];
@@ -566,7 +566,7 @@
 
 - (UITableViewCell *)tableView:(UITableView *)tableView cellForRowAtIndexPath:(NSIndexPath *)indexPath
 {
-    int section = indexPath.section;
+    long section = indexPath.section;
     UITableViewCell *cell = nil;
     if (section == SECTION_CONTENT_MANAGE)
     {
@@ -590,7 +590,8 @@
         }
     }
     cell.accessoryType = UITableViewCellAccessoryDisclosureIndicator;
-    int row = indexPath.row;
+    [cell.imageView setImage:nil];
+    long row = indexPath.row;
     if (section == SECTION_CONTENT_MANAGE)
     {
         if (row == ROW_CONTENT_MG_SWITCH_ACTIVE)
@@ -731,7 +732,7 @@
     // create the parent view that will hold header Label
     if (section == SECTION_CONTENT_MANAGE)
     {
-        int loc = [_source rangeOfString:@"*"].location;
+        NSUInteger loc = [_source rangeOfString:@"*"].location;
         NSString* namePart = _source;
         if (loc != NSNotFound)
             namePart =  [_source substringToIndex:loc];
@@ -811,7 +812,7 @@
 
 - (void)tableView:(UITableView *)tableView didSelectRowAtIndexPath:(NSIndexPath *)indexPath
 {
-    int section = indexPath.section;
+    long section = indexPath.section;
     if (section == SECTION_CONTENT_MANAGE)
         [self handleContentManageSection:tableView :indexPath ];
     if (section == SECTION_LOGIN_EMAIL)
@@ -825,7 +826,7 @@
 }
 -(void) handleMiscSection:(UITableView*)tableView :(NSIndexPath *)indexPath
 {
-    int row = indexPath.row;
+    long row = indexPath.row;
     if (row == ROW_OPTIONS)
     {
         [self performSegueWithIdentifier:@"options" sender:nil];
@@ -890,7 +891,7 @@
 }
 -(void) handleSynchServerSection:(UITableView*)tableView :(NSIndexPath *)indexPath
 {
-    int row = indexPath.row;
+    long row = indexPath.row;
     if (row == ROW_SYNC_RESTORE_MYEVENTS)
     {
         [self startDownloadMyEventsJson];
@@ -914,7 +915,7 @@
     [spinner startAnimating];
     ATAppDelegate *appDelegate = (ATAppDelegate *)[[UIApplication sharedApplication] delegate];
     
-    int localListCnt = [appDelegate.eventListSorted count];
+    long localListCnt = [appDelegate.eventListSorted count];
     NSUserDefaults* userDefault = [NSUserDefaults standardUserDefaults];
     NSString* userEmail = [userDefault objectForKey:[ATConstants UserEmailKeyName]];
     NSString* securityCode = [userDefault objectForKey:[ATConstants UserSecurityCodeKeyName]];
@@ -929,7 +930,7 @@
         return;
     NSString* displayLocalCnt = @"";
     if ([[ATHelper getSelectedDbFileName] isEqualToString :atlasName])
-        displayLocalCnt = [NSString stringWithFormat:@"%i", localListCnt];
+        displayLocalCnt = [NSString stringWithFormat:@"%ld", localListCnt];
     
     NSError* error;
     downloadedMyEventsJsonArray = [NSJSONSerialization JSONObjectWithData:downloadedData options:kNilOptions error:&error];
@@ -945,7 +946,7 @@
 }
 -(void) handleSynchPhotoSection:(UITableView*)tableView :(NSIndexPath *)indexPath
 {
-    int row = indexPath.row;
+    long row = indexPath.row;
     if (row == ROW_SYNC_TO_DROPBOX)
     {
         if (![[DBSession sharedSession] isLinked]) {

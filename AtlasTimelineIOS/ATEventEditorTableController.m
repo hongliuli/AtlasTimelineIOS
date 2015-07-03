@@ -166,7 +166,7 @@ forRowAtIndexPath: (NSIndexPath*)indexPath
         customView = [[UIView alloc] initWithFrame:CGRectMake(0.0, 0.0, editorPhotoViewWidth, editorPhotoViewHeight)];
         
         // create photo count display
-        lblTotalCount = [[UILabel alloc] initWithFrame:CGRectMake(editorPhotoViewWidth - 180, editorPhotoViewHeight + 15, 20, 20)];
+        lblTotalCount = [[UILabel alloc] initWithFrame:CGRectMake(editorPhotoViewWidth - 150, editorPhotoViewHeight + 15, 20, 20)];
         lblNewAddedCount = [[UILabel alloc] initWithFrame:CGRectMake(editorPhotoViewWidth - 160, editorPhotoViewHeight + 15, 100, 20)];
         lblTotalCount.backgroundColor = [UIColor clearColor];
         lblNewAddedCount.backgroundColor = [UIColor clearColor];

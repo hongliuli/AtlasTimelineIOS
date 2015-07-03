@@ -199,10 +199,10 @@ NSString* deleteFriend_wait;
 
 //swapable delegate
 - (void)swipeableTableViewCell:(SWTableViewCell *)cell didTriggerLeftUtilityButtonWithIndex:(NSInteger)index {
-    int row = cell.tag;
+    NSInteger row = cell.tag;
     deleteFriend_wait = friendList[row];
     deleteFriendEmailToServer = deleteFriend_wait;
-    int loc = [deleteFriend_wait rangeOfString:@"(wait)"].location;
+    NSUInteger loc = [deleteFriend_wait rangeOfString:@"(wait)"].location;
     if (loc != NSNotFound)
         deleteFriendEmailToServer = [deleteFriend_wait substringToIndex:loc];
     

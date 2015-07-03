@@ -193,8 +193,8 @@ NSInteger selectedPoiGroupIdxForDeselect;
     }
     else
     {
-        UIAlertView *alert = [[UIAlertView alloc] initWithTitle:NSLocalizedString(@"Network is unavailable!",nil)
-                                                        message:NSLocalizedString(@"You need network the first time access this POI group",nil)
+        UIAlertView *alert = [[UIAlertView alloc] initWithTitle:NSLocalizedString(@"Network is unavailable to Download",nil)
+                                                        message:NSLocalizedString(@"Network is needed the first time access this POI group",nil)
                                                        delegate:nil
                                               cancelButtonTitle:NSLocalizedString(@"OK",nil)
                                               otherButtonTitles:nil];

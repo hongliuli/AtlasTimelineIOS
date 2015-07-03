@@ -239,7 +239,10 @@
     [helpbtn setImage:[UIImage imageNamed:@"help.png"] forState:UIControlStateNormal];
     [helpbtn addTarget:self action:@selector(tutorialClicked:) forControlEvents:UIControlEventTouchUpInside];
     UIBarButtonItem *helpButton = [[UIBarButtonItem alloc] initWithCustomView:helpbtn];
-    self.navigationItem.rightBarButtonItems = @[settringButton, helpButton];
+    if (UI_USER_INTERFACE_IDIOM() == UIUserInterfaceIdiomPad)
+        self.navigationItem.rightBarButtonItems = @[settringButton, helpButton];
+    else
+        self.navigationItem.rightBarButtonItems = @[settringButton];
     
     /*
     UIButton *poiLoadViewBtn = [UIButton buttonWithType:UIButtonTypeCustom];
@@ -248,8 +251,7 @@
     [poiLoadViewBtn addTarget:self action:@selector(choosePoiClicked:) forControlEvents:UIControlEventTouchUpInside];
     UIBarButtonItem *poiButton = [[UIBarButtonItem alloc] initWithCustomView:poiLoadViewBtn];
      */
-    //self.navigationItem.rightBarButtonItems = @[settringButton];
-    self.navigationItem.rightBarButtonItems = @[settringButton, helpButton];
+
     
     //   }
     
@@ -367,16 +369,16 @@
 -(void)setSwitchButtonTimeMode
 {
     switchEventListViewModeToVisibleOnMapFlag = false;
-    [switchEventListViewModeBtn setTitleColor:[UIColor colorWithRed:0.0 green:122.0/255.0 blue:1.0 alpha:1.0] forState:UIControlStateNormal];
+    [switchEventListViewModeBtn setTitleColor:[UIColor redColor] forState:UIControlStateNormal];
     [switchEventListViewModeBtn setTitle:NSLocalizedString(@"By Time",nil) forState:UIControlStateNormal];
-    [[switchEventListViewModeBtn layer] setBorderColor:[UIColor colorWithRed:0.0 green:122.0/255.0 blue:1.0 alpha:1.0].CGColor];
+    [[switchEventListViewModeBtn layer] setBorderColor:[UIColor redColor].CGColor];
 }
 -(void)setSwitchButtonMapMode
 {
     switchEventListViewModeToVisibleOnMapFlag = true;
-    [switchEventListViewModeBtn setTitleColor:[UIColor redColor] forState:UIControlStateNormal];
+    [switchEventListViewModeBtn setTitleColor:[UIColor colorWithRed:0.0 green:122.0/255.0 blue:1.0 alpha:1.0] forState:UIControlStateNormal];
     [switchEventListViewModeBtn setTitle:NSLocalizedString(@"By Map",nil) forState:UIControlStateNormal];
-    [[switchEventListViewModeBtn layer] setBorderColor:[UIColor redColor].CGColor];
+    [[switchEventListViewModeBtn layer] setBorderColor:[UIColor colorWithRed:0.0 green:122.0/255.0 blue:1.0 alpha:1.0].CGColor];
 }
 
 - (void)addFirstDemoEvent {
@@ -2517,7 +2519,7 @@
     NSString* titleStr = @"";
     NSMutableAttributedString *attString=[[NSMutableAttributedString alloc] initWithString:descStr];
     
-    int titleEndLocation = [descStr rangeOfString:@"\n"].location;
+    NSUInteger titleEndLocation = [descStr rangeOfString:@"\n"].location;
     if (titleEndLocation < 80) //title is in file as [Desc]xxx yyy zzzz\n
     {
         titleStr = [descStr substringToIndex:titleEndLocation];
