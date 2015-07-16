@@ -211,13 +211,13 @@ forRowAtIndexPath: (NSIndexPath*)indexPath
         [customView addSubview:label];
         
         UIButton *shareButton = [UIButton buttonWithType:UIButtonTypeCustom];
-        shareButton.frame = CGRectMake(290, 0, 30, 30);
+        shareButton.frame = CGRectMake(260, 0, 30, 30);
         [shareButton setImage:[UIImage imageNamed:@"share.png"] forState:UIControlStateNormal];
         [shareButton addTarget:self action:@selector(shareButtonAction:) forControlEvents:UIControlEventTouchUpInside];
         [customView addSubview:shareButton];
         
         UIButton *sizeButton = [UIButton buttonWithType:UIButtonTypeCustom];
-        sizeButton.frame = CGRectMake(170, 0, 30, 30);
+        sizeButton.frame = CGRectMake(140, 0, 30, 30);
         BOOL fullFlag = [ATHelper getOptionEditorFullScreen];
         if (fullFlag)
             [sizeButton setImage:[UIImage imageNamed:@"window_minimize.png"] forState:UIControlStateNormal];
@@ -232,7 +232,7 @@ forRowAtIndexPath: (NSIndexPath*)indexPath
         if ([appDelegate.sourceName isEqual:@"myEvents"]) //can create episode on myEvents only
         {
             UIButton *episodeButton = [UIButton buttonWithType:UIButtonTypeCustom];
-            episodeButton.frame = CGRectMake(230, 0, 40, 30);
+            episodeButton.frame = CGRectMake(200, 0, 40, 30);
             if ([self.delegate isInEpisode])
                 [episodeButton setImage:[UIImage imageNamed:@"add-to-episode-folder-reverse.png"] forState:UIControlStateNormal];
             else
@@ -241,7 +241,7 @@ forRowAtIndexPath: (NSIndexPath*)indexPath
             [customView addSubview:episodeButton];
         }
         UIButton *markerPicker = [UIButton buttonWithType:UIButtonTypeCustom];
-        markerPicker.frame = CGRectMake(100, 0, 30, 30);
+        markerPicker.frame = CGRectMake(70, 0, 30, 30);
         [markerPicker setImage:[UIImage imageNamed:@"marker_star.png"] forState:UIControlStateNormal];
         [markerPicker setAlpha:0.8];
         [markerPicker addTarget:self action:@selector(markerPickerAction:) forControlEvents:UIControlEventTouchUpInside];

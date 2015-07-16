@@ -330,14 +330,22 @@
         return 40;
 }
 + (int) revealViewPreferenceWidth{
-    return 320;
+    if (UI_USER_INTERFACE_IDIOM() == UIUserInterfaceIdiomPad)
+        return 320;
+    else
+        return 280;
 }
 + (int) revealViewEventEditorWidth{
     BOOL fullFlag = [ATHelper getOptionEditorFullScreen];
     if (fullFlag)
         return 600;
     else
-        return 340;
+    {
+        if (UI_USER_INTERFACE_IDIOM() == UIUserInterfaceIdiomPad)
+            return 340;
+        else
+            return 295;
+    }
 }
 + (int) revealViewTimeLineViewWidth{
     return 280;
