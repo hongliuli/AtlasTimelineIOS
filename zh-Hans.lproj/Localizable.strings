@@ -122,6 +122,8 @@
 "Fail reason could be network issue or data issue!"="失败原因可能是网络或数据问题!";
 "failed to add %@"="添加%@失败";
 "Failed to save image"="保存图像失败";
+"Find"="搜索事件";
+"Find Event by Text"="按文字搜索事件";
 "Select All"="全选";
 "Free version allows you to store as many as 50 events and unlimited photos, do you want to support us by purchasing unlimited version for USD$2.99 now?"="免费版本只能添加50个事件和无限制的照片。现在你要付2.99美元买完整版本吗?";
 "%@ has not accepted your request yet"="%@ 还没有接受你的请求";
@@ -237,7 +239,6 @@
 "This may happen if the app was uninstalled before export all photos to dropbox /ChronicleMap/%@ folder!"="这种情况可能会发生如果卸载APP前照片还没有备份到Dropbox的 /ChronicleMap/%@文件夹!";
 "The product is restored, no charge is applied"="APP已恢复，你不用任何支付！";
 "Time Wheel"="时间轮";
-"Timeline/Search"="年列表／搜索事件";
 "Tap another event or long press any location on map as start point to get direction here."="在地图上点击另一个事件或者长按任何地址作为起始点，以便显示到达这里的路线。";
 "This app is best used as a trip, event and photo organizer. If you store photos on Flickr, Picasa or Facebook you can use below apps instead:"="[霞客行]是旅行规划和事件照片管理的好帮手。如果你的照片在 Flickr, Picasa 或 Facebook 上，建议你用下列［霞客行］姊妹APP：";
 "To add your own event, long press on a map location, or search an address.\nThis is a demo event/album we created for you. To learn more, please tap on any photos in this demo event."="添加事件方法： 长按在地图上的某点，或在上方的框中搜寻地址.\n这是我们为你创建的模拟事件。点击上面照片看更多说明。";

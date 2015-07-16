@@ -70,7 +70,7 @@ NSDateFormatter* dateFormatter;
 	
     [super viewDidLoad];
     [self.searchDisplayController.searchBar setPlaceholder:NSLocalizedString(@"Search description and address",nil)];
-    [self.navigationItem setTitle:NSLocalizedString(@"Timeline/Search", nil)];
+    [self.navigationItem setTitle:NSLocalizedString(@"Find Event by Text", nil)];
     // Add a pinch gesture recognizer to the table view.
 	UIPinchGestureRecognizer* pinchRecognizer = [[UIPinchGestureRecognizer alloc] initWithTarget:self action:@selector(handlePinch:)];
 	[self.tableView addGestureRecognizer:pinchRecognizer];

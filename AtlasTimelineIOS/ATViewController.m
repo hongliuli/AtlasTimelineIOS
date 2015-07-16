@@ -12,7 +12,7 @@
 #define ALERT_FOR_POPOVER_ERROR 2
 #define ALERT_FOR_DIRECTION_MODE 3
 #define ALERT_FOR_NEW_APP 4
-#define MAX_NUMBER_OF_POI_IN_EVENT_VIEW 10
+#define MAX_NUMBER_OF_POI_IN_EVENT_VIEW 20
 
 #define PHOTO_META_FILE_NAME @"MetaFileForOrderAndDesc"
 #define ALERT_FOR_SYNC_PROMPT_DISABLE 999
@@ -316,7 +316,7 @@
     [self.timeZoomLine showHideScaleText:false];
     [ATHelper setOptionDateFieldKeyboardEnable:false]; //always set default to not allow keyboard
     ATAppDelegate *appDelegate = (ATAppDelegate *)[[UIApplication sharedApplication] delegate];
-    [self.navigationItem.leftBarButtonItem setTitle:NSLocalizedString(@"Timeline/Search",nil)];
+    [self.navigationItem.leftBarButtonItem setTitle:NSLocalizedString(@"Find",nil)];
     [self.searchBar setPlaceholder:NSLocalizedString(@"Poi or Address", nil)];
     if ([appDelegate.eventListSorted count] == 0)
     {
@@ -471,8 +471,8 @@
         CLLocationCoordinate2D coord = CLLocationCoordinate2DMake((CLLocationDegrees)ent.lat, (CLLocationDegrees)ent.lng);
         ATAnnotationPoi *eventAnnotation = [[ATAnnotationPoi alloc] initWithLocation:coord];
         eventAnnotation.uniqueId = ent.uniqueId;
-        if (ent.eventDate == nil)
-            NSLog(@"---- nil date in poiGroupChooseViewController");
+        //if (ent.eventDate == nil)
+            //NSLog(@"---- nil date in poiGroupChooseViewController");
         eventAnnotation.address = ent.address;
         eventAnnotation.description=ent.eventDesc;
         eventAnnotation.eventDate=ent.eventDate;

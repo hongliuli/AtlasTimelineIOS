@@ -29,6 +29,9 @@ BOOL isAtLeast7;
 
 BOOL eventListViewInMapModeFlag;
 
+int lastScrollContentOffset = 0;
+NSDate* lastScrollStartTime;
+
 NSDateFormatter *dateFormatter;
 
 UIColor *greyColor;
@@ -61,6 +64,7 @@ NSString* selectedPOIEventId;
         
         greyColor=[UIColor darkGrayColor];
         boldFont=[UIFont fontWithName:@"Arial-BoldMT" size:13];
+        lastScrollStartTime = [NSDate date];
     }
     return self;
 }
@@ -260,8 +264,8 @@ NSString* selectedPOIEventId;
     ATAppDelegate *appDelegate = (ATAppDelegate *)[[UIApplication sharedApplication] delegate];
     ATEventDataStruct* firstEvt = internalEventList[1];
     ATEventDataStruct* lastEvt = internalEventList[[internalEventList count] - 2];
-    int globalIdxFirst = [appDelegate.eventListSorted indexOfObject:firstEvt];
-    int globalIdxLast = [appDelegate.eventListSorted indexOfObject:lastEvt];
+    unsigned long globalIdxFirst = [appDelegate.eventListSorted indexOfObject:firstEvt];
+    unsigned long globalIdxLast = [appDelegate.eventListSorted indexOfObject:lastEvt];
     return ((globalIdxFirst == [appDelegate.eventListSorted count] - 1 &&  row == 0) ||
             (globalIdxLast == 0 && row == [internalEventList count] - 1));
 }
@@ -322,8 +326,8 @@ NSString* selectedPOIEventId;
         if (![ATHelper isPOIEvent:evt])
         {
             NSUserDefaults* userDefault = [NSUserDefaults standardUserDefaults];
-            int idx = [appDelegate.eventListSorted indexOfObject:evt];
-            [userDefault setObject:[NSString stringWithFormat:@"%d",idx ] forKey:@"BookmarkEventIdx"];
+            unsigned long idx = [appDelegate.eventListSorted indexOfObject:evt];
+            [userDefault setObject:[NSString stringWithFormat:@"%lu",idx ] forKey:@"BookmarkEventIdx"];
             [userDefault synchronize];
         }
     }
@@ -361,6 +365,34 @@ NSString* selectedPOIEventId;
         [self.tableView scrollToRowAtIndexPath: [NSIndexPath indexPathForRow:selectedEventIdx inSection:0]
                               atScrollPosition:UITableViewScrollPositionMiddle animated:YES];
 }
+
+/****** following delegate works to detect scroll up/down. Originally I want use this to show/hide map mode button, but decide may not a good idea because if not eventlist view, should we show or hide the button?
+- (void)scrollViewDidScroll:(UIScrollView *)scrollView
+{
+    NSTimeInterval timeInterval = abs([lastScrollStartTime timeIntervalSinceNow]);
+    if (timeInterval < 0.2)
+    {
+        lastScrollContentOffset = scrollView.contentOffset.y;
+        //NSLog(@"------Scroll within time");
+        return;
+    }
+    if (lastScrollContentOffset > scrollView.contentOffset.y)
+    {
+        lastScrollStartTime = [NSDate date];
+        NSLog(@"Scroll down");
+    }
+    else if (lastScrollContentOffset < scrollView.contentOffset.y)
+    {
+        lastScrollStartTime = [NSDate date];
+        NSLog(@"Scroll up");
+    }
+    
+    lastScrollContentOffset = scrollView.contentOffset.y;
+    
+    // do whatever you need to with scrollDirection here.
+}
+ */
+
 /*
  // Override to support conditional editing of the table view.
  - (BOOL)tableView:(UITableView *)tableView canEditRowAtIndexPath:(NSIndexPath *)indexPath
