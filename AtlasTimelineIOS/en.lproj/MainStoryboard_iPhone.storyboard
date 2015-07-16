@@ -798,11 +798,12 @@
                                             <rect key="frame" x="0.0" y="0.0" width="320" height="323"/>
                                             <autoresizingMask key="autoresizingMask"/>
                                             <subviews>
-                                                <textView clipsSubviews="YES" multipleTouchEnabled="YES" tag="888" contentMode="scaleToFill" showsHorizontalScrollIndicator="NO" id="tty-tE-n8l">
+                                                <textView clipsSubviews="YES" multipleTouchEnabled="YES" tag="888" contentMode="scaleToFill" showsHorizontalScrollIndicator="NO" editable="NO" id="tty-tE-n8l">
                                                     <rect key="frame" x="0.0" y="0.0" width="320" height="318"/>
                                                     <color key="backgroundColor" white="0.0" alpha="0.0" colorSpace="calibratedWhite"/>
                                                     <fontDescription key="fontDescription" type="system" pointSize="14"/>
                                                     <textInputTraits key="textInputTraits" autocapitalizationType="sentences"/>
+                                                    <dataDetectorType key="dataDetectorTypes" link="YES"/>
                                                     <connections>
                                                         <outlet property="delegate" destination="kvk-Aq-AcP" id="M3f-c9-zgZ"/>
                                                     </connections>
