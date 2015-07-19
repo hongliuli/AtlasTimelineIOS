@@ -840,13 +840,15 @@
     {
         NSUserDefaults* userDefault = [NSUserDefaults standardUserDefaults];
         NSString* bookmarkIdxStr = [userDefault valueForKey:@"BookmarkEventIdx"];
-        int eventListSize = [eventList count];
+        unsigned long eventListSize = [eventList count];
         ATEventDataStruct* entStruct = eventList[eventListSize -1]; //if no bookmark, always use earlist
         if (bookmarkIdxStr != nil)
         {
             int bookmarkIdx = [bookmarkIdxStr intValue];
             if (bookmarkIdx >= eventListSize)
                 bookmarkIdx = eventListSize - 1;
+            if (bookmarkIdx < 0)
+                bookmarkIdx = 0;
             entStruct = eventList[bookmarkIdx];
         }
         appDelegate.focusedDate = entStruct.eventDate;
@@ -1230,6 +1232,65 @@
     }
     */
 }
+
+- (void) hideTimeScrollAndNavigationBar:(BOOL)hideFlag
+{
+    if (hideFlag)
+    {
+        self.mapViewShowWhatFlag = MAPVIEW_HIDE_ALL;
+        [self animatedHideTimeScrollAndNavigationBarPart1];
+        [self.navigationController setNavigationBarHidden:true animated:TRUE];
+    }
+    else
+    {
+        self.mapViewShowWhatFlag = MAPVIEW_SHOW_ALL;
+        [self animatedShowTimeScrollAndNavigationBarPart1];
+        [self.navigationController setNavigationBarHidden:false animated:TRUE];
+    }
+}
+
+- (void) animatedHideTimeScrollAndNavigationBarPart1
+{
+    int timeWindowY = self.view.bounds.size.height - [ATConstants timeScrollWindowHeight];
+    int timeLineY = timeWindowY;
+    [UIView animateWithDuration:0.3
+                          delay:0.0
+                        options:UIViewAnimationCurveEaseOut
+                     animations:^(void) {
+                         self.timeScrollWindow.alpha = 0;
+                         self.timeZoomLine.alpha = 0;
+                         CGRect frame = self.timeScrollWindow.frame;
+                         frame.origin.y = timeWindowY + 30;
+                         [self.timeScrollWindow setFrame:frame];
+                         frame = self.timeZoomLine.frame;
+                         frame.origin.y = timeLineY + 30;
+                         [self.timeZoomLine setFrame:frame];
+                     }
+                     completion:NULL];
+}
+- (void) animatedShowTimeScrollAndNavigationBarPart1
+{
+    int timeWindowY = self.view.bounds.size.height - [ATConstants timeScrollWindowHeight];
+    int timeLineY = timeWindowY;
+    [UIView animateWithDuration:0.3
+                          delay:0.0
+                        options:UIViewAnimationCurveEaseOut
+                     animations:^(void) {
+                         self.timeScrollWindow.alpha = 1;
+                         self.timeZoomLine.alpha = 1;
+                         switchEventListViewModeBtn.alpha = 1;
+                         eventListView.alpha = 1;
+                         
+                         CGRect frame = self.timeScrollWindow.frame;
+                         frame.origin.y = timeWindowY;
+                         [self.timeScrollWindow setFrame:frame];
+                         frame = self.timeZoomLine.frame;
+                         frame.origin.y = timeLineY;
+                         [self.timeZoomLine setFrame:frame];
+                     }
+                     completion:NULL];
+}
+
 
 - (void) animatedHidePart1
 {
@@ -1674,6 +1735,7 @@
 - (void)mapView:(MKMapView *)mapView regionWillChangeAnimated:(BOOL)animated
 {
     [self hideDescriptionLabelViews];
+    [self hideTimeScrollAndNavigationBar:true];
 }
 - (void)mapView:(MKMapView *)mapView regionDidChangeAnimated:(BOOL)animated
 {
@@ -3823,7 +3885,7 @@
     //try to move evetlistview to right side screenWidht - eventListViewCellWidth, but a lot of trouble, not know why
     //  even make x to 30, it will move more than 30, besides, not left side tap works
     CGRect newFrame = CGRectMake(0,offset,0,0);
-    int numOfCellOnScreen = 0;
+    unsigned long numOfCellOnScreen = 0;
     
     
     NSMutableArray* eventListViewList = nil;
@@ -3847,7 +3909,7 @@
         
         eventListViewList = [[NSMutableArray alloc] init];
 
-        int cnt = [allEventSortedList count];
+        NSInteger cnt = [allEventSortedList count];
         if (cnt == 0 && (eventListInVisibleMapArea == nil || [eventListInVisibleMapArea count] == 0) )
         {
             [eventListView setFrame:newFrame];
@@ -3869,7 +3931,7 @@
         }
         //come here when there start/end date range has intersect with allEventSorted
         BOOL completeFlag = false;
-        int insertStartPosition = 0;
+        unsigned long insertStartPosition = 0;
         if  (eventListInVisibleMapArea != nil && [eventListInVisibleMapArea count] > 0)
         {
             [eventListViewList addObjectsFromArray:eventListInVisibleMapArea];
@@ -3905,7 +3967,7 @@
     }
 
     //above logic will remain startDateIdx/endDateIdx to be -1 if no events
-    int cnt = [eventListViewList count]; //Inside ATEventListWindow, this will add two rows for arrow button, one at top, one at bottom
+    unsigned long cnt = [eventListViewList count]; //Inside ATEventListWindow, this will add two rows for arrow button, one at top, one at bottom
     if (cnt > 0)
     {
         numOfCellOnScreen = cnt;

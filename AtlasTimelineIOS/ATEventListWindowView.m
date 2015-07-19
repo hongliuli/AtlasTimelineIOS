@@ -36,6 +36,10 @@ NSDateFormatter *dateFormatter;
 
 UIColor *greyColor;
 UIFont *boldFont;
+UIFont *regularFont;
+UIFont *dateFontSize;
+int poiImageWidth;
+int poiImageHeight;
 NSString* selectedPOIEventId;
 
 - (id)initWithFrame:(CGRect)frame
@@ -64,6 +68,18 @@ NSString* selectedPOIEventId;
         
         greyColor=[UIColor darkGrayColor];
         boldFont=[UIFont fontWithName:@"Arial-BoldMT" size:13];
+        regularFont=[UIFont fontWithName:@"Arial" size:13];
+        dateFontSize=[UIFont fontWithName:@"Arial" size:13];
+        poiImageWidth = 65;
+        poiImageHeight = 50;
+        if (UI_USER_INTERFACE_IDIOM() == UIUserInterfaceIdiomPhone)
+        {
+            boldFont=[UIFont fontWithName:@"Arial-BoldMT" size:11];
+            regularFont=[UIFont fontWithName:@"Arial" size:11];
+            dateFontSize=[UIFont fontWithName:@"Arial" size:10];
+            poiImageWidth = 50;
+            poiImageHeight = 38;
+        }
         lastScrollStartTime = [NSDate date];
     }
     return self;
@@ -142,7 +158,7 @@ NSString* selectedPOIEventId;
         if (cellPoi == nil)
         {
             cellPoi = [[ATEventListViewPoiCell alloc] initWithFrame:CGRectMake(0, 0, [ATConstants eventListViewCellWidth], [ATConstants eventListViewCellHeight])];
-            cellPoi.eventDescView.font = [UIFont fontWithName:@"Arial-BoldMT" size:15];
+            cellPoi.eventDescView.font = boldFont;
             
             cellPoi.selectionStyle = UITableViewCellStyleDefault;
             [cellPoi.layer setCornerRadius:7.0f];
@@ -167,7 +183,7 @@ NSString* selectedPOIEventId;
         else
             [cellPoi setBackgroundColor:[UIColor colorWithRed:0.9 green:0.9 blue:1.0 alpha:0.7]];
         UIImageView* iconView = (UIImageView*) [cellPoi viewWithTag:9999]; //modify that from parent
-        [iconView setFrame:CGRectMake(2, 2, 65, 50)];
+        [iconView setFrame:CGRectMake(2, 2, poiImageWidth, poiImageHeight)];
         [iconView setImage:[ATHelper readPhotoFromFile:evt.uniqueId eventId:evt.uniqueId]];
         //[iconView setImage:[ATHelper readPhotoThumbFromFile:evt.uniqueId]];
         return cellPoi;
@@ -185,7 +201,7 @@ NSString* selectedPOIEventId;
     if (cell == nil)
     {
         cell = [[ATEventListViewCell alloc] initWithFrame:CGRectMake(0, 0, [ATConstants eventListViewCellWidth], [ATConstants eventListViewCellHeight])];
-        cell.eventDescView.font = [UIFont fontWithName:@"Arial" size:13];
+        cell.eventDescView.font = regularFont;
         
         cell.selectionStyle = UITableViewCellStyleDefault;
         [cell.layer setCornerRadius:7.0f];
@@ -196,9 +212,11 @@ NSString* selectedPOIEventId;
         //cell.backgroundColor = [UIColor colorWithRed:1 green:1 blue:1 alpha:0.7];
         //[cell.layer setBorderColor:(__bridge CGColorRef)([UIColor lightGrayColor])];
     }
-    
+    NSUInteger dateStrLen = [dateStr length];
     NSMutableAttributedString *attString=[[NSMutableAttributedString alloc] initWithString:descToDisplay];
-    [attString addAttribute:NSForegroundColorAttributeName value:greyColor range:NSMakeRange(0, [dateStr length])];
+    [attString addAttribute:NSForegroundColorAttributeName value:greyColor range:NSMakeRange(0, dateStrLen)];
+    [attString addAttribute:NSFontAttributeName value:dateFontSize range:NSMakeRange(0, dateStrLen)];
+    [attString addAttribute:NSFontAttributeName value:regularFont range:NSMakeRange(dateStrLen + 1, [descToDisplay length] - dateStrLen -1)];
     
     NSUInteger titleEndLocation = [descStr rangeOfString:@"\n"].location;
     if (titleEndLocation < 80 && titleEndLocation > 0) //title is in file as [Desc]xxx yyy zzzz\n
@@ -207,9 +225,10 @@ NSString* selectedPOIEventId;
         descStr = [descStr substringFromIndex:titleEndLocation];
         descToDisplay = [NSString stringWithFormat:@"%@\n%@%@", dateStr,titleStr, descStr ];
         attString=[[NSMutableAttributedString alloc] initWithString:descToDisplay];
-        NSUInteger dateStrLen = [dateStr length];
-        [attString addAttribute:NSForegroundColorAttributeName value:greyColor range:NSMakeRange(0, dateStrLen)];
         [attString addAttribute:NSFontAttributeName value:boldFont range:NSMakeRange(dateStrLen, [titleStr length] + 1)];
+        [attString addAttribute:NSFontAttributeName value:regularFont range:NSMakeRange([titleStr length] + 1, [descToDisplay length] - dateStrLen - [titleStr length] -1)];
+        [attString addAttribute:NSForegroundColorAttributeName value:greyColor range:NSMakeRange(0, dateStrLen)];
+        [attString addAttribute:NSFontAttributeName value:dateFontSize range:NSMakeRange(0, dateStrLen)];
     }
     
     //dateStr = [dateStr substringToIndex:10];
@@ -253,9 +272,9 @@ NSString* selectedPOIEventId;
     {
         ATEventDataStruct* evt = internalEventList[indexPath.row];
         if ([ATHelper isPOIEvent:evt])
-            return 50;
+            return poiImageHeight;
         else
-        return [ATConstants eventListViewCellHeight];
+            return [ATConstants eventListViewCellHeight];
     }
 }
 
@@ -366,7 +385,7 @@ NSString* selectedPOIEventId;
                               atScrollPosition:UITableViewScrollPositionMiddle animated:YES];
 }
 
-/****** following delegate works to detect scroll up/down. Originally I want use this to show/hide map mode button, but decide may not a good idea because if not eventlist view, should we show or hide the button?
+/****** following delegate works to detect scroll up/down.  */
 - (void)scrollViewDidScroll:(UIScrollView *)scrollView
 {
     NSTimeInterval timeInterval = abs([lastScrollStartTime timeIntervalSinceNow]);
@@ -379,19 +398,25 @@ NSString* selectedPOIEventId;
     if (lastScrollContentOffset > scrollView.contentOffset.y)
     {
         lastScrollStartTime = [NSDate date];
-        NSLog(@"Scroll down");
+        ATAppDelegate *appDelegate = (ATAppDelegate *)[[UIApplication sharedApplication] delegate];
+        ATViewController* mapView = appDelegate.mapViewController;
+        [mapView hideTimeScrollAndNavigationBar:false];
+        //NSLog(@"Scroll down");
     }
     else if (lastScrollContentOffset < scrollView.contentOffset.y)
     {
         lastScrollStartTime = [NSDate date];
-        NSLog(@"Scroll up");
+        ATAppDelegate *appDelegate = (ATAppDelegate *)[[UIApplication sharedApplication] delegate];
+        ATViewController* mapView = appDelegate.mapViewController;
+        [mapView hideTimeScrollAndNavigationBar:false];
+        //NSLog(@"Scroll up");
     }
     
     lastScrollContentOffset = scrollView.contentOffset.y;
     
     // do whatever you need to with scrollDirection here.
 }
- */
+
 
 /*
  // Override to support conditional editing of the table view.

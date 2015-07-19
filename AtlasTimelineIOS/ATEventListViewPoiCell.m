@@ -30,9 +30,12 @@
         [self.checkIcon setImage:[UIImage imageNamed:@"focuseIcon.png"]];
         [self.checkIcon setTag:9999];
         [self.contentView addSubview:self.checkIcon];
-        
-        CGRect textFrame = CGRectMake(65, 0, [ATConstants eventListViewCellWidth],[ATConstants eventListViewCellHeight]);
+        int poiImageWidth = 65;
+        if (UI_USER_INTERFACE_IDIOM() == UIUserInterfaceIdiomPhone)
+            poiImageWidth = 50;
+        CGRect textFrame = CGRectMake(poiImageWidth, 0, [ATConstants eventListViewCellWidth] - poiImageWidth, [ATConstants eventListViewCellHeight]);
         UITextView* descView = (UITextView*)[self viewWithTag:99992];
+        descView.textContainer.lineBreakMode = NSLineBreakByWordWrapping;
         [descView setFrame:textFrame];
     }
     return self;

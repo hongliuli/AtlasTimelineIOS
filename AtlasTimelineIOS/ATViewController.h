@@ -63,5 +63,6 @@
 - (void) refreshEventListView:(BOOL)callFromScrollTimewheel;
 - (int) zoomLevel;
 - (void) refreshFocusedEvent;
+- (void) hideTimeScrollAndNavigationBar:(BOOL)hideFlag;
 
 @end
