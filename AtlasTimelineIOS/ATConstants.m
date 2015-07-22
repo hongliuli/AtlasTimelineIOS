@@ -302,16 +302,17 @@
         return 80;
 }
 + (int) eventListViewCellNum{
+    UIInterfaceOrientation interfaceOrientation = [[UIApplication sharedApplication] statusBarOrientation];
     if (UI_USER_INTERFACE_IDIOM() == UIUserInterfaceIdiomPad)
     {
-        if (UIDeviceOrientationIsPortrait([UIDevice currentDevice].orientation))
+        if (UIInterfaceOrientationIsPortrait(interfaceOrientation))
             return 6;
         else
             return 4;
     }
     else
     {
-        if (UIDeviceOrientationIsPortrait([UIDevice currentDevice].orientation))
+        if (UIInterfaceOrientationIsPortrait(interfaceOrientation))
             return 4;
         else
             return 2;

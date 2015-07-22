@@ -1370,7 +1370,7 @@
 
 - (void)handleLongPressGesture:(UIGestureRecognizer *)gestureRecognizer
 {
-    
+    UIInterfaceOrientation orientation = [UIApplication sharedApplication].statusBarOrientation;
     if (gestureRecognizer.state != UIGestureRecognizerStateBegan)   // UIGestureRecognizerStateEnded)
         return;
     
@@ -1378,9 +1378,9 @@
     CGPoint touchPoint = [gestureRecognizer locationInView:_mapView];
     
     //Following is to do not create annotation when tuch upper part of the map because of the timeline related controls.
-    if ((UIDeviceOrientationIsLandscape([UIDevice currentDevice].orientation) && touchPoint.y <= 120 && touchPoint.x > 300 && touchPoint.x < 650)
+    if ((UIDeviceOrientationIsLandscape(orientation) && touchPoint.y <= 120 && touchPoint.x > 300 && touchPoint.x < 650)
         ||
-        (UIDeviceOrientationIsPortrait([UIDevice currentDevice].orientation) && touchPoint.y <=105))
+        (UIDeviceOrientationIsPortrait(orientation) && touchPoint.y <=105))
         return;
     
     CLLocationCoordinate2D touchMapCoordinate =
@@ -3977,8 +3977,8 @@
         if (UI_USER_INTERFACE_IDIOM() == UIUserInterfaceIdiomPhone)
         {
             CGRect newBtnFrame = switchEventListViewModeBtn.frame;
-            
-            if (UIDeviceOrientationIsPortrait([UIDevice currentDevice].orientation))
+            UIInterfaceOrientation orientation = [UIApplication sharedApplication].statusBarOrientation;
+            if (UIDeviceOrientationIsPortrait(orientation))
             {
                 offset = offset - 10;
                 newBtnFrame = CGRectMake(newBtnFrame.origin.x, 66, newBtnFrame.size.width, newBtnFrame.size.height);
