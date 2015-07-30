@@ -14,6 +14,10 @@
 #define ALERT_FOR_NEW_APP 4
 #define MAX_NUMBER_OF_POI_IN_EVENT_VIEW 20
 
+#define POI_DISPLAY_TYPE_RED_DOT 99
+#define POI_DISPLAY_TYPE_STAR 5
+#define POI_DISPLAY_TYPE_ORANGE 50
+
 #define PHOTO_META_FILE_NAME @"MetaFileForOrderAndDesc"
 #define ALERT_FOR_SYNC_PROMPT_DISABLE 999
 
@@ -50,6 +54,9 @@
 #define ZOOM_LEVEL_TO_HIDE_EVENTLIST_VIEW 5
 #define ZOOM_LEVEL_TO_HIDE_POI_IN_EVENTLIST_VIEW 7
 #define ZOOM_LEVEL_TO_SEND_WHITE_FLAG_BEHIND_IN_REGION_DID_CHANGE 9
+#define ZOOM_LEVEL_POI_11 11
+#define ZOOM_LEVEL_POI_7 7
+#define ZOOM_LEVEL_POI_4 4
 
 #define DISTANCE_TO_HIDE 80
 
@@ -902,7 +909,7 @@
     ATAppDelegate *appDelegate = (ATAppDelegate *)[[UIApplication sharedApplication] delegate];
     
     NSArray * eventList = appDelegate.eventListSorted;
-    int eventCount = [eventList count];
+    unsigned long eventCount = [eventList count];
     //IMPORTANT  startDate's date part should always start as year's start day 01/01,so event count in each bucket will be accurate
     if (eventCount == 0) //startDate be this year's start date, end day is today
     {
@@ -1455,8 +1462,16 @@
         //if ([self zoomLevel] <= ZOOM_LEVEL_TO_HIDE_EVENTLIST_VIEW)
          //   return nil; //this will return a standard pin, which is not what I want
         NSString* poiAnnImageFile = @"star-red.png";
-        if (ann.eventType == 99)
+        if (ann.eventType == POI_DISPLAY_TYPE_RED_DOT)
             poiAnnImageFile = @"small-red-ball-icon.png";
+        else if (ann.eventType == POI_DISPLAY_TYPE_ORANGE)
+        {
+            //if ([self zoomLevel] <= ZOOM_LEVEL_POI_7)
+               //poiAnnImageFile = @"small-orange-ball-brighter-icon.png";
+            //else
+                poiAnnImageFile = @"small-orange-ball-icon.png";
+        }
+        
         MKAnnotationView* annView = (MKAnnotationView *) [self.mapView dequeueReusableAnnotationViewWithIdentifier:poiAnnImageFile];
 
         if (!annView)
@@ -1668,7 +1683,7 @@
     currentTapTouchKey = 0;
     currentTapTouchMove = false;
     UITouch *touch = [touches anyObject];
-    NSNumber* annViewKey = [NSNumber numberWithInt:touch.view.tag];
+    NSNumber* annViewKey = [NSNumber numberWithLong:touch.view.tag];
     if ([annViewKey intValue] > 0) //tag is set in viewForAnnotation when instance tmpLbl
         currentTapTouchKey = [annViewKey intValue];
 }
@@ -1676,7 +1691,7 @@
 //Only tap to start event editor, when swipe map and happen to swipe on photo, do not start event editor
 - (void)touchesMoved:(NSSet *)touches withEvent:(UIEvent *)event{
     UITouch *touch = [touches anyObject];
-    NSNumber* annViewKey = [NSNumber numberWithInt:touch.view.tag];
+    NSNumber* annViewKey = [NSNumber numberWithLong:touch.view.tag];
     if ([annViewKey intValue] > 0 && [annViewKey intValue] == currentTapTouchKey)
         currentTapTouchMove = true;
 }
@@ -1684,7 +1699,7 @@
 - (void)touchesCancelled:(NSSet *)touches withEvent:(UIEvent *)event
 {
     UITouch *touch = [touches anyObject];
-    NSNumber* annViewKey = [NSNumber numberWithInt:touch.view.tag];
+    NSNumber* annViewKey = [NSNumber numberWithLong:touch.view.tag];
     if ([annViewKey intValue] > 0 && [annViewKey intValue] == currentTapTouchKey && !currentTapTouchMove)
     {
         MKAnnotationView* annView = [tmpLblUniqueIdMap objectForKey:annViewKey];
@@ -1739,6 +1754,8 @@
 }
 - (void)mapView:(MKMapView *)mapView regionDidChangeAnimated:(BOOL)animated
 {
+
+    
     //TODO could set option to enable/disable hide white flag, because if large nmber of selected note, then move map may be slow
     //     although currently we already have optimized it a lot
     /*
@@ -1970,6 +1987,7 @@
                 evt.lng = ann.coordinate.longitude;
                 evt.eventDate = ann.eventDate;
                 evt.eventDesc = ann.description;
+                evt.eventType = ann.eventType;
                 evt.address = ann.address;
                 
                 [eventListInVisibleMapArea insertObject:evt atIndex:0];
@@ -2042,10 +2060,12 @@
     //  The small the zoom level, the closer to center will be shown.
     //  When zoom level is large than 12, then show all poi on screen
     
-    ATAppDelegate *appDelegate = (ATAppDelegate *)[[UIApplication sharedApplication] delegate];
     int eventType = annView.eventType;
     //NSLog(@"zoo level  %d   eventType=%d",appDelegate.zoomLevel, eventType);
-    if ((appDelegate.zoomLevel > 11 && eventType != 99) || (appDelegate.zoomLevel > 4 && eventType == 99))
+    int zoomLevel = [self zoomLevel];
+    if ((zoomLevel > ZOOM_LEVEL_POI_11 && eventType == POI_DISPLAY_TYPE_STAR)   //display star poi only when zoom to city level
+        || (zoomLevel > ZOOM_LEVEL_POI_7 && eventType == POI_DISPLAY_TYPE_ORANGE)  //display orange poi only when zoom to state level
+        || (zoomLevel > ZOOM_LEVEL_POI_4 && eventType == POI_DISPLAY_TYPE_RED_DOT)) //display global poi when zoom to countries level
     {
         //need to show poi, but only show those close to map center
         float distanceRatioToCenter = 2.5;
@@ -2802,7 +2822,7 @@
                 // ******************************/
             }
             //the last one must have differnt date, so add separately. Actually here take care of line with different date
-            int startIdx = [eventsInSameDepth count] - 2;
+            unsigned long startIdx = [eventsInSameDepth count] - 2;
             MKMapPoint* pointArr2 = malloc(sizeof(CLLocationCoordinate2D) * 2);
             pointArr2[0] = [self getEventMapPoint:eventsInSameDepth[startIdx]];
             pointArr2[1] = [self getEventMapPoint:eventsInSameDepth[startIdx+1]];
@@ -2810,7 +2830,7 @@
             [returnPolylineList addObject:timeLinkPolyline];
             free(pointArr2);
             linkDepth ++;
-            int tmp = linkDepth;
+            unsigned long tmp = linkDepth;
             if (directionFuture)
                 tmp = - tmp;
             
@@ -3072,10 +3092,10 @@
     if (tmpLbl != nil)
         [tmpLbl removeFromSuperview];
     [selectedAnnotationSet removeObjectForKey:key];//in case this is
-    int index = [list indexOfObject:tmp]; //implemented isEqual
+    unsigned long index = [list indexOfObject:tmp]; //implemented isEqual
     if (index != NSNotFound)
         [list removeObjectAtIndex:index];
-    NSLog(@"   delete object at index %i",index);
+    NSLog(@"   delete object at index %lu",index);
     
     [self deletePhotoFilesByEventId:tmp.uniqueId];//put all phot into deletedPhotoQueue
     if (index == 0 || index == [list count]) //do not -1 since it already removed the element

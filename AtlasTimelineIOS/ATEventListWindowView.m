@@ -22,6 +22,10 @@
 #define MAPVIEW_HIDE_ALL 1
 #define MAPVIEW_SHOW_PHOTO_LABEL_ONLY 2
 
+#define POI_DISPLAY_TYPE_RED_DOT 99
+#define POI_DISPLAY_TYPE_STAR 5
+#define POI_DISPLAY_TYPE_ORANGE 50
+
 @implementation ATEventListWindowView
 
 NSArray* internalEventList;
@@ -182,6 +186,14 @@ NSString* selectedPOIEventId;
         }
         else
             [cellPoi setBackgroundColor:[UIColor colorWithRed:0.9 green:0.9 blue:1.0 alpha:0.7]];
+        
+        if (evt.eventType == POI_DISPLAY_TYPE_ORANGE)
+        {
+            cellPoi.eventDescView.textColor = [UIColor grayColor];
+        }
+        else
+            cellPoi.eventDescView.textColor = [UIColor blackColor];
+        
         UIImageView* iconView = (UIImageView*) [cellPoi viewWithTag:9999]; //modify that from parent
         [iconView setFrame:CGRectMake(2, 2, poiImageWidth, poiImageHeight)];
         [iconView setImage:[ATHelper readPhotoFromFile:evt.uniqueId eventId:evt.uniqueId]];
