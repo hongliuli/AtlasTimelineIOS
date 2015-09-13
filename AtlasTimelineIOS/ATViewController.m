@@ -132,8 +132,8 @@
     
     ATInAppPurchaseViewController* purchase; // have to be global because itself has delegate to use it self
     NSMutableDictionary* timeLinkOverlayDepthColorMap; // latlngTimeLinkDepthMapForOverlay;
-    int timeLinkDepthDirectionFuture;
-    int timeLinkDepthDirectionPast;
+    NSInteger timeLinkDepthDirectionFuture;
+    NSInteger timeLinkDepthDirectionPast;
     NSMutableArray* timeLinkOverlaysToBeCleaned ;
     NSMutableArray* eventEpisodeList;
     NSString* loadedEpisodeName; //if an episode is loaded from setting -> outgoing modify
@@ -169,6 +169,10 @@
     BOOL onlyRunViewDidAppearOnce;
     
     NSString* prevSelectedEventId;
+    
+    NSMutableArray* orangePoiOnMap;
+    
+    BOOL firstTimeShowFlag;
 }
 
 @synthesize mapView = _mapView;
@@ -319,6 +323,7 @@
 }
 -(void) viewDidAppear:(BOOL)animated
 {
+    firstTimeShowFlag = true;
     [self displayTimelineControls]; //MOTHER FUCKER, I struggled long time when I decide to put timescrollwindow at bottom. Finally figure out have to put this code here in viewDidAppear. If I put it in viewDidLoad, then first time timeScrollWindow will be displayed in other places if I want to display at bottom, have to put it here
     [self.timeZoomLine showHideScaleText:false];
     [ATHelper setOptionDateFieldKeyboardEnable:false]; //always set default to not allow keyboard
@@ -367,6 +372,10 @@
                 eventAnnotation.eventDate=ent.eventDate;
                 eventAnnotation.eventType = ent.eventType;
                 [self.mapView addAnnotation:eventAnnotation];
+                if (orangePoiOnMap == nil)
+                    orangePoiOnMap = [[NSMutableArray alloc] init];
+                if (ent.eventType == POI_DISPLAY_TYPE_ORANGE)
+                    [orangePoiOnMap addObject:eventAnnotation];
             }
         }
         onlyRunViewDidAppearOnce = TRUE;
@@ -485,6 +494,10 @@
         eventAnnotation.eventDate=ent.eventDate;
         eventAnnotation.eventType = ent.eventType;
         [self.mapView addAnnotation:eventAnnotation];
+        if (orangePoiOnMap == nil)
+            orangePoiOnMap = [[NSMutableArray alloc] init];
+        if (ent.eventType == POI_DISPLAY_TYPE_ORANGE)
+            [orangePoiOnMap addObject:eventAnnotation];
     }
     if ([poiList count] > 0)
     {
@@ -695,7 +708,7 @@
     {
         [eventEpisodeList addObject:evt.uniqueId];
     }
-    int cnt = [appDelegate.eventListSorted count];
+    NSUInteger cnt = [appDelegate.eventListSorted count];
     if (episodeNameforUpdating == nil)
         lblEpisode1.text = [NSString stringWithFormat:NSLocalizedString(@"%d event(s) are picked for new episode",nil), cnt];
     else
@@ -851,7 +864,7 @@
         ATEventDataStruct* entStruct = eventList[eventListSize -1]; //if no bookmark, always use earlist
         if (bookmarkIdxStr != nil)
         {
-            int bookmarkIdx = [bookmarkIdxStr intValue];
+            long bookmarkIdx = [bookmarkIdxStr intValue];
             if (bookmarkIdx >= eventListSize)
                 bookmarkIdx = eventListSize - 1;
             if (bookmarkIdx < 0)
@@ -1749,8 +1762,16 @@
 
 - (void)mapView:(MKMapView *)mapView regionWillChangeAnimated:(BOOL)animated
 {
-    [self hideDescriptionLabelViews];
-    [self hideTimeScrollAndNavigationBar:true];
+    if (!firstTimeShowFlag) //always show all menus when first time show the view
+    {
+        [self hideDescriptionLabelViews];
+        [self hideTimeScrollAndNavigationBar:true];
+    }
+    else
+    {
+        [self hideTimeScrollAndNavigationBar:false];
+        firstTimeShowFlag = false;
+    }
 }
 - (void)mapView:(MKMapView *)mapView regionDidChangeAnimated:(BOOL)animated
 {
@@ -1825,6 +1846,14 @@
         currentSelectedEvent = nil;
     }
     //bookmark zoom level so app restart will restore state
+    if ([self zoomLevel] > ZOOM_LEVEL_POI_7)
+    {
+        [self.mapView removeAnnotations:orangePoiOnMap];
+        [self.mapView addAnnotations:orangePoiOnMap];
+    }
+    else
+        [self.mapView removeAnnotations:orangePoiOnMap];
+    
     int currentZoomLevel = [self zoomLevel];
     ATAppDelegate *appDelegate = (ATAppDelegate *)[[UIApplication sharedApplication] delegate];
     appDelegate.zoomLevel = currentZoomLevel;
@@ -2445,8 +2474,8 @@
     [self refreshEventListView:false];
     //bookmark selected event
     NSUserDefaults* userDefault = [NSUserDefaults standardUserDefaults];
-    int idx = [appDelegate.eventListSorted indexOfObject:ent];
-    [userDefault setObject:[NSString stringWithFormat:@"%d",idx ] forKey:@"BookmarkEventIdx"];
+    NSUInteger idx = [appDelegate.eventListSorted indexOfObject:ent];
+    [userDefault setObject:[NSString stringWithFormat:@"%lu",(unsigned long)idx ] forKey:@"BookmarkEventIdx"];
     [userDefault synchronize];
 }
 
@@ -2671,7 +2700,7 @@
     
     // http://stackoverflow.com/questions/15061207/how-to-draw-a-straight-line-on-an-ios-map-without-moving-the-map-using-mkmapkit
     //add line by line, instead add all lines in one MKPolyline object, because I want to draw color differently in viewForOverlay
-    int size = [futureOverlays count];
+    NSUInteger size = [futureOverlays count];
     for(int i = 0; i < size; i++)
     {
         MKPolyline* line = futureOverlays[i];
@@ -2691,14 +2720,14 @@
     //direction = false is for event after ent
     ATAppDelegate *appDelegate = (ATAppDelegate *)[[UIApplication sharedApplication] delegate];
     NSMutableArray* list  = appDelegate.eventListSorted;
-    int listSize =[list count];
+    NSUInteger listSize =[list count];
     
     
-    int currEventIdxConstant = [list indexOfObject:ent];
+    NSInteger currEventIdxConstant = [list indexOfObject:ent];
     
     //link all same day, and 5 different days before/after, (same day must be togetther
     NSInteger linkDepth = 0;
-    int linkCount = 0;
+    NSInteger linkCount = 0;
     
     ATEventDataStruct* prevEvent = ent;
     ATEventDataStruct* thisEvent = nil;
@@ -2720,7 +2749,7 @@
     //NOTE a senario: if zoom range is not day and focused group is at end, then dashed line for this group will not show
     while (linkDepth <= TIME_LINK_DEPTH) { //TODO TIME_LINK_DEPTH is 5, should be configurable, same day event link together
         linkCount++;
-        int thisIdx = currEventIdxConstant + linkCount;
+        NSInteger thisIdx = currEventIdxConstant + linkCount;
         if (directionFuture)
             thisIdx = currEventIdxConstant - linkCount;
         
@@ -2758,7 +2787,7 @@
             //else will continues following to finish remaining draw for nodes in same depth
         }
         
-        int numberOfSameDepthLine;
+        NSInteger numberOfSameDepthLine;
         //Time Link logic 2: put group of events in same time link depth according to time wheel zoom
         BOOL sameDepthFlag = false;
         if (appDelegate.selectedPeriodInDays <=30)
@@ -2787,7 +2816,7 @@
         if (!sameDepthFlag || breakFlag)
         { //if depth changed, draw the link. For same depth links, draw all in one overlay for better performance
             numberOfSameDepthLine = [eventsInSameDepth count] / 2 - 1;  //the last one is not same depth
-            int pointArrSize = numberOfSameDepthLine;
+            NSInteger pointArrSize = numberOfSameDepthLine;
             if (numberOfSameDepthLine > MAX_NUMBER_OF_TIME_LINKS_IN_SAME_DEPTH_GROUP)
                 pointArrSize = MAX_NUMBER_OF_TIME_LINKS_IN_SAME_DEPTH_GROUP;
             if (numberOfSameDepthLine > 0)
@@ -2813,10 +2842,10 @@
                 [returnPolylineList addObject:timeLinkPolyline];
                 free(pointArr);
                 linkDepth ++;
-                int tmp = linkDepth;
+                NSInteger tmp = linkDepth;
                 if (directionFuture)
                     tmp = - tmp;
-                NSString* lineStyle = [NSString stringWithFormat:@"%d|%d", tmp, TIME_LINK_DASH_LINE_STYLE_FOR_SAME_DEPTH];
+                NSString* lineStyle = [NSString stringWithFormat:@"%ld|%d", tmp, TIME_LINK_DASH_LINE_STYLE_FOR_SAME_DEPTH];
                 NSString *key=[NSString stringWithFormat:@"%f|%f", timeLinkPolyline.coordinate.latitude, timeLinkPolyline.coordinate.longitude];
                 [timeLinkOverlayDepthColorMap  setValue: lineStyle  forKey:key];
                 // ******************************/
@@ -2834,7 +2863,7 @@
             if (directionFuture)
                 tmp = - tmp;
             
-            NSString* lineStyle = [NSString stringWithFormat:@"%d|%d", tmp, TIME_LINK_SOLID_LINE_STYLE];
+            NSString* lineStyle = [NSString stringWithFormat:@"%ld|%d", tmp, TIME_LINK_SOLID_LINE_STYLE];
             //NSLog(@"    in prepare: linDepth=%d  tmp=%d, Solid Line",linkDepth, tmp);
             NSString *key=[NSString stringWithFormat:@"%f|%f", timeLinkPolyline.coordinate.latitude, timeLinkPolyline.coordinate.longitude];
             [timeLinkOverlayDepthColorMap  setValue: lineStyle  forKey:key];
@@ -3256,7 +3285,7 @@
         {
             NSString* descTxt = [photoDescMap objectForKey:fileName];
             NSString* fileName2 = fileName;
-            int prefixLen = [NEW_NOT_SAVED_FILE_PREFIX length];
+            NSInteger prefixLen = [NEW_NOT_SAVED_FILE_PREFIX length];
             if ([fileName hasPrefix:NEW_NOT_SAVED_FILE_PREFIX])
             {
                 fileName2 = [fileName substringFromIndex:prefixLen];
@@ -3368,7 +3397,7 @@
     NSString* btnSaveTitleText = NSLocalizedString(@"Create Episode",nil);
     if (episodeNameforUpdating != nil)
     {
-        int nameLength = [episodeNameforUpdating length];
+        NSInteger nameLength = [episodeNameforUpdating length];
         if (nameLength >5)
             btnSaveTitleText = [NSString stringWithFormat:NSLocalizedString(@"Update %@..",nil), [episodeNameforUpdating substringToIndex:5]];
         else
@@ -3419,7 +3448,7 @@
         lblEpisode1 = [[UILabel alloc] initWithFrame:CGRectMake(10, 2*EPISODE_ROW_HEIGHT, EPISODE_VIEW_WIDTH - 20, EPISODE_ROW_HEIGHT)];
     }
     [episodeView addSubview:lblEpisode1];
-    int cnt = [eventEpisodeList count];
+    NSInteger cnt = [eventEpisodeList count];
     if (episodeNameforUpdating == nil)
         lblEpisode1.text = [NSString stringWithFormat:NSLocalizedString(@"%d event(s) are picked for new episode",nil), cnt];
     else
@@ -3551,7 +3580,7 @@
 {
     if (_lblDirectionDistance != nil)
     {
-        int cnt = [_directionRouteDistanceResultSet count];
+        NSInteger cnt = [_directionRouteDistanceResultSet count];
         if (_directionCurrentDistanceIndex >= cnt - 1)
             _directionCurrentDistanceIndex = 0;
         else
