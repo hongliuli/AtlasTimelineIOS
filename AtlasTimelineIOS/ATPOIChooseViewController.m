@@ -10,6 +10,7 @@
 #import "ATHelper.h"
 #import "ATAppDelegate.h"
 #import "SWRevealViewController.h"
+#import "ATConstants.h"
 
 @interface ATPOIChooseViewController ()
 
@@ -17,7 +18,7 @@
 
 @implementation ATPOIChooseViewController
 
-NSArray* poiGroupList;
+NSMutableArray* poiGroupList;
 NSString* selectedPoiGroupName;
 NSInteger selectedPoiGroupIdxForDeselect;
 
@@ -35,11 +36,33 @@ NSInteger selectedPoiGroupIdxForDeselect;
     [super viewDidLoad];
     ATAppDelegate *appDelegate = (ATAppDelegate *)[[UIApplication sharedApplication] delegate];
     self.delegate = appDelegate.mapViewController;
+
+    [self fetchPOIList];
+}
+
+
+- (void) fetchPOIList
+{
+    NSString* languageToSelect = @"中文";
     NSString * language = [[[NSLocale preferredLanguages] objectAtIndex:0] substringToIndex:2]; //return zh for chinese
     NSString* serviceUrl = [NSString stringWithFormat:@"http://www.chroniclemap.com/resources/poi_list.html"];
     if ([@"zh" isEqualToString:language])
         serviceUrl = [NSString stringWithFormat:@"http://www.chroniclemap.com/resources/poi_list_zh.html"];
-    
+    NSUserDefaults* userDefault = [NSUserDefaults standardUserDefaults];
+    NSString* languageValue = [userDefault objectForKey:LanguageKey];
+    if (languageValue != nil)
+    {
+        if ([ChineseValue isEqualToString:languageValue])
+        {
+            serviceUrl = [NSString stringWithFormat:@"http://www.chroniclemap.com/resources/poi_list_zh.html"];
+            languageToSelect = @"English";
+        }
+        else{
+            serviceUrl = [NSString stringWithFormat:@"http://www.chroniclemap.com/resources/poi_list.html"];
+            languageToSelect = @"中文";
+        }
+    }
+
     NSString* responseStr  = [ATHelper httpGetFromServer:serviceUrl :false];
     poiGroupList = [[NSMutableArray alloc] init];
     //polist.html has format of :
@@ -59,10 +82,12 @@ NSInteger selectedPoiGroupIdxForDeselect;
     {
         [userDefaults setObject:responseStr forKey:@"GROUP_POI_SAVED"];
     }
+    
     if (responseStr != nil && [responseStr length] > 100)
     {
-        poiGroupList = [responseStr componentsSeparatedByString:@"\n"];
-        
+        NSArray* glist = [responseStr componentsSeparatedByString:@"\n"];
+        poiGroupList = [NSMutableArray arrayWithArray: glist];
+        [poiGroupList insertObject:languageToSelect atIndex:0];
     }
     else
     {
@@ -94,15 +119,15 @@ NSInteger selectedPoiGroupIdxForDeselect;
     UITableViewCell *cell;
     
     NSString* poiRowText = poiGroupList[indexPath.row];
-
     CellIdentifier = @"PeriodCell";
     cell = [tableView  dequeueReusableCellWithIdentifier:CellIdentifier];
 
-
-
     cell.textLabel.text = [self getPoiTitle:poiRowText];
     cell.detailTextLabel.text = [self getPoiSubTitle:poiRowText];
-
+    //For world heritage, detail subtitle will show //apple-app-store-rul ...
+    if ([cell.detailTextLabel.text hasPrefix:@"//"])
+        cell.detailTextLabel.text = @"Start App here ...";
+    
     if ([selectedPoiGroupName isEqualToString:[self getPoiTitle:poiRowText]])
     {
         cell.accessoryType = UITableViewCellAccessoryCheckmark;
@@ -118,6 +143,9 @@ NSInteger selectedPoiGroupIdxForDeselect;
 {
     NSString* poiRowText = poiGroupList[indexPath.row];
     NSString* poiGroupName = [self getPoiTitle:poiRowText];
+    if (poiRowText == nil || [poiRowText isEqualToString:@""])
+        return;
+    
     selectedPoiGroupName = poiGroupName;
     
     [tableView deselectRowAtIndexPath:indexPath animated:YES];
@@ -135,7 +163,20 @@ NSInteger selectedPoiGroupIdxForDeselect;
     [userDefaults setObject:poiGroupName forKey:@"SELECTED_POI_GROUP_NAME"];
     [userDefaults synchronize];
     
-    if (indexPath.row == 0)
+    if (indexPath.row == 0) //change language
+    {
+        NSString* newLanguage = poiGroupList[0];
+        if ([@"English" isEqualToString:newLanguage])
+            [userDefaults setObject:EnglishValue forKey:LanguageKey];
+        else
+            [userDefaults setObject:ChineseValue forKey:LanguageKey];
+        [userDefaults synchronize];
+        
+        [self fetchPOIList];
+        [self.tableView reloadData];
+        return;
+    }
+    if (indexPath.row == 1) //hide POI
     {
         NSArray* poiList = [[NSArray alloc] init];
         [self.delegate poiGroupChooseViewController:self didSelectPoiGroup:poiList]; //clean map with empty array to mapview
@@ -146,14 +187,40 @@ NSInteger selectedPoiGroupIdxForDeselect;
     //TODO  following spinner does not work /////////
     // Get center of cell (vertically)
     int center = [cell frame].size.height / 2;
-    CGSize size = [[[cell textLabel] text] sizeWithFont:[[cell textLabel] font]];
-    [spinner setFrame:CGRectMake(size.width + 25, center - 25 / 2, 25, 25)];
+    //CGSize size = [[[cell textLabel] text] sizeWithFont:[[cell textLabel] font]];
+    UILabel* downloadLbl = [[UILabel alloc] initWithFrame:CGRectMake(50, center - 25 / 2, 170, 25)];
+    [downloadLbl setText:NSLocalizedString(@"Downloading ..", nil)];
+    [[cell contentView] addSubview:downloadLbl];
+    [spinner setFrame:CGRectMake(15, center - 25 / 2, 25, 25)];
     [[cell contentView] addSubview:spinner];
     spinner.tag = 9999;
     //UIActivityIndicatorView* spinner = (UIActivityIndicatorView*)[cell.contentView viewWithTag:9999];
     [spinner startAnimating];
     [[NSRunLoop currentRunLoop] runUntilDate:[NSDate date]]; //Tricky: yield main loop so spinner will show progress
-    NSString* serviceUrl = [NSString stringWithFormat:@"http://www.chroniclemap.com/resources/poi/%@.html", [self getPoiFileName:poiRowText]];
+    NSString* poiFileName = [self getPoiFileName:poiRowText];
+    if ([poiFileName hasPrefix:@"http"]) //For example, World Heritage is a app url, not file
+    {
+        if (![[UIApplication sharedApplication] openURL:[NSURL URLWithString:@"hongworldheritage://"]]) //World Heritage app custom URL
+        {
+            NSString* poiAppUrl = [self getPoiFileName2:poiRowText];
+            poiAppUrl = [poiAppUrl stringByTrimmingCharactersInSet:[NSCharacterSet newlineCharacterSet]];
+            NSLog(@"##### store url:%@", poiAppUrl);
+            if (![[UIApplication sharedApplication] openURL:[NSURL URLWithString:poiAppUrl]]) //World Heritage app store url
+            {
+                UIAlertView *alert = [[UIAlertView alloc] initWithTitle:nil
+                            message:NSLocalizedString(@"World Heritage Sites App will be avaialble soon!",nil)
+                            delegate:nil
+                            cancelButtonTitle:NSLocalizedString(@"OK",nil)
+                            otherButtonTitles:nil];
+                [alert show];
+            }
+        }
+        [spinner stopAnimating];
+        [spinner removeFromSuperview];
+        [downloadLbl removeFromSuperview];
+        return;
+    }
+    NSString* serviceUrl = [NSString stringWithFormat:@"http://www.chroniclemap.com/resources/poi/%@.html", poiFileName];
     //####
     //#### following may return nil if %@.html file is not utf-8 encoded (linux: file -bi filename)
     //####
@@ -204,6 +271,7 @@ NSInteger selectedPoiGroupIdxForDeselect;
 
     [spinner stopAnimating];
     [spinner removeFromSuperview];
+    [downloadLbl removeFromSuperview];
     
     SWRevealViewController* revealController = [self revealViewController];
     [revealController rightRevealToggle:nil];
@@ -224,6 +292,11 @@ NSInteger selectedPoiGroupIdxForDeselect;
     NSArray* textArr = [poiHeaderText componentsSeparatedByString:@"|"];
     return textArr[1];
 }
+-(NSString*) getPoiFileName2:(NSString*)poiRow //for example, World Heritage is in URL format
+{
+    NSArray* textArr = [poiRow componentsSeparatedByString:@"|"];
+    return textArr[1];
+}
 -(NSString*) getPoiSubTitle:(NSString*)poiRow
 {
     NSArray* poiRowText = [poiRow componentsSeparatedByString:@":"];
@@ -235,7 +308,7 @@ NSInteger selectedPoiGroupIdxForDeselect;
 
 
 - (void)tableView:(UITableView *)tableView accessoryButtonTappedForRowWithIndexPath:(NSIndexPath *)indexPath{
-    NSLog(@"reaching accessoryButtonTappedForRowWithIndexPath: section %d   row %d", indexPath.section, indexPath.row);
+    NSLog(@"reaching accessoryButtonTappedForRowWithIndexPath: section %ld   row %ld", indexPath.section, indexPath.row);
 }
 
 

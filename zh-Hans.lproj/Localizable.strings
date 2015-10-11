@@ -94,6 +94,7 @@
 "Do not cancel"="不要取消";
 "Done"="完成";
 "Don't Remind Me"="别提醒我";
+"Downloading .."="正在下载 ..";
 "Downloaded %@ has %i events"="下载的 %@ 有%i个事件";
 "Download from server to offline"="从服务器下载到设备";
 "Download missing %@ photos from Dropbox. This operation can be repeated until all photos are downloaded."="从Dropbox下载[%@]中还没有被下载的照片. 可以重复这个操作直到全部下载完成.";
@@ -187,6 +188,7 @@
 "Reached the max Zoom-In level Week!"="不能再放大，7天是最高放大级别!";
 "Record/navigate events on map in chronological order!"="以时间顺序，记录/浏览地图事件!";
 "Red Dot and Green Dot on Time Wheel"="时间轮上方的红点和绿点";
+"Related Apps to download"="相关 APP 下载";
 "Repeat until no more download"="可重复此操作，直到全部完成";
 "Replace"="替换";
 "Replace photos on Dropbox for %@"="替换Dropbox中%@的照片";
@@ -221,6 +223,7 @@
 "Share Event"="分享事件";
 "Share event and selected photos to social network."="分享事件和照片";
 "Share my Episodes to Friends"="分享我的片段给朋友";
+"Start App here ..."="启动相关APP。。。";
 "Support Us"="支持我们";
 "Swipe time wheel, the events in the selected period will be:\n  - listed on the left\n  - colored darker on map\nIf switch map mode to [By Map], swipe map and the events occur on screen will be listed instead.\n(Note: red/green dots above the time wheel indicate the existence of events in that period)"="刷动时间轮，在时间轴上被选事件就会:\n  - 出现在左边列表\n  - 在地图上变为深红色\n如果切换到 [按地图列表], 出现在左边列表中的事件就是刷动地图而出现在屏幕上的事件.\n(注: 时间轮上方的小红点小绿点代表该时间段有事件)";
 "Sync %i events to %@ on server"="同步 %i 个事件到服务器的[%@]";

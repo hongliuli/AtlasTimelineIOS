@@ -242,7 +242,7 @@
     //   if (UI_USER_INTERFACE_IDIOM() == UIUserInterfaceIdiomPad)
     //   {
     
-  UIBarButtonItem *settringButton = [[UIBarButtonItem alloc] initWithImage:[UIImage imageNamed:@"ios-menu-icon.png"]  style:UIBarButtonItemStyleBordered target:self action:@selector(settingsClicked:)];
+  UIBarButtonItem *settringButton = [[UIBarButtonItem alloc] initWithImage:[[UIImage imageNamed:@"ios-menu-icon-star.png"] imageWithRenderingMode:UIImageRenderingModeAlwaysOriginal]  style:UIButtonTypeCustom target:self action:@selector(settingsClicked:)];
     
     //NOTE the trick to set background image for a bar buttonitem
     UIButton *helpbtn = [UIButton buttonWithType:UIButtonTypeCustom];
@@ -250,10 +250,10 @@
     [helpbtn setImage:[UIImage imageNamed:@"help.png"] forState:UIControlStateNormal];
     [helpbtn addTarget:self action:@selector(tutorialClicked:) forControlEvents:UIControlEventTouchUpInside];
     UIBarButtonItem *helpButton = [[UIBarButtonItem alloc] initWithCustomView:helpbtn];
-    if (UI_USER_INTERFACE_IDIOM() == UIUserInterfaceIdiomPad)
+    //if (UI_USER_INTERFACE_IDIOM() == UIUserInterfaceIdiomPad)
         self.navigationItem.rightBarButtonItems = @[settringButton, helpButton];
-    else
-        self.navigationItem.rightBarButtonItems = @[settringButton];
+    //else
+      //  self.navigationItem.rightBarButtonItems = @[settringButton];
     
     /*
     UIButton *poiLoadViewBtn = [UIButton buttonWithType:UIButtonTypeCustom];

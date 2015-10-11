@@ -22,6 +22,10 @@
 #define RESIZE_WIDTH 600
 #define RESIZE_HEIGHT 450
 
+#define POI_DISPLAY_TYPE_RED_DOT 99
+#define POI_DISPLAY_TYPE_STAR 5
+#define POI_DISPLAY_TYPE_ORANGE 50
+
 @implementation ATHelper
 
 NSDateFormatter* dateFormaterForMonth;
@@ -717,8 +721,9 @@ UIPopoverController *verifyViewPopover;
             
             [eventList addObject:evt];
             
-            //Should call following in background
-            [self writePoiProfilePhotoToFileFromWeb:evt.uniqueId];
+            //Should call following in background (there is no photos for secondary poi
+            if (evt.eventType != POI_DISPLAY_TYPE_ORANGE)
+                [self writePoiProfilePhotoToFileFromWeb:evt.uniqueId];
         }
     }
     
@@ -759,7 +764,6 @@ UIPopoverController *verifyViewPopover;
     NSString* photoUrlHttp = [NSString stringWithFormat:@"https://dl.dropboxusercontent.com/u/87265216/%@.jpg", eventId];
     
     NSString* newPhotoFinalFileName = [photoFinalDir stringByAppendingPathComponent:eventId];
-    
     if ([[NSFileManager defaultManager] fileExistsAtPath:newPhotoFinalFileName isDirectory:nil])
     {
         return;

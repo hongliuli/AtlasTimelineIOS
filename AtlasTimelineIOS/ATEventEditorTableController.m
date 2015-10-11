@@ -498,7 +498,7 @@ forRowAtIndexPath: (NSIndexPath*)indexPath
             [alertView show];
         }
         
-        APActivityProvider *ActivityProvider = [[APActivityProvider alloc] init];
+        APActivityProvider *ActivityProvider = [[APActivityProvider alloc] initWithPlaceholderItem:@""];
         ActivityProvider.eventEditor = self;
         NSMutableArray *activityItems = [[NSMutableArray alloc] init];
     
@@ -532,6 +532,7 @@ forRowAtIndexPath: (NSIndexPath*)indexPath
     
         [self presentViewController:activityController
                        animated:YES completion:nil];
+        
     }
     else
     {
@@ -590,7 +591,7 @@ forRowAtIndexPath: (NSIndexPath*)indexPath
     if (markerPickerSelectedItemName != nil)
     {
         NSString* markerImageName = [NSString stringWithFormat:@"marker_%@.png", markerPickerSelectedItemName];
-        int index = [markerPickerImageNameList indexOfObject:markerImageName];
+        NSUInteger index = [markerPickerImageNameList indexOfObject:markerImageName];
         if (index != NSNotFound)
         {
             [markerPickerView selectRow:index inComponent:0 animated:NO];
@@ -863,7 +864,7 @@ forRowAtIndexPath: (NSIndexPath*)indexPath
 }
 
 - (IBAction)cancelAction:(id)sender {
-    int cnt = [photoNewAddedList count] ;
+    NSUInteger cnt = [photoNewAddedList count] ;
     if (cnt > 0 || self.photoDescChangedFlag || [self.photoScrollView.selectedAsSortIndexList count] > 0)
     {
         /*
@@ -1115,7 +1116,7 @@ numberOfRowsInComponent:(NSInteger)component
     ATAppDelegate *appDelegate = (ATAppDelegate *)[[UIApplication sharedApplication] delegate];
     NSDateFormatter *dateFormater = appDelegate.dateFormater;
     NSDate* date = [dateFormater dateFromString:self.eventEditor.dateTxt.text];
-    if (![ATHelper isBCDate:date])
+    if (date != nil && ![ATHelper isBCDate:date])
         dateStr = [dateStr substringWithRange:NSMakeRange(0, 10)];
         
     NSString *googleMap = [NSString stringWithFormat:@"https://maps.google.com/maps?q=%f,%f&spn=65.61535,79.013672",self.eventEditor.coordinate.latitude, self.eventEditor.coordinate.longitude ];

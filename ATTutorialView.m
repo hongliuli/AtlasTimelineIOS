@@ -61,7 +61,8 @@ NSMutableArray* appStoreUrlList;
         {
             if (appStr != nil && [appStr length] > 20)
             {
-                NSArray* appDetail = [appStr componentsSeparatedByString:@"|"];
+                NSString* appStrTmp = [appStr stringByTrimmingCharactersInSet:[NSCharacterSet newlineCharacterSet]];
+                NSArray* appDetail = [appStrTmp componentsSeparatedByString:@"|"];
                 [appNameList addObject:NSLocalizedString(appDetail[0],nil)];
                 [appStoreUrlList addObject:appDetail[1]];
             }
@@ -93,8 +94,11 @@ NSMutableArray* appStoreUrlList;
 {
     if (buttonIndex == 0) //Not Now
         return; //user clicked cancel button
-    
-    [[UIApplication sharedApplication] openURL:[NSURL URLWithString:appStoreUrlList[buttonIndex -1]]];
+    NSString* urlStr = appStoreUrlList[buttonIndex -1];
+    NSURL *url = [NSURL URLWithString:urlStr];
+    NSLog(@"---- Url to open is %@",urlStr);
+    if (![[UIApplication sharedApplication] openURL:url])
+        NSLog(@"---- Fail to open  %@",url.description);
 }
 
 - (void) updateDateText
