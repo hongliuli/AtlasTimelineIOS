@@ -196,8 +196,8 @@
     //add for ios8
     self.locationManager.delegate = self;
     if ([ATHelper isAtLeastIOS8]) {
-       // [self.locationManager requestWhenInUseAuthorization];
-       // [self.locationManager requestAlwaysAuthorization];
+        [self.locationManager requestWhenInUseAuthorization];
+        [self.locationManager requestAlwaysAuthorization];
     }
     
     /*
@@ -1080,13 +1080,7 @@
         appDelegate.focusedDate = [[NSDate alloc] init];
     [self.timeScrollWindow setNewFocusedDateFromAnnotation:appDelegate.focusedDate needAdjusted:FALSE];
     
-    //TODO tmpXcode5ScreenWidth should be decommissioned when use xcode6
-    UIInterfaceOrientation orientation = [UIApplication sharedApplication].statusBarOrientation;
-    int tmpXcode5ScreenWidth = [[UIScreen mainScreen] bounds].size.width;
-    if (orientation == UIInterfaceOrientationLandscapeLeft || orientation == UIInterfaceOrientationLandscapeRight) {
-        tmpXcode5ScreenWidth = [[UIScreen mainScreen] bounds].size.height;
-    }
-
+    int tmpXcode5ScreenWidth = [ATConstants screenWidth];
     
     //NOTE the trick to set background image for a bar buttonitem
     if (locationbtn == nil)

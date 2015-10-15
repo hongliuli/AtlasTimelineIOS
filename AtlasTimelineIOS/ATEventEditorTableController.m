@@ -809,7 +809,7 @@ forRowAtIndexPath: (NSIndexPath*)indexPath
 }
 
 - (IBAction)deleteAction:(id)sender {
-    int cnt = [self.photoScrollView.photoList count] ;
+    NSUInteger cnt = [self.photoScrollView.photoList count] ;
     NSString* promptStr = NSLocalizedString(@"This event will be deleted!",nil);
     if (cnt > 0)
     {

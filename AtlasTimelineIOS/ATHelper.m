@@ -617,12 +617,8 @@ UIPopoverController *verifyViewPopover;
 
 + (BOOL) isAtLeastIOS8
 {
-    //TODO need to change after using xcode 6
-    return false;
-    /*
     NSString *version = [[UIDevice currentDevice] systemVersion];
     return [version compare:@"8.0" options:NSNumericSearch] != NSOrderedAscending;
-     */
 }
 
 + (BOOL) isPOIEvent:(ATEventDataStruct*) evt
