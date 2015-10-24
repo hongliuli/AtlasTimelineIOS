@@ -2206,6 +2206,7 @@
     tmpLbl.numberOfLines = 0;
     tmpLbl.font = [UIFont fontWithName:@"Arial" size:11];
     int labelWidth = 60;
+    int labelHeight = 45;
     if (zoomLevel <= ZOOM_LEVEL_TO_HIDE_DESC)
     {
         //tmpLbl.hidden = true; //do nothing, caller already hidden the label;
@@ -2219,27 +2220,29 @@
     {
         tmpLbl.numberOfLines=4;
         labelWidth = 100;
+        labelHeight = 80;
     }
     else if (zoomLevel <= 13)
     {
         tmpLbl.font = [UIFont fontWithName:@"Arial" size:13];
         tmpLbl.numberOfLines=5;
-        labelWidth = 100;
+        labelWidth = 90;
+        labelHeight = 70;
     }
     else
     {
         tmpLbl.font = [UIFont fontWithName:@"Arial" size:14];
         tmpLbl.numberOfLines=5;
         labelWidth = 120;
+        labelHeight = 95;
     }
     
     //HONG if height > CONSTANT, then do not change, I do not like biggerImage unless in a big zooing
     CGRect newFrame = tmpLbl.frame;
-    newFrame.size.height = expectedLabelSize.height;
+    newFrame.size.height = labelHeight;
     newFrame.size.width=labelWidth;
     tmpLbl.frame = newFrame;
-    //if (!CGColorGetPattern(tmpLbl.backgroundColor.CGColor))
-    [tmpLbl sizeToFit];
+
     UIImageView* imgView = (UIImageView*)[tmpLbl viewWithTag:HAVE_IMAGE_INDICATOR];
     if (imgView != nil)
     {
