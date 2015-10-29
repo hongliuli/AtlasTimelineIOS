@@ -1630,8 +1630,9 @@
                     tmpLbl.hidden = true;
                     //tmpLbl.alpha = 0;
                 else
-                    //tmpLbl.hidden=false;
+                {
                     tmpLbl.hidden = false;
+                }
                 
                 [selectedAnnotationSet setObject:tmpLbl forKey:key];
                 [self.view addSubview:tmpLbl];
@@ -1854,7 +1855,6 @@
     NSUserDefaults* userDefault = [NSUserDefaults standardUserDefaults];
     [userDefault setObject:[NSString stringWithFormat:@"%d",currentZoomLevel] forKey:@"BookmarkMapZoomLevel"];
     [userDefault synchronize];
-    
 }
 -(void) displayPOIView:(MKAnnotationView*)selectedPoiAnnEventInEventListView
 {
@@ -2157,6 +2157,7 @@
             else
             {
                 tmpLbl.hidden = false; //xxxxx add today afte retreat
+                tmpLbl.alpha = 1.0;
                 [selectedAnnotationNearestLocationList addObject: [NSValue valueWithCGPoint:annotationViewPoint]];
             }
             
