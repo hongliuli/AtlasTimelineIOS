@@ -12,7 +12,7 @@
 #import "ATConstants.h"
 #import "ATEventDataStruct.h"
 #import "ATTimeScrollWindowNew.h"
-#import "Toast+UIView.h"
+#import "UIView+Toast.h"
 
 #define MOVABLE_VIEW_Y_POS 0
 #define MOVABLE_VIEW_HEIGHT 2

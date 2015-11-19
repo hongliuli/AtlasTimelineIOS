@@ -829,7 +829,9 @@ forRowAtIndexPath: (NSIndexPath*)indexPath
     if (self.eventId == nil)
         return;
     [self.delegate addToEpisode];
-    [self dismissViewControllerAnimated:NO completion:nil]; //for iPhone case
+    SWRevealViewController *revealController = [self revealViewController];
+    [revealController rightRevealToggle:nil];
+    //[self dismissViewControllerAnimated:NO completion:nil]; //for iPhone case
 }
 -(void)alertView:(UIAlertView *)alertView clickedButtonAtIndex:(NSInteger)buttonIndex
 {
@@ -895,7 +897,7 @@ forRowAtIndexPath: (NSIndexPath*)indexPath
     SWRevealViewController *revealController = [self revealViewController];
     [revealController rightRevealToggle:nil];
     
-    [self dismissViewControllerAnimated:NO completion:nil]; //for iPhone case
+    //[self dismissViewControllerAnimated:NO completion:nil]; //for iPhone case
 }
 
 - (void)changeDateInLabel:(id)sender{

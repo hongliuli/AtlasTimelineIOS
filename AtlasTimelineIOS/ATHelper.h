@@ -8,6 +8,7 @@
 
 #import <Foundation/Foundation.h>
 #import "ATEventDataStruct.h"
+#import "UIView+Toast.h"
 
 @interface ATHelper : NSObject
 + (BOOL)isStringNumber:(NSString*) numberStr;
@@ -53,6 +54,11 @@
 + (UIImage*)imageResizeWithImage:(UIImage*)image scaledToSize:(CGSize)newSize;
 + (UIImage*)readPhotoFromFile:(NSString*)photoFileName eventId:photoDir;
 + (UIImage*)readPhotoThumbFromFile:(NSString*)eventId;
+
+//tutorial tost
++ (void)startTutorialToasts:(UIView*)parentView style:(CSToastStyle*)style nextToToast:(void (^)(UIView*, CSToastStyle*))callbackBlock;
++ (void)tutorialToastCreateEditEvent:(UIView*)parentView style:(CSToastStyle*)style nextToToast:(void (^)(UIView*, CSToastStyle*))callbackBlock;
++ (void)tutorialToastOtherFeatures:(UIView*)parentView style:(CSToastStyle*)style nextToToast:(void (^)(UIView*, CSToastStyle*))callbackBlock;
 
 //set/get options
 + (BOOL) getOptionDateFieldKeyboardEnable;

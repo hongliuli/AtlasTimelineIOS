@@ -15,7 +15,7 @@
 #import "ATEventDataStruct.h"
 #import "ATTimeZoomLine.h"
 #import "ATConstants.h"
-#import "Toast+UIView.h"
+#import "UIView+Toast.h"
 
 #define FIRST_TIME_CALL -999
 //color from http://cloford.com/resources/colours/500col.htm

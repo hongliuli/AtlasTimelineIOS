@@ -12,6 +12,7 @@
 #import "ATUserVerifyViewController.h"
 #import "ATViewController.h"
 #import "ATEventDataStruct.h"
+#import "UIView+Toast.h"
 
 #define NEW_NOT_SAVED_FILE_PREFIX @"NEW"
 #define THUMB_WIDTH 120
@@ -819,6 +820,66 @@ UIPopoverController *verifyViewPopover;
     
     
 }
+
+
+//-----  Tutorial Toast
++ (void)startTutorialToasts:(UIView*)parentView style:(CSToastStyle*)style nextToToast:(void (^)(UIView*, CSToastStyle*))callbackBlock
+{
+    [parentView makeToast:NSLocalizedString(@"1. Plan travel events\n\n2. Log travel events\n\n3. View top attractions\n\nStart adding your first event!\n\n\n\nContinue...", nil)
+                duration:300.0
+                position:CSToastPositionCenter
+                   title:NSLocalizedString(@"Chronicle Map helps you to:", nil)
+                   image:[UIImage imageNamed:@"Tutorial1.png"]
+                   style:style
+              completion:^(BOOL didTap) {
+                  if (didTap) {
+                      NSLog(@"completion from tap");
+                      if (callbackBlock)
+                          callbackBlock(parentView, style);
+                  } else {
+                      NSLog(@"completion without tap");
+                  }
+              }];
+}
+
++ (void)tutorialToastCreateEditEvent:(UIView*)parentView style:(CSToastStyle*)style nextToToast:(void (^)(UIView*, CSToastStyle*))callbackBlock
+{
+    [parentView makeToast:NSLocalizedString(@"1. Long-press on a map location to drop a pin\n\n2. Tap the pin to edit the event\n\n3. Select date, optionally add note and photos\n\n\nContinue...", nil)
+                duration:300.0
+                position:CSToastPositionCenter
+                   title:NSLocalizedString(@"Adding an event", nil)
+                   image:[UIImage imageNamed:@"TutorialCreateEvent.png"]
+                   style:style
+              completion:^(BOOL didTap) {
+                  if (didTap) {
+                      NSLog(@"completion from tap");
+                      if (callbackBlock)
+                          callbackBlock(parentView, style);
+                  } else {
+                      NSLog(@"completion without tap");
+                  }
+              }];
+}
+
++ (void)tutorialToastOtherFeatures:(UIView*)parentView style:(CSToastStyle*)style nextToToast:(void (^)(UIView*, CSToastStyle*))callbackBlock
+{
+    [parentView makeToast:NSLocalizedString(@"1. View Top World Attractions\n\n2. Direction\n\n3. Backup/Restore\n\n4. Share itinerary\n\n5. Share to Social Network\n\n\nDone", nil)
+                 duration:300.0
+                 position:CSToastPositionCenter
+                    title:NSLocalizedString(@"Other features", nil)
+                    image:[UIImage imageNamed:@"TutorialOtherFeatures.png"]
+                    style:style
+               completion:^(BOOL didTap) {
+                   if (didTap) {
+                       NSLog(@"completion from tap");
+                       if (callbackBlock)
+                           callbackBlock(parentView, style);
+                   } else {
+                       NSLog(@"completion without tap");
+                   }
+               }];
+}
+
 
 //---- set/get options
 + (BOOL) getOptionDateFieldKeyboardEnable

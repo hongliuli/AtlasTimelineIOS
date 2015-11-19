@@ -41,7 +41,7 @@
 #import "ATTutorialView.h"
 #import "ATInAppPurchaseViewController.h"
 #import "ATEventListWindowView.h"
-#import "Toast+UIView.h"
+#import "UIView+Toast.h"
 
 #import "SWRevealViewController.h"
 
@@ -173,6 +173,8 @@
     NSMutableArray* orangePoiOnMap;
     
     BOOL firstTimeShowFlag;
+    
+    CSToastStyle *tutorialStyle;
 }
 
 @synthesize mapView = _mapView;
@@ -330,13 +332,33 @@
     ATAppDelegate *appDelegate = (ATAppDelegate *)[[UIApplication sharedApplication] delegate];
     [self.navigationItem.leftBarButtonItem setTitle:NSLocalizedString(@"Find",nil)];
     [self.searchBar setPlaceholder:NSLocalizedString(@"Poi or Address", nil)];
+    tutorialStyle = [[CSToastStyle alloc] initWithDefaultStyle];
+    tutorialStyle.imageSize = CGSizeMake(300, 600); //for iPad
+    UIInterfaceOrientation orientation = [UIApplication sharedApplication].statusBarOrientation;
+    if (UI_USER_INTERFACE_IDIOM() == UIUserInterfaceIdiomPhone)
+    {
+        if (UIDeviceOrientationIsPortrait(orientation))
+            tutorialStyle.imageSize = CGSizeMake(80, 160);
+        else
+            tutorialStyle.imageSize = CGSizeMake(150, 300);
+    }
     if ([appDelegate.eventListSorted count] == 0)
     {
         /*
         UIAlertView *alert = [[UIAlertView alloc] initWithTitle:NSLocalizedString(@"Add your first event",nil) message:NSLocalizedString(@"Add event by long press on a map location, or search an address. You can also import [TestEvents] in [Settings->Incoming Contents/Episodes] to learn more.",nil) delegate:nil cancelButtonTitle:NSLocalizedString(@"OK",nil) otherButtonTitles:nil];
         [alert show];
          */
-        [self addFirstDemoEvent];
+        //[self addFirstDemoEvent]
+        
+        void (^tutorialOtherFeaturesBlock)(UIView*, CSToastStyle*) = ^(UIView* parentView, CSToastStyle* style) {
+            [ATHelper tutorialToastOtherFeatures:parentView style:style nextToToast:nil];
+        };
+        void (^tutorialCreateEventBlock)(UIView*, CSToastStyle*) = ^(UIView* parentView, CSToastStyle* style) {
+            [ATHelper tutorialToastCreateEditEvent:parentView style:style nextToToast:tutorialOtherFeaturesBlock];
+        };
+        
+        [ATHelper startTutorialToasts:self.view style:tutorialStyle nextToToast:tutorialCreateEventBlock];
+
     }
     if (eventListView == nil) //viewDidAppear will be called when navigate back (such as from timeline/search view and full screen event editor, so need to check. Always be careful of viewDidAppear to not duplicate instances
     {
@@ -381,6 +403,7 @@
         onlyRunViewDidAppearOnce = TRUE;
     }
 }
+
 
 -(void)setSwitchButtonTimeMode
 {
@@ -610,6 +633,21 @@
 #pragma mark - CLLocationManagerDelegate
 
 -(void) tutorialClicked:(id)sender //Only iPad come here. on iPhone will be frome inside settings and use push segue
+{
+    void (^tutorialLargeBlock)(UIView*, CSToastStyle*) = ^(UIView* parentView, CSToastStyle* style) {
+        [self startLargeTutorial];
+    };
+    void (^tutorialOtherFeaturesBlock)(UIView*, CSToastStyle*) = ^(UIView* parentView, CSToastStyle* style) {
+        [ATHelper tutorialToastOtherFeatures:parentView style:style nextToToast:tutorialLargeBlock];
+    };
+    void (^tutorialCreateEventBlock)(UIView*, CSToastStyle*) = ^(UIView* parentView, CSToastStyle* style) {
+        [ATHelper tutorialToastCreateEditEvent:parentView style:style nextToToast:tutorialOtherFeaturesBlock];
+    };
+    
+    [ATHelper startTutorialToasts:self.view style:tutorialStyle nextToToast:tutorialCreateEventBlock];
+    
+}
+-(void) startLargeTutorial
 {
     if (tutorialView != nil)
     {
@@ -3731,6 +3769,18 @@
     [self displayTimelineControls];
     [self calculateSearchBarFrame]; //in iPhone, make search bar wider in landscape
     [self closeTutorialView];
+    if (tutorialStyle != nil)
+    {
+        tutorialStyle.imageSize = CGSizeMake(300, 600); //for iPad
+        UIInterfaceOrientation orientation = [UIApplication sharedApplication].statusBarOrientation;
+        if (UI_USER_INTERFACE_IDIOM() == UIUserInterfaceIdiomPhone)
+        {
+            if (UIDeviceOrientationIsPortrait(orientation))
+                tutorialStyle.imageSize = CGSizeMake(80, 160);
+            else
+                tutorialStyle.imageSize = CGSizeMake(150, 300);
+        }
+    }
 }
 
 -(void)searchBarSearchButtonClicked:(UISearchBar *)theSearchBar
