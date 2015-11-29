@@ -84,9 +84,14 @@
 {
     return @"marker-af-4.png";
 }
-+ (NSString*)WhiteFlagAnnotationIdentifier
++ (NSString*)WhiteFlagAnnotationIdentifier:(BOOL)mapMode
 {
-    return @"small-white-flag.png";
+    if (mapMode)
+    {
+        return @"small-red-ball-icon.png";
+    }
+    else
+        return @"small-white-flag.png";
 }
 + (int) screenWidth
 {

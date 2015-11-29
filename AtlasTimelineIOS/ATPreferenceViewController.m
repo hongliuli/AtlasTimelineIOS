@@ -623,7 +623,7 @@
         if (row == 0)
         {
             cell.textLabel.text = NSLocalizedString(@"World Top Attractions",nil);
-            [cell.imageView setImage:[UIImage imageNamed:@"star-red-orig.png"]];
+            [cell.imageView setImage:[UIImage imageNamed:@"star-red-orig-purple.png"]];
         }
     }
     else if (section == SECTION_MISC)
