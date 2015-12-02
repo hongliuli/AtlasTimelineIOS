@@ -897,7 +897,7 @@ forRowAtIndexPath: (NSIndexPath*)indexPath
     SWRevealViewController *revealController = [self revealViewController];
     [revealController rightRevealToggle:nil];
     
-    //[self dismissViewControllerAnimated:NO completion:nil]; //for iPhone case
+    [self dismissViewControllerAnimated:NO completion:nil]; //for iPhone case
 }
 
 - (void)changeDateInLabel:(id)sender{
