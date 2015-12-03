@@ -184,12 +184,15 @@
     [ATHelper setSelectedDbFileName:_source];
     ATAppDelegate *appDelegate = (ATAppDelegate *)[[UIApplication sharedApplication] delegate];
     [appDelegate emptyEventList];
-    [appDelegate.mapViewController cleanSelectedAnnotationSet];
+    [appDelegate.mapViewController cleanAnnotationToShowImageSet];
     [appDelegate.mapViewController prepareMapView];
     [appDelegate.mapViewController refreshEventListView:false];
     [self.navigationController popViewControllerAnimated:YES];
     isRemoveSourceForUploadAll = false;
     [self.tableView reloadData]; //reload so active source name will be display when back to preference view
+    
+    SWRevealViewController* revealController = [self revealViewController];
+    [revealController rightRevealToggle:nil];
 }
 
 - (void)sourceChooseViewController: (ATSourceChooseViewController *)controller
@@ -200,6 +203,9 @@
     [appDelegate.mapViewController cancelPreference];
     [self.navigationController removeFromParentViewController];
     [self dismissViewControllerAnimated:NO completion:nil]; //for iPhone case
+    
+    SWRevealViewController* revealController = [self revealViewController];
+    [revealController rightRevealToggle:nil];
 }
 
 //called by download window after downloaded a source

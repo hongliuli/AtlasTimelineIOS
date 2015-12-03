@@ -541,7 +541,7 @@ UIPopoverController *verifyViewPopover;
         [dataController addEventEntityAddress:evt.address description:evt.eventDesc date:evt.eventDate lat:evt.lat lng:evt.lng type:evt.eventType uniqueId:evt.uniqueId];
     }
     [appDelegate emptyEventList];
-    [appDelegate.mapViewController cleanSelectedAnnotationSet];
+    [appDelegate.mapViewController cleanAnnotationToShowImageSet];
     [appDelegate.mapViewController prepareMapView];
     if (spinner != nil)
         [spinner stopAnimating];
