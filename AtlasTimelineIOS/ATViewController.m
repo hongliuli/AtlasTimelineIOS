@@ -618,17 +618,20 @@
 
 -(void) switchEventListViewMode:(id)sender
 {
+    int toastXPos = 340;
+    if (UI_USER_INTERFACE_IDIOM() == UIUserInterfaceIdiomPhone)
+        toastXPos = 200;
     if (switchEventListViewModeToVisibleOnMapFlag)
     {
         eventListInVisibleMapArea = nil; //IMPORTANT: refreshEventListView will use this is nil or not to decide if in map event list view mode, do not refresh if scroll timewheel
         [self setSwitchButtonTimeMode];
-        [self.mapView makeToast:NSLocalizedString(@"Scroll timewheel to list events in the selected period",nil) duration:4.0 position:[NSValue valueWithCGPoint:CGPointMake(350, 80)]];
+        [self.mapView makeToast:NSLocalizedString(@"Scroll timewheel to list events in the selected period",nil) duration:4.0 position:[NSValue valueWithCGPoint:CGPointMake(toastXPos, 77)]];
         [self refreshEventListView:false];
     }
     else
     {
         [self setSwitchButtonMapMode];
-        [self.mapView makeToast:NSLocalizedString(@"Scroll map to list events moving into the screen",nil) duration:4.0 position:[NSValue valueWithCGPoint:CGPointMake(340, 80)]];
+        [self.mapView makeToast:NSLocalizedString(@"Scroll map to list events moving into the screen",nil) duration:4.0 position:[NSValue valueWithCGPoint:CGPointMake(toastXPos, 77)]];
         [self updateEventListViewWithEventsOnMap];
     }
 }
@@ -4153,10 +4156,8 @@
             }
             [switchEventListViewModeBtn setFrame:newBtnFrame];
         }
-
-         newFrame = CGRectMake(newFrame.origin.x ,offset,[ATConstants eventListViewCellWidth],numOfCellOnScreen * [ATConstants eventListViewCellHeight]);
     }
-
+    newFrame = CGRectMake(newFrame.origin.x ,offset,[ATConstants eventListViewCellWidth],numOfCellOnScreen * [ATConstants eventListViewCellHeight]);
     /////xxxx
     /*
     self.timeScrollWindow.hidden=false;
