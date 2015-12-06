@@ -775,7 +775,7 @@
 - (void) scrollToFocusedRow
 {
     //NSLog(@"======== ScrollToFocusedRow at %d", focusedRow);
-    if (focusedRow == 0 || focusedRow > currentNumberOfRow + 1 || focusedRow == currentNumberOfRow) //somehow these will cause crash
+    if (focusedRow <= 0 || focusedRow > currentNumberOfRow + 1 || focusedRow == currentNumberOfRow) //somehow these will cause crash
         return;
     if (focusedRow > currentNumberOfRow) //sometimes focusedRow will be too big that cause crash, need more investigate why, here is defenseively program to make sure it works
         focusedRow = currentNumberOfRow -1;
