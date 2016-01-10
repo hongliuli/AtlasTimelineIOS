@@ -36,7 +36,7 @@ NSString* receivedSecurityCode; //use this to compare with user entered
 {
     [super viewDidLoad];
     
-    securityCodeText = [[UITextField alloc] initWithFrame:CGRectMake(10.0, 0.0, 180, 40)];
+    securityCodeText = [[UITextField alloc] initWithFrame:CGRectMake(10.0, 0.0, 160, 40)];
     [securityCodeText setBorderStyle:UITextBorderStyleLine];
     [securityCodeText setKeyboardType:UIKeyboardTypeNumberPad];
     [securityCodeText setPlaceholder:NSLocalizedString(@"Enter Code",nil)];
@@ -46,6 +46,7 @@ NSString* receivedSecurityCode; //use this to compare with user entered
     verifyButton.enabled = false;
     securityCodeText.backgroundColor = [UIColor lightGrayColor];
     verifyButton.backgroundColor = [UIColor lightGrayColor];
+    self.view.backgroundColor = [[UIColor alloc] initWithRed:0.8 green:0.9 blue:1.0 alpha:0.7];
 
     // Uncomment the following line to preserve selection between presentations.
     // self.clearsSelectionOnViewWillAppear = NO;
@@ -71,23 +72,24 @@ NSString* receivedSecurityCode; //use this to compare with user entered
     // create the parent view that will hold header Label
     if (section == 0)
     {
-        customView = [[UIView alloc] initWithFrame:CGRectMake(0.0, 0.0, 400, 100)];
-        UILabel* label = [[UILabel alloc] initWithFrame:CGRectMake(10.0, 0.0, 350, 100)];
-        label.numberOfLines = 5;
-        label.text = NSLocalizedString(@"Enter your email， tap [Send Code]. Then check your email to get security code.\nNext, enter the security code and tap [Verify] to login. Your email address will be your login ID!",nil);
+        customView = [[UIView alloc] initWithFrame:CGRectMake(0.0, 0.0, 400, 120)];
+        UILabel* label = [[UILabel alloc] initWithFrame:CGRectMake(10.0, 0.0, 310, 120)];
+        label.numberOfLines = 6;
+        label.text = NSLocalizedString(@"- Enter your email，tap [Send Code].\n- Check email to get security code.\n- Enter the security code to login.\n(Email address will be your login ID!)",nil);
         [customView addSubview:label];
     }
     if (section == 1)
     {
         customView = [[UIView alloc] initWithFrame:CGRectMake(0.0, 0.0, 400, 50)];
-        userEmailText = [[UITextField alloc] initWithFrame:CGRectMake(10.0, 0.0, 180, 40)];
+        userEmailText = [[UITextField alloc] initWithFrame:CGRectMake(10.0, 0.0, 160, 40)];
         [userEmailText setKeyboardType:UIKeyboardTypeEmailAddress];
         [userEmailText setBorderStyle:UITextBorderStyleLine];
         userEmailText.autocapitalizationType = UITextAutocapitalizationTypeNone;
+        [userEmailText setBackgroundColor:[UIColor whiteColor]];
         [userEmailText setPlaceholder:NSLocalizedString(@"Your email addr",nil)];
         UIButton *getEmailButton = [UIButton buttonWithType:UIButtonTypeSystem];
         getEmailButton.titleLabel.font = [UIFont fontWithName:@"Helvetica" size:17];
-        getEmailButton.frame = CGRectMake(200, 0, 120, 50);
+        getEmailButton.frame = CGRectMake(180, 0, 120, 50);
         [getEmailButton setTitle:NSLocalizedString(@"Send Me Code",nil) forState:UIControlStateNormal];
         //[addFriendButton.titleLabel setTextColor:[UIColor blueColor]];
         [getEmailButton addTarget:self action:@selector(getEmailAction:) forControlEvents:UIControlEventTouchUpInside];
@@ -98,7 +100,7 @@ NSString* receivedSecurityCode; //use this to compare with user entered
     {
         customView = [[UIView alloc] initWithFrame:CGRectMake(0.0, 0.0, 400, 100)];
         verifyButton.titleLabel.font = [UIFont fontWithName:@"Helvetica" size:17];
-        verifyButton.frame = CGRectMake(200, 0, 120, 40);
+        verifyButton.frame = CGRectMake(180, 0, 120, 40);
         [verifyButton setTitle:NSLocalizedString(@"Verify",nil) forState:UIControlStateNormal];
         //[addFriendButton.titleLabel setTextColor:[UIColor blueColor]];
         [verifyButton addTarget:self action:@selector(verifySecurityCodeAction:) forControlEvents:UIControlEventTouchUpInside];
@@ -107,7 +109,8 @@ NSString* receivedSecurityCode; //use this to compare with user entered
         if (UI_USER_INTERFACE_IDIOM() == UIUserInterfaceIdiomPhone)
         {
             UIButton* btn = [UIButton buttonWithType:UIButtonTypeSystem];
-            [btn setFrame:CGRectMake(10.0, 50.0, 90, 100)];
+            [btn setFrame:CGRectMake(10.0, 50.0, 100, 40)];
+            btn.titleLabel.font = [UIFont fontWithName:@"Helvetica" size:17];
             [btn setTitle:NSLocalizedString(@"Dismiss", nil) forState:UIControlStateNormal];
             [btn addTarget:self action:@selector(dismissMeAction:) forControlEvents:UIControlEventTouchUpInside];
             [customView addSubview:btn];
@@ -117,7 +120,7 @@ NSString* receivedSecurityCode; //use this to compare with user entered
 }
 - (CGFloat)tableView:(UITableView *)tableView heightForHeaderInSection:(NSInteger)section {
     if (section == 0)
-        return 100;
+        return 120;
     if (section == 1)
         return 50;
     if (section == 2)
@@ -125,7 +128,7 @@ NSString* receivedSecurityCode; //use this to compare with user entered
     return 50;
 }
 - (void)dismissMeAction:(id)sender{ //only iPhone comes here
-    [self dismissViewControllerAnimated:true completion:nil];
+    [self.presentingViewController dismissViewControllerAnimated:true completion:nil];
 }
 - (IBAction)getEmailAction:(id)sender {
     //NSLog(@"getemail clicked");

@@ -320,8 +320,9 @@ NSDateFormatter* dateFormatter;
     }
     
     [[self getMapViewCountroller] setNewFocusedDateAndUpdateMapWithNewCenter:ent :[ATConstants defaultZoomLevel]];
-    //a tech skill: to return back to a navigator, do not use segue
-    [self.navigationController popViewControllerAnimated:YES];
+    
+    SWRevealViewController *revealController = [self revealViewController];
+    [revealController revealToggle:nil];
     
     [tableView deselectRowAtIndexPath:indexPath animated:YES];
 }

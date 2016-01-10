@@ -49,7 +49,7 @@ NSMutableArray* appStoreUrlList;
         // Initialization code
         // add subview etc here
     }
-    NSString* serviceUrl = [NSString stringWithFormat:@"http://www.chroniclemap.com//resources/newappshortlist.html"];
+    NSString* serviceUrl = NSLocalizedString(@"http://www.chroniclemap.com//resources/newappshortlist.html",nil);
     NSString* responseStr  = [ATHelper httpGetFromServer:serviceUrl :false];
     NSMutableArray* appNameList = [[NSMutableArray alloc] init];
     appStoreUrlList = [[NSMutableArray alloc] init];

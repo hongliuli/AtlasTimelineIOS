@@ -88,7 +88,7 @@
 
 #define HAVE_IMAGE_INDICATOR 100
 
-#define EPISODE_VIEW_WIDTH 340
+#define EPISODE_VIEW_WIDTH 320
 #define EPISODE_VIEW_HIGHT_LARGE 410
 #define EPISODE_VIEW_HIGHT_SMALL 140
 #define EPISODE_ROW_HEIGHT 30
@@ -302,28 +302,6 @@
     [self.mapView addSubview:switchEventListViewModeBtn];
     eventListInVisibleMapArea = nil;
     [self refreshEventListView:false];
-    
-    NSUserDefaults* userDefault = [NSUserDefaults standardUserDefaults];
-    //if ( ![@"霞客行" isEqualToString:NSLocalizedString(@"Chronicle Map",nil)]) //China has no access to Flickr/Picasa
-    //{
-        if ([userDefault objectForKey:@"ALERT_FOR_SYNC_PROMPT_DISABLE"] == nil)
-        {
-            UIAlertView *alert = [[UIAlertView alloc] initWithTitle:NSLocalizedString(@"This app is best used as a trip, event and photo organizer. If you store photos on Flickr, Picasa or Facebook you can use below apps instead:",nil)
-                                                            message:@""
-                                                           delegate:self
-                                                  cancelButtonTitle:NSLocalizedString(@"OK",nil)
-                                                  otherButtonTitles:nil];
-            [alert addButtonWithTitle:@"For  Flickr"];
-            [alert addButtonWithTitle:@"For Picasa"];
-            [alert addButtonWithTitle:@"For Facebook"];
-            [alert addButtonWithTitle:NSLocalizedString(@"Don't Remind Me",nil)];
-            alert.tag = ALERT_FOR_NEW_APP;
-            [alert show];
-        }
-    //}
-    
-    //[userDefault removeObjectForKey:@"ALERT_FOR_SYNC_PROMPT_DISABLE"];
-
 }
 -(void) viewDidAppear:(BOOL)animated
 {
@@ -347,7 +325,7 @@
     if ([appDelegate.eventListSorted count] == 0)
     {
         /*
-        UIAlertView *alert = [[UIAlertView alloc] initWithTitle:NSLocalizedString(@"Add your first event",nil) message:NSLocalizedString(@"Add event by long press on a map location, or search an address. You can also import [TestEvents] in [Settings->Incoming Contents/Episodes] to learn more.",nil) delegate:nil cancelButtonTitle:NSLocalizedString(@"OK",nil) otherButtonTitles:nil];
+        UIAlertView *alert = [[UIAlertView alloc] initWithTitle:NSLocalizedString(@"Add your first event",nil) message:NSLocalizedString(@"Add event by long press on a map location, or search an address. You can also import [TestEvents] in [Settings->My Collections] to learn more.",nil) delegate:nil cancelButtonTitle:NSLocalizedString(@"OK",nil) otherButtonTitles:nil];
         [alert show];
          */
         //[self addFirstDemoEvent]
@@ -3489,7 +3467,7 @@
     UILabel* lblWording = [[UILabel alloc] initWithFrame:CGRectMake(10, 3*EPISODE_ROW_HEIGHT + 10, EPISODE_VIEW_WIDTH - 20, 9*EPISODE_ROW_HEIGHT)];
     lblWording.lineBreakMode = NSLineBreakByWordWrapping;
     lblWording.numberOfLines = 0;
-    lblWording.text = NSLocalizedString(@"An episode is a collection of events, such as an itinerary, that you can share to your friends' ChronicleMap app. (Photos are not included.)\n\nTo send an episode to a friend's ChronicleMap app, tap the episode in [Menu->Share my Episodes]\n\nYour friend can check the incoming episode in the app's [Menu->Incoming Contents/Episodes] and download to display on map.",nil);
+    lblWording.text = NSLocalizedString(@"An episode is a collection of events, such as an itinerary, that you can share to your friends' ChronicleMap app. (Photos are not included.)\n\nTo send an episode to a friend's ChronicleMap app, tap the episode in [Menu->Share my Episodes]\n\nYour friend can check the incoming episode in the app's [Menu->Collection Box] and download to display on map.",nil);
     [episodeView addSubview:lblWording];
     
     int btnY = 12*EPISODE_ROW_HEIGHT + 10;
@@ -3516,6 +3494,13 @@
         btnAll.titleLabel.font = [UIFont fontWithName:@"Arial-Bold" size:15];
         [btnAll addTarget:self action:@selector(allEpisodeClicked:) forControlEvents:UIControlEventTouchUpInside];
         [episodeView addSubview: btnAll];
+        
+        UIButton *btnClear = [UIButton buttonWithType:UIButtonTypeSystem];
+        btnClear.frame = CGRectMake(140, 3*EPISODE_ROW_HEIGHT - 4, 60, 20);
+        [btnClear setTitle:NSLocalizedString(@"Less",nil) forState:UIControlStateNormal];
+        btnClear.titleLabel.font = [UIFont fontWithName:@"Arial-Bold" size:17];
+        [btnClear addTarget:self action:@selector(lessEpisodeClicked:) forControlEvents:UIControlEventTouchUpInside];
+        [episodeView addSubview: btnClear];
     }
     UIButton *btnSave = [UIButton buttonWithType:UIButtonTypeSystem];
     btnSave.frame = CGRectMake(10, btnY, 120, 20);

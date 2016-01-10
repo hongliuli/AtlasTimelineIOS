@@ -51,16 +51,26 @@ int swipPromptCount;
 
     localList = [[NSMutableArray alloc] initWithArray:[ATHelper listFileAtPath:[ATHelper applicationDocumentsDirectory]]];
 
+    
     NSString *userId = [userDefault objectForKey:[ATConstants UserEmailKeyName]];
     NSString *securityCode = [userDefault objectForKey:[ATConstants UserSecurityCodeKeyName]];
     
     NSString* serviceUrl = [NSString stringWithFormat:@"%@/retreivelistofcontents?user_id=%@&security_code=%@",[ATConstants ServerURL], userId, securityCode];
-    NSString* responseStr = [ATHelper httpGetFromServer:serviceUrl];
+    NSString* responseStr = [ATHelper httpGetFromServer:serviceUrl :false];
     NSArray* libraryList = nil;
-    if (responseStr == nil)
-        return;
+    if (responseStr == nil || [responseStr isEqualToString:@""])
+    {
+        libraryList = [userDefault objectForKey:@"CONTENTS_LIST_FROM_SERVER"];
+        if (libraryList == nil)
+        {
+            libraryList = @[[ATConstants defaultSourceName]];
+        }
+    }
     else
-         libraryList = [responseStr componentsSeparatedByString:@"|"];
+    {
+        libraryList = [responseStr componentsSeparatedByString:@"|"];
+        [userDefault setObject:libraryList forKey:@"CONTENTS_LIST_FROM_SERVER"];
+    }
     filteredList = [[NSMutableArray alloc] init];
     //should use predicate to filter nil
     for (int i=0; i< [libraryList count]; i++)
@@ -69,9 +79,10 @@ int swipPromptCount;
         if (item != nil && [item length]>0)
             [filteredList addObject:libraryList[i]];
     }
-    [filteredList removeObject:@"myEvents"]; //myEvents backup/restore is done in Settings->Backup/Restore myEvents data section
     
+    [filteredList removeObject:[ATConstants defaultSourceName]]; //"myEvents" should be always at top after sort
     filteredList = [[filteredList sortedArrayUsingSelector:@selector(localizedCaseInsensitiveCompare:)] mutableCopy];
+    [filteredList insertObject:[ATConstants defaultSourceName] atIndex:0];
 
     spinner = [[UIActivityIndicatorView alloc]
                initWithActivityIndicatorStyle:UIActivityIndicatorViewStyleGray];
@@ -104,19 +115,40 @@ int swipPromptCount;
 - (UITableViewCell *)tableView:(UITableView *)tableView cellForRowAtIndexPath:(NSIndexPath *)indexPath
 {
     static NSString *CellIdentifier = @"downloadcellswap";
+    bool firstRowflag = false;
+    if (indexPath.row == 0)
+    {
+        CellIdentifier = @"downloadcelswp_firstrow";
+        firstRowflag = true;
+    }
     //UITableViewCell *cell = [tableView dequeueReusableCellWithIdentifier:CellIdentifier];
-    
+
     SWTableViewCell *cell = (SWTableViewCell *)[tableView dequeueReusableCellWithIdentifier:CellIdentifier];
     
     if (cell == nil) {
         NSMutableArray *rightUtilityButtons = [NSMutableArray new];
         //see action in didTriggerRightUtilityButtonWithIndex
-        [rightUtilityButtons sw_addUtilityButtonWithColor:
-         [UIColor colorWithRed:0.78f green:0.38f blue:0.5f alpha:1.0]
+        if (firstRowflag)
+        {
+            [rightUtilityButtons sw_addUtilityButtonWithColor:
+             [UIColor colorWithRed:0.78f green:0.38f blue:0.5f alpha:1.0]
+                                                        title:NSLocalizedString(@"Backup",nil)];
+            [rightUtilityButtons sw_addUtilityButtonWithColor:
+             [UIColor colorWithRed:0.6f green:0.4f blue:0.5f alpha:1.0]
+                                                        title:NSLocalizedString(@"Restore",nil)];
+            [rightUtilityButtons sw_addUtilityButtonWithColor:
+             [UIColor colorWithRed:1.0f green:0.231f blue:0.188 alpha:1.0f]
+                                                        title:NSLocalizedString(@"Map It",nil)];
+        }
+        else
+        {
+            [rightUtilityButtons sw_addUtilityButtonWithColor:
+            [UIColor colorWithRed:0.78f green:0.38f blue:0.5f alpha:1.0]
                                                     title:NSLocalizedString(@"Delete",nil)];
-        [rightUtilityButtons sw_addUtilityButtonWithColor:
-         [UIColor colorWithRed:1.0f green:0.231f blue:0.188 alpha:1.0f]
-                                                    title:NSLocalizedString(@"Download",nil)];
+            [rightUtilityButtons sw_addUtilityButtonWithColor:
+            [UIColor colorWithRed:1.0f green:0.231f blue:0.188 alpha:1.0f]
+                                                    title:NSLocalizedString(@"Map It",nil)];
+        }
         cell = [[SWTableViewCell alloc] initWithStyle:UITableViewCellStyleSubtitle
                                       reuseIdentifier:CellIdentifier
                                   containingTableView:self.tableView // For row height and selection
@@ -137,7 +169,7 @@ int swipPromptCount;
         tmpAtlasName = [tmpAtlasName substringFromIndex:2]; //remove 1* when display in text, and this text will be used when download from server
     }
     
-    
+    //for episode from other user, name has * in it
     if ([tmpAtlasName rangeOfString:@"*"].location != NSNotFound)
     {
         NSArray* nameList = [tmpAtlasName componentsSeparatedByString:@"*"];
@@ -146,26 +178,37 @@ int swipPromptCount;
     }
     else
     {
+        if ([localList containsObject:tmpAtlasName])
+        {
+            
+        }
         cell.textLabel.text = tmpAtlasName;
         cell.detailTextLabel.text = @"";
     }
-    if ([localList containsObject:filteredList[indexPath.row]]){
-        if ([filteredList[indexPath.row] isEqual:[ATConstants defaultSourceName]])
-        {
-            cell.textLabel.textColor = [UIColor blueColor];
-        }
-        else
-        {
-            cell.textLabel.textColor = [UIColor lightGrayColor];
-            cell.detailTextLabel.textColor = [UIColor lightGrayColor];
-        }
+
+    if ([filteredList[indexPath.row] isEqual:[ATConstants defaultSourceName]]) // for myEvents row
+    {
+        cell.textLabel.font = [UIFont fontWithName:@"Helvetica-Bold" size:19.0];
+        cell.detailTextLabel.text = NSLocalizedString(@"  << Left swipe to backup/restore",nil);
     }
-    else{
+    else
+    {
         if (unreadEpisode)
             cell.textLabel.font = [UIFont fontWithName:@"Helvetica-Bold" size:17.0];
         else
             cell.textLabel.font = [UIFont fontWithName:@"Helvetica" size:16.0];
         //cell.accessoryType = UITableViewCellAccessoryDetailDisclosureButton;
+    }
+
+    ATAppDelegate *appDelegate = (ATAppDelegate *)[[UIApplication sharedApplication] delegate];
+    if ([tmpAtlasName isEqualToString:appDelegate.sourceName])
+    {
+        cell.textLabel.textColor = [UIColor blueColor];
+        [ATHelper getStatsForEvent:tmpAtlasName tableCell:cell];
+    }
+    else
+    {
+        cell.textLabel.textColor = [UIColor blackColor];
     }
     
     return cell;
@@ -191,70 +234,63 @@ int swipPromptCount;
     selectedAtlasName = filteredList[row];
     if ([selectedAtlasName hasPrefix:@"1*"])
         selectedAtlasName = [selectedAtlasName substringFromIndex:2];
-    NSString* tmpAtlasName = selectedAtlasName;
-    if ([tmpAtlasName rangeOfString:@"*"].location != NSNotFound)
+    NSString* displayName = selectedAtlasName;
+    if ([displayName rangeOfString:@"*"].location != NSNotFound)
     {
-        NSArray* nameList = [tmpAtlasName componentsSeparatedByString:@"*"];
-        tmpAtlasName = nameList[0];
+        NSArray* nameList = [displayName componentsSeparatedByString:@"*"];
+        displayName = nameList[0];
         
     }
     switch (index) {
-        case 0:
+        case 0: //DELETE swipe (backup for first row)
         {
-            UIAlertView *alert = [[UIAlertView alloc]initWithTitle: [NSString stringWithFormat:NSLocalizedString(@"Delete [%@] From Server",nil),tmpAtlasName]
-                                                           message: NSLocalizedString(@"If you have downloaded it before, the offline one will stay until you remove the app. Are you sure to delete it from server?",nil)
-                                                          delegate: self
-                                                 cancelButtonTitle:NSLocalizedString(@"Cancel",nil)
-                                                 otherButtonTitles:NSLocalizedString(@"Continue",nil),nil];
-            alert.tag = DELETE_INCOMING_ON_SERVER_CONFIRM;
-            [alert show];
-
-            break;
-        }
-        case 1:
-        {
-            if ([cell.textLabel.textColor isEqual:[UIColor lightGrayColor]])
+            if ([selectedAtlasName isEqualToString:[ATConstants defaultSourceName]])
             {
-                UIAlertView *alert = [[UIAlertView alloc]initWithTitle: [NSString stringWithFormat:NSLocalizedString(@"%@ was downloaded before",nil),tmpAtlasName]
-                                                               message: NSLocalizedString(@"Are you sure to replace your offline copy?",nil)
-                                                              delegate: self
-                                                     cancelButtonTitle:NSLocalizedString(@"Cancel",nil)
-                                                     otherButtonTitles:NSLocalizedString(@"Continue",nil),nil];
-                alert.tag = DOWNLOAD_AGAIN_ALERT;
-                [alert show];
+                [self.parent startExport]; //do myEvents backup
             }
             else
             {
-                [self startDownload];
-                
+                UIAlertView *alert = [[UIAlertView alloc]initWithTitle: [NSString stringWithFormat:NSLocalizedString(@"Delete [%@]",nil),displayName]
+                                                           message: NSLocalizedString(@"Are you sure to delete it?",nil)
+                                                          delegate: self
+                                                 cancelButtonTitle:NSLocalizedString(@"Cancel",nil)
+                                                 otherButtonTitles:NSLocalizedString(@"Continue",nil),nil];
+                alert.tag = DELETE_INCOMING_ON_SERVER_CONFIRM;
+                [alert show];
             }
 
             break;
+        }
+        case 1: //Set Active swipe (restore for myEvents row)
+        {
+            if ([selectedAtlasName isEqualToString:[ATConstants defaultSourceName]])
+            {
+                [self.parent startDownloadMyEventsJson];
+            }
+            else if (![localList containsObject:selectedAtlasName]) //selectedAtlasName may contains * suchas aaa
+            {
+                [self startDownload];
+            }
+            else
+            {
+                [self.delegate downloadTableViewController:self didSelectSource:selectedAtlasName];
+            }
+
+            break;
+        }
+        case 2: //set Active for first row myEvents
+        {
+            [self.delegate downloadTableViewController:self didSelectSource:selectedAtlasName];
         }
         default:
             break;
     }
 }
 
-
+//TODO not used anymore
 -(void)alertView:(UIAlertView *)alertView clickedButtonAtIndex:(NSInteger)buttonIndex
 {
-    if (alertView.tag == DOWNLOAD_CONFIRM)
-    {
-        UITextField *agree = [alertView textFieldAtIndex:0];
-        if ([agree.text caseInsensitiveCompare:NSLocalizedString(@"agree",nil)] == NSOrderedSame)
-        {
-            [ATHelper startReplaceDb:selectedAtlasName :downloadedJson :spinner];
-            [_parent changeSelectedSource: selectedAtlasName];
-            downloadedJson = nil;
-        }
-        else
-        {
-            UIAlertView *alert = [[UIAlertView alloc] initWithTitle:NSLocalizedString(@"You Canceled replacing offline content!",nil) message:@"" delegate:nil cancelButtonTitle:NSLocalizedString(@"OK",nil) otherButtonTitles:nil];
-            [alert show];
-        }
-    }
-    else if (alertView.tag == DELETE_INCOMING_ON_SERVER_CONFIRM)
+    if (alertView.tag == DELETE_INCOMING_ON_SERVER_CONFIRM)
     {
         if (buttonIndex == 0)
             return;
@@ -278,36 +314,26 @@ int swipPromptCount;
             NSLog(@"user canceled upload");
             // Any action can be performed here
         }
-        else
-        {
-            if ( alertView.tag == DOWNLOAD_AGAIN_ALERT)
-                [self startDownload];
-            if (alertView.tag == DOWNLOAD_REPLACE_MY_SOURCE_ALERT )
-            {
-                UIAlertView* alert  = [[UIAlertView alloc] initWithTitle:[NSString stringWithFormat:NSLocalizedString(@"Confirm to download and set [%@] active!",nil),selectedAtlasName]
-                    message:NSLocalizedString(@"Enter agree to continue:",nil) delegate:self cancelButtonTitle:@"OK" otherButtonTitles:nil];
-                [alert setAlertViewStyle:UIAlertViewStylePlainTextInput];
-                UITextField * aa = [alert textFieldAtIndex:0];
-                aa.placeholder = NSLocalizedString(@"agree",nil);
-                alert.tag = DOWNLOAD_CONFIRM;
-                [alert show];
-            }
-        }
     }
 }
 
 //NOTE at serverside, if do not find user own this, it means user first time selected a public_share file, server will first copy it to user's row, then download, so user can modify its own copy
 -(void) startDownload
 {
+    NSUserDefaults* userDefault = [NSUserDefaults standardUserDefaults];
     [spinner startAnimating];
     ATAppDelegate *appDelegate = (ATAppDelegate *)[[UIApplication sharedApplication] delegate];
-    int localListCnt = [appDelegate.eventListSorted count];
-    NSUserDefaults* userDefault = [NSUserDefaults standardUserDefaults];
+    Boolean successFlag = [ATHelper checkUserEmailAndSecurityCode:self];
+    if (!successFlag)
+    {
+        //if user not login, then network not availbe case will be alert
+        return;
+    }
     NSString* userEmail = [userDefault objectForKey:[ATConstants UserEmailKeyName]];
     NSString* securityCode = [userDefault objectForKey:[ATConstants UserSecurityCodeKeyName]];
     //continues to get from server
     NSString* userId = userEmail;
-
+    [localList addObject:selectedAtlasName];
     NSString* atlasName = [selectedAtlasName stringByReplacingOccurrencesOfString:@" " withString:@"%20"];
     NSString* urlString = [NSString stringWithFormat:@"%@/downloadjsoncontents?user_id=%@&security_code=%@&atlas_name=%@",[ATConstants ServerURL], userId, securityCode, atlasName];
     //NSLog(@"-- bf encoding%@",urlString);
@@ -316,28 +342,21 @@ int swipPromptCount;
     NSURL* serviceUrl = [NSURL URLWithString:urlString];
 
     NSData* downloadedData = [NSData dataWithContentsOfURL:serviceUrl];
-    NSString* displayLocalCnt = @"";
-    if ([[ATHelper getSelectedDbFileName] isEqualToString :selectedAtlasName])
-        displayLocalCnt = [NSString stringWithFormat:@"%i", localListCnt];
+    
+    if (downloadedData == nil)
+    {
+        UIAlertView *alert = [[UIAlertView alloc] initWithTitle:NSLocalizedString(@"Network is unavailable!",nil) message:NSLocalizedString(@"Network may not be available, Please try later!",nil) delegate:nil cancelButtonTitle:NSLocalizedString(@"OK",nil) otherButtonTitles:nil];
+        [alert show];
+        return;
+    }
         
     NSError* error;
     downloadedJson = [NSJSONSerialization JSONObjectWithData:downloadedData options:kNilOptions error:&error];
     
-    NSString* tmpAtlasName = selectedAtlasName;
-    if ([tmpAtlasName rangeOfString:@"*"].location != NSNotFound)
-    {
-        NSArray* nameList = [tmpAtlasName componentsSeparatedByString:@"*"];
-        tmpAtlasName = nameList[0];
-        
-    }
-    UIAlertView *alert = [[UIAlertView alloc]initWithTitle: [NSString stringWithFormat:NSLocalizedString(@"[%@] has %i events",nil),tmpAtlasName,[downloadedJson count]]
-                                message: [NSString stringWithFormat:NSLocalizedString(@"WARNING: Local %@'s %@ events will be replaced!",nil),tmpAtlasName,displayLocalCnt]
-                                delegate: self
-                                cancelButtonTitle:NSLocalizedString(@"Cancel",nil)
-                                otherButtonTitles:NSLocalizedString(@"Replace",nil),nil];
-    alert.tag = DOWNLOAD_REPLACE_MY_SOURCE_ALERT;
-    [spinner stopAnimating];
-    [alert show];
+    appDelegate.sourceName = selectedAtlasName; //TODO add 12/30/15 for merge menu, not sure this is right place to add, need test. just the logically I think should add this here
+    [ATHelper startReplaceDb:selectedAtlasName :downloadedJson :spinner];
+    [_parent changeSelectedSource: selectedAtlasName];
+    [self.delegate downloadTableViewController:self didSelectSource:selectedAtlasName];
 }
 
 

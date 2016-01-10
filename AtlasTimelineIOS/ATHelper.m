@@ -27,6 +27,8 @@
 #define POI_DISPLAY_TYPE_STAR 5
 #define POI_DISPLAY_TYPE_ORANGE 50
 
+#define EVENT_TYPE_HAS_PHOTO 1
+
 @implementation ATHelper
 
 NSDateFormatter* dateFormaterForMonth;
@@ -180,11 +182,13 @@ UIPopoverController *verifyViewPopover;
     if (UI_USER_INTERFACE_IDIOM() == UIUserInterfaceIdiomPad)
     {
         verifyViewPopover = [[UIPopoverController alloc] initWithContentViewController:verifyView];
-        verifyViewPopover.popoverContentSize = CGSizeMake(370,280);
+        verifyViewPopover.popoverContentSize = CGSizeMake(400,300);
 
-            [appDelegate.mapViewController.preferencePopover dismissPopoverAnimated:true];
+        CGPoint screenCenter = CGPointMake([[UIScreen mainScreen] bounds].size.width/2, [[UIScreen mainScreen] bounds].size.height/2);
+        
+        [appDelegate.mapViewController.preferencePopover dismissPopoverAnimated:true];
         UIView *mapView = appDelegate.mapViewController.mapView;
-        CGRect rect = CGRectMake(mapView.frame.size.width/2, mapView.frame.size.height/2, 1, 1);
+        CGRect rect = CGRectMake(screenCenter.x, screenCenter.y, 1, 1);
         [verifyViewPopover presentPopoverFromRect:rect inView:mapView permittedArrowDirections:0 animated:YES];
     }
     else
@@ -825,10 +829,10 @@ UIPopoverController *verifyViewPopover;
 //-----  Tutorial Toast
 + (void)startTutorialToasts:(UIView*)parentView style:(CSToastStyle*)style nextToToast:(void (^)(UIView*, CSToastStyle*))callbackBlock
 {
-    [parentView makeToast:NSLocalizedString(@"1. Plan travel events\n\n2. Log travel events\n\n3. View top attractions\n\nStart adding your first event!\n\n\n\nContinue...", nil)
+    [parentView makeToast:NSLocalizedString(@"1. Travel Event Planner\n\n2. Travel Journal\n\n3. Personal Photo Album\n\nStart adding your first event!\n\n\n\nContinue...", nil)
                 duration:300.0
                 position:CSToastPositionCenter
-                   title:NSLocalizedString(@"Chronicle Map helps you to:", nil)
+                   title:NSLocalizedString(@"Chronicle Map is a:", nil)
                    image:[UIImage imageNamed:@"Tutorial1.png"]
                    style:style
               completion:^(BOOL didTap) {
@@ -981,4 +985,40 @@ UIPopoverController *verifyViewPopover;
     [userDefault setObject:flagStr forKey:@"ZoomToWeek"];
 }
 
++(void) getStatsForEvent:(NSString*)sourceName tableCell:(UITableViewCell*)cell
+{
+    ATAppDelegate *appDelegate = (ATAppDelegate *)[[UIApplication sharedApplication] delegate];
+    NSArray* eventList = appDelegate.eventListSorted;
+    NSError *error;
+    int totalPhotoCount = 0;
+    double totalPhotoSize = 0;
+    for (ATEventDataStruct* evt in eventList)
+    {
+        if (evt.eventType == EVENT_TYPE_HAS_PHOTO)
+        {
+            NSString *fullPathToFile = [[ATHelper getPhotoDocummentoryPath] stringByAppendingPathComponent:evt.uniqueId];
+            NSArray* tmpFileList = [[NSFileManager defaultManager] contentsOfDirectoryAtPath:fullPathToFile error:&error];
+            if (tmpFileList != nil && [tmpFileList count] > 0)
+            {
+                for (NSString* file in tmpFileList)
+                {
+                    NSDictionary *dict = [[NSFileManager defaultManager] attributesOfItemAtPath:[fullPathToFile stringByAppendingPathComponent:file] error: &error];
+                    NSNumber* fileSize = [dict valueForKey:@"NSFileSize"];
+                    totalPhotoSize = totalPhotoSize + [fileSize doubleValue];
+                    if (![file isEqualToString:@"thumbnail"])
+                        totalPhotoCount++;
+                }
+            }
+            
+        }
+    }
+    float totalSizeInM = totalPhotoSize / 1048576;
+    NSNumberFormatter *formatter = [[NSNumberFormatter alloc] init];
+    [formatter setMaximumFractionDigits:1];
+    [formatter setRoundingMode: NSNumberFormatterRoundDown];
+    NSString *mbStr = [formatter stringFromNumber:[NSNumber numberWithFloat:totalSizeInM]];
+    cell.detailTextLabel.text = [NSString stringWithFormat:NSLocalizedString(@"%d events",nil),[eventList count] ];
+    if ([@"myEvents" isEqualToString:sourceName])
+        cell.detailTextLabel.text = [NSString stringWithFormat:NSLocalizedString(@"%de/%dp/%@MB  << Left swipe to backup/restore",nil),[eventList count], totalPhotoCount, mbStr];
+}
 @end

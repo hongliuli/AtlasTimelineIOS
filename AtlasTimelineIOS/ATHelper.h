@@ -72,5 +72,7 @@
 + (BOOL) getOptionZoomToWeek;
 + (void) setOptionZoomToWeek:(BOOL)flag;
 
++(void) getStatsForEvent:(NSString*)sourceName tableCell:(UITableViewCell*)cell;
+
 
 @end

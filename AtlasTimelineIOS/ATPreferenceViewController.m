@@ -24,19 +24,15 @@
 
 #define SECTION_LOGIN_EMAIL 0
 #define SECTION_CONTENT_MANAGE 1
-#define SECTION_SYNC_MYEVENTS_TO_SERVER 2
-#define SECTION_SYNC_MYEVENTS_PHOTO_TO_DROPBOX 3
-#define SECTION_MISC 4
+#define SECTION_SYNC_MYEVENTS_PHOTO_TO_DROPBOX 2
+#define SECTION_MISC 3
 
-#define ROW_SYNC_BACKUP_MYEVENTS 0
-#define ROW_SYNC_RESTORE_MYEVENTS 1
 #define ROW_SYNC_TO_DROPBOX 0
 #define ROW_SYNC_TO_DROPBOX_ALL 1
 #define ROW_SYNC_FROM_DROPBOX 2
 
-#define ROW_CONTENT_MG_SWITCH_ACTIVE 0
+#define ROW_INBOX 0
 #define ROW_CONTENT_MG_MY_EPISODE 1
-#define ROW_CONTENT_MG_EPISODE_FROM_FRIEND 2
 
 #define ROW_OPTIONS 0
 #define ROW_VIDEO_TUTORIAL 1
@@ -45,7 +41,6 @@
 #define IN_APP_PURCHASED @"IN_APP_PURCHASED"
 #define RESTORE_PHOTO_TITLE NSLocalizedString(@"Restore Photos",nil)
 
-#define FOR_CHOOSE_ACTIVE 0
 #define FOR_SHARE_MY_EVENTS 1
 
 #define DOWNLOAD_REPLACE_MY_SOURCE_TO_MYEVENTS_ALERT 100
@@ -142,6 +137,24 @@
 	rightSwiper.direction = UISwipeGestureRecognizerDirectionRight;
 	[self.view addGestureRecognizer:rightSwiper];
 
+    NSUserDefaults* userDefault = [NSUserDefaults standardUserDefaults];
+    NSString *userId = [userDefault objectForKey:[ATConstants UserEmailKeyName]];
+    if (userId == nil) //user has not logged in yet means user has never restored myEvents since download the app
+    {
+        [self displayRestoreBackupTip];
+    }
+}
+
+- (void) displayRestoreBackupTip
+{
+    UIAlertController* alert = [UIAlertController alertControllerWithTitle:@"Tips: Backup/Restore your event data:"
+                                                                   message:@"Collection Box -> Left swipe on myEvents -> Tap Restore to recover previously saved myEvents data, or tap Backup to save current myEvents to cloud"
+                                                            preferredStyle:UIAlertControllerStyleAlert];
+    
+    UIAlertAction* defaultAction = [UIAlertAction actionWithTitle:@"OK" style:UIAlertActionStyleDefault handler:^(UIAlertAction * action) {}];
+    
+    [alert addAction:defaultAction];
+    [self presentViewController:alert animated:YES completion:nil];
 }
 
 - (void)swipeRight {
@@ -174,7 +187,31 @@
         }
     }
 }
+
+//This is delegate, will be called from ATSourceChooseViewController didSelect..
+//not used anymore, instead downloadTableViewController ... is used
 - (void)sourceChooseViewController: (ATSourceChooseViewController *)controller
+                   didSelectSource:(NSString *)source{
+    //########################################
+    // If user select a large period, then map may be slow if there is too many annotations. but I could not do anything to prevent it.
+    //########################################
+    _source = source;
+    self.detailLabel.text = _source ;
+    [ATHelper setSelectedDbFileName:_source];
+    ATAppDelegate *appDelegate = (ATAppDelegate *)[[UIApplication sharedApplication] delegate];
+    [appDelegate emptyEventList];
+    [appDelegate.mapViewController cleanAnnotationToShowImageSet];
+    [appDelegate.mapViewController prepareMapView];
+    [appDelegate.mapViewController refreshEventListView:false];
+    [self.navigationController popViewControllerAnimated:YES];
+    isRemoveSourceForUploadAll = false;
+    [self.tableView reloadData]; //reload so active source name will be display when back to preference view
+    
+    SWRevealViewController* revealController = [self revealViewController];
+    [revealController rightRevealToggle:nil];
+}
+//This is delegate, will be called from ATDownloadTableView didSelect..
+- (void)downloadTableViewController: (ATDownloadTableViewController *)controller
                    didSelectSource:(NSString *)source{
     //########################################
     // If user select a large period, then map may be slow if there is too many annotations. but I could not do anything to prevent it.
@@ -223,12 +260,6 @@
 //prepareForSegue() is useful for pass values to called storyboard objects
 - (void)prepareForSegue:(UIStoryboardSegue *)segue sender:(id)sender
 {
-    if ([segue.identifier isEqualToString:@"choose_active_offline_content"]) {
-        ATSourceChooseViewController *sourceChooseViewController = segue.destinationViewController;
-        sourceChooseViewController.delegate = self;
-        sourceChooseViewController.source = _source;
-        sourceChooseViewController.requestType = FOR_CHOOSE_ACTIVE;
-    }
     if ([segue.identifier isEqualToString:@"share_my_episode"]) {
         ATSourceChooseViewController *sourceChooseViewController = segue.destinationViewController;
         sourceChooseViewController.delegate = self;
@@ -240,13 +271,8 @@
         optionPage.parent = self;
     }
     if ([segue.identifier isEqualToString:@"download"]) {
-        Boolean successFlag = [ATHelper checkUserEmailAndSecurityCode:self];
-        if (!successFlag)
-        {
-            //Need alert again?  checkUserEmailAndSecurityCode already alerted
-            return;
-        }
         ATDownloadTableViewController *downloadTableViewController = segue.destinationViewController;
+        downloadTableViewController.delegate = self;
         downloadTableViewController.parent = self;
     }
 }
@@ -258,7 +284,7 @@
     return self;
 }
 
-- (void)startExport:(UITableView*)tableView :(NSIndexPath *)indexPath
+- (void)startExport
 {
     Boolean successFlag = [ATHelper checkUserEmailAndSecurityCode:self];
     if (!successFlag)
@@ -270,7 +296,7 @@
     NSString* sourceName = appDelegate.sourceName;
     if (![@"myEvents" isEqualToString:sourceName])
     {
-        UIAlertView *alert = [[UIAlertView alloc] initWithTitle:NSLocalizedString(@"myEvents need to be Active",nil) message:NSLocalizedString(@"Please set myEvents as active content and try again",nil) delegate:nil cancelButtonTitle:NSLocalizedString(@"OK",nil) otherButtonTitles:nil];
+        UIAlertView *alert = [[UIAlertView alloc] initWithTitle:NSLocalizedString(@"myEvents need to be shown on map",nil) message:NSLocalizedString(@"Please pick myEvents to show on map and try again",nil) delegate:nil cancelButtonTitle:NSLocalizedString(@"OK",nil) otherButtonTitles:nil];
         [alert show];
         return;
     }
@@ -549,7 +575,7 @@
 - (NSInteger)numberOfSectionsInTableView:(UITableView *)tableView
 {
     // Return the number of sections.
-    return 5;
+    return 4;
 }
 
 - (NSInteger)tableView:(UITableView *)tableView numberOfRowsInSection:(NSInteger)section
@@ -559,8 +585,6 @@
     if (section == SECTION_LOGIN_EMAIL)
         retCount = 1;
     else if (section == SECTION_CONTENT_MANAGE)
-        retCount = 3;
-    else if (section == SECTION_SYNC_MYEVENTS_TO_SERVER)
         retCount = 2;
     else if (section == SECTION_SYNC_MYEVENTS_PHOTO_TO_DROPBOX)
         retCount = 3;
@@ -600,20 +624,15 @@
     long row = indexPath.row;
     if (section == SECTION_CONTENT_MANAGE)
     {
-        if (row == ROW_CONTENT_MG_SWITCH_ACTIVE)
-        {
-            cell.textLabel.text = NSLocalizedString(@"Set Active Contents",nil);
-            cell.detailTextLabel.text = NSLocalizedString(@"Select Active from the downloaded contents/episodes",nil);
-        }
         if (row == ROW_CONTENT_MG_MY_EPISODE)
         {
             cell.textLabel.text = NSLocalizedString(@"Share my Episodes to Friends",nil);
             cell.detailTextLabel.text = NSLocalizedString(@"Send episodes / Invite Friends",nil);
         }
-        if (row == ROW_CONTENT_MG_EPISODE_FROM_FRIEND)
+        if (row == ROW_INBOX)
         {
-            cell.textLabel.text = NSLocalizedString(@"Incoming Contents/Episodes",nil);
-            cell.detailTextLabel.text = NSLocalizedString(@"Download from server to offline",nil);
+            cell.textLabel.text = NSLocalizedString(@"Collection Box",nil);
+            cell.detailTextLabel.text = NSLocalizedString(@"Pick an item to show; recover myEvents..",nil);
             if (hasNewIncomingShareFlag)
             {
                 UIImage *img = [UIImage imageNamed:@"new-message-red-dot"];
@@ -662,19 +681,6 @@
                 cell.selectionStyle = UITableViewCellSelectionStyleNone;
                 cell.textLabel.textColor = [UIColor lightGrayColor];
             }
-        }
-    }
-    else if (section == SECTION_SYNC_MYEVENTS_TO_SERVER)
-    {
-        switch (row) {
-            case ROW_SYNC_RESTORE_MYEVENTS:
-                cell.textLabel.text = NSLocalizedString(@"Restore myEvents from server",nil);
-                break;
-            case ROW_SYNC_BACKUP_MYEVENTS:
-                cell.textLabel.text = NSLocalizedString(@"Backup myEvents to server",nil);
-                break;
-            default:
-                break;
         }
     }
     else if (section == SECTION_SYNC_MYEVENTS_PHOTO_TO_DROPBOX)
@@ -738,11 +744,22 @@
     // create the parent view that will hold header Label
     if (section == SECTION_CONTENT_MANAGE)
     {
+        /**** TODO **** add refersh button for later implement auto synch. Also see unused smartDownloadMyEvents() function
+        //Show full sync button only when:
+        //  1. not logged in yet
+        //  2. current active contents is myEvents
+        UIButton* refreshBtn =[UIButton buttonWithType:UIButtonTypeCustom];
+        [refreshBtn setImage:[UIImage imageNamed:@"Refresh-icon.png"] forState:UIControlStateNormal];
+        [refreshBtn addTarget:self action:@selector(fullSyncMyEvents:) forControlEvents:UIControlEventTouchUpInside];
+        refreshBtn.frame = CGRectMake(10, -10, 40, 40);
+        //TODO if not login, and first time, and ....... see document
+        [customView addSubview:refreshBtn];
+        ******/
         NSUInteger loc = [_source rangeOfString:@"*"].location;
         NSString* namePart = _source;
         if (loc != NSNotFound)
             namePart =  [_source substringToIndex:loc];
-        label.text = [NSString stringWithFormat:NSLocalizedString(@"Active: %@",nil), namePart];
+        label.text = [NSString stringWithFormat:NSLocalizedString(@"On Map: %@",nil), namePart];
     }
     if (section == SECTION_LOGIN_EMAIL)
     {
@@ -761,16 +778,22 @@
         {
             logoutButton = [UIButton buttonWithType:UIButtonTypeSystem];
             logoutButton.titleLabel.font = [UIFont fontWithName:@"Helvetica" size:17];
-            logoutButton.frame = CGRectMake(260, -10, 60, 50);
+            logoutButton.frame = CGRectMake(210, -10, 60, 50);
             [logoutButton setTitle:NSLocalizedString(@"Logout",nil) forState:UIControlStateNormal];
             [logoutButton.titleLabel setTextColor:[UIColor blueColor]];
             [logoutButton addTarget:self action:@selector(logoutButtonAction:) forControlEvents:UIControlEventTouchUpInside];
             [customView addSubview:logoutButton];
         }
-    }
-    if (section == SECTION_SYNC_MYEVENTS_TO_SERVER)
-    {
-        label.text = NSLocalizedString(@"Backup/Restore myEvents data",nil);
+        else
+        {
+            logoutButton = [UIButton buttonWithType:UIButtonTypeSystem];
+            logoutButton.titleLabel.font = [UIFont fontWithName:@"Helvetica" size:17];
+            logoutButton.frame = CGRectMake(210, -10, 60, 50);
+            [logoutButton setTitle:NSLocalizedString(@"Login",nil) forState:UIControlStateNormal];
+            [logoutButton.titleLabel setTextColor:[UIColor blueColor]];
+            [logoutButton addTarget:self action:@selector(loginButtonAction:) forControlEvents:UIControlEventTouchUpInside];
+            [customView addSubview:logoutButton];
+        }
     }
     if (section == SECTION_SYNC_MYEVENTS_PHOTO_TO_DROPBOX)
     {
@@ -783,20 +806,7 @@
     [customView addSubview:label];
     return customView;
 }
-/*
- - (NSString *)tableView:(UITableView *)tableView titleForHeaderInSection:(NSInteger)section
- {
- if (section == SECTION_SYNC_MYEVENTS_TO_SERVER)
- return @"Backup/Restore myEvents data";
- if (section == SECTION_SYNC_MYEVENTS_PHOTO_TO_DROPBOX)
- return @"Backup/Restore Photos to Dropbox";
- if (section == SECTION_MISC)
- return @"Misc";
- 
- 
- return @"";
- }
- */
+
 - (CGFloat)tableView:(UITableView *)tableView heightForHeaderInSection:(NSInteger)section
 {
     return 30;
@@ -825,8 +835,6 @@
         [self handleLoginEmailSection:tableView :indexPath ];
     if (section == SECTION_MISC)
         [self handleMiscSection:tableView :indexPath ];
-    if (section == SECTION_SYNC_MYEVENTS_TO_SERVER)
-        [self handleSynchServerSection:tableView :indexPath];
     if (section == SECTION_SYNC_MYEVENTS_PHOTO_TO_DROPBOX)
         [self handleSynchPhotoSection:tableView :indexPath];
 }
@@ -866,8 +874,6 @@
 -(void) handleContentManageSection:(UITableView*)tableView :(NSIndexPath *)indexPath
 {
     //also see prepareForSegue() where pass values
-    if (indexPath.row == ROW_CONTENT_MG_SWITCH_ACTIVE)
-        [self performSegueWithIdentifier:@"choose_active_offline_content" sender:nil];
     if (indexPath.row == ROW_CONTENT_MG_MY_EPISODE)
     {
         ATAppDelegate *appDelegate = (ATAppDelegate *)[[UIApplication sharedApplication] delegate];
@@ -875,8 +881,8 @@
             [self performSegueWithIdentifier:@"share_my_episode" sender:nil];
         else
         {
-            UIAlertView *alert = [[UIAlertView alloc]initWithTitle: NSLocalizedString(@"Please set myEvents to be active",nil)
-                                                           message: NSLocalizedString(@"You can share your episode only when myEvents is active",nil)
+            UIAlertView *alert = [[UIAlertView alloc]initWithTitle: NSLocalizedString(@"Please pick myEvents to show on map!",nil)
+                                                           message: NSLocalizedString(@"You can share your episode only when myEvents is on map",nil)
                                                           delegate: self
                                                  cancelButtonTitle:NSLocalizedString(@"OK",nil)
                                                  otherButtonTitles:nil,nil];
@@ -885,7 +891,7 @@
             [alert show];
         }
     }
-    else if (indexPath.row == ROW_CONTENT_MG_EPISODE_FROM_FRIEND)
+    else if (indexPath.row == ROW_INBOX)
         [self performSegueWithIdentifier:@"download" sender:nil];
     
 }
@@ -895,21 +901,45 @@
     if (indexPath.row == 0)
         [self performSegueWithIdentifier:@"choose_poi" sender:nil];
 }
--(void) handleSynchServerSection:(UITableView*)tableView :(NSIndexPath *)indexPath
+
+//Unused, just created for later implement auto synch mysevnts
+-(void) smartDownloadMyEvents
 {
-    long row = indexPath.row;
-    if (row == ROW_SYNC_RESTORE_MYEVENTS)
+    Boolean successFlag = [ATHelper checkUserEmailAndSecurityCode:self];
+    if (!successFlag)
     {
-        [self startDownloadMyEventsJson];
+        //Need alert again?  checkUserEmailAndSecurityCode already alerted
+        return;
     }
-    else if (row == ROW_SYNC_BACKUP_MYEVENTS)
-    {
-        [self startExport: tableView :indexPath];
-    }
+    ATAppDelegate *appDelegate = (ATAppDelegate *)[[UIApplication sharedApplication] delegate];
     
+    long localListCnt = [appDelegate.eventListSorted count];
+    NSUserDefaults* userDefault = [NSUserDefaults standardUserDefaults];
+    NSString* userEmail = [userDefault objectForKey:[ATConstants UserEmailKeyName]];
+    NSString* securityCode = [userDefault objectForKey:[ATConstants UserSecurityCodeKeyName]];
+    //continues to get from server
+    NSString* userId = userEmail;
+    
+    NSString* atlasName = @"myEvents";
+    
+    //TODO need pass LUT (last upload time) to server 
+    NSURL* serviceUrl = [NSURL URLWithString:[NSString stringWithFormat:@"%@/downloadjsoncontents?user_id=%@&security_code=%@&atlas_name=%@",[ATConstants ServerURL], userId, securityCode, atlasName]];
+    
+    NSData* downloadedData = [NSData dataWithContentsOfURL:serviceUrl];
+    if (downloadedData == nil)
+        return;
+    NSString* displayLocalCnt = @"";
+    if ([[ATHelper getSelectedDbFileName] isEqualToString :atlasName])
+        displayLocalCnt = [NSString stringWithFormat:@"%ld", localListCnt];
+    
+    NSError* error;
+    downloadedMyEventsJsonArray = [NSJSONSerialization JSONObjectWithData:downloadedData options:kNilOptions error:&error];
+    
+    [ATHelper startReplaceDb:@"myEvents" :downloadedMyEventsJsonArray :nil];
 }
 
-//this function is almost identical in ATDownloadTableViewController's startDownload function
+//this function is almost identical in ATDownloadTableViewController's startDownload functions
+// (Dec, 2015: download MyEvents will be in smartDownloadMyEvents()
 -(void) startDownloadMyEventsJson
 {
     Boolean successFlag = [ATHelper checkUserEmailAndSecurityCode:self];
@@ -1078,6 +1108,11 @@
     }
 }
 
+//1) smart download, 2)if has local change, do merge then upload
+- (void) fullSyncMyEvents: (id)sender{
+    
+}
+
 - (void) logoutButtonAction: (id)sender {
     NSUserDefaults* userDefault = [NSUserDefaults standardUserDefaults];
     [userDefault removeObjectForKey:[ATConstants UserEmailKeyName]];
@@ -1085,7 +1120,10 @@
     [logoutButton setTitle:@"" forState: UIControlStateNormal];
     [loginEmailLabel setText:NSLocalizedString(@"Not login",nil)];
 }
-
+- (void) loginButtonAction: (id)sender {
+    [ATHelper checkUserEmailAndSecurityCode:self];
+    [logoutButton setTitle:@"" forState: UIControlStateNormal];
+}
 //Because of the DBRestClient's asynch nature, I have to implement a synchronous way:
 /*
  * 1. create /ChronicleMap fold. if success or fail with already-exists then create Source Folder (such as myEvents)

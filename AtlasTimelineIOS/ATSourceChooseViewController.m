@@ -5,6 +5,9 @@
 //  Created by Hong on 1/25/13.
 //  Copyright (c) 2013 hong. All rights reserved.
 //
+// Before version 4, this is for both Set Active Content and Share My Episodes
+// Now it is for Share My Episodes only since Set Active has been merge into Inbox
+//
 
 #import "ATSourceChooseViewController.h"
 #import "ATConstants.h"
@@ -17,7 +20,6 @@
 
 #define EPISODE_SELECTED_ALERT 1
 
-#define FOR_CHOOSE_ACTIVE 0
 #define FOR_SHARE_MY_EVENTS 1
 
 @interface ATSourceChooseViewController ()
@@ -86,9 +88,7 @@
 {
     // Return the number of rows in the section.
     int retCount = 0;
-    if (self.requestType == FOR_CHOOSE_ACTIVE)
-        retCount = [_sources count];
-    else if (self.requestType == FOR_SHARE_MY_EVENTS)
+    if (self.requestType == FOR_SHARE_MY_EVENTS)
     {
         if (_episodeNameList != nil)
             retCount = [_episodeNameList count];
@@ -101,42 +101,7 @@
     static NSString *CellIdentifier;
     // Configure the cell...
     UITableViewCell *cell;
-    if (self.requestType == FOR_CHOOSE_ACTIVE)
-    {
-        CellIdentifier = @"PeriodCell";
-        cell = [tableView  dequeueReusableCellWithIdentifier:CellIdentifier];
-        NSString* sourceName  = _sources[indexPath.row];
-        //do not display ".sqlite" in the Source tableview
-        
-        if ([sourceName rangeOfString:@"*"].location != NSNotFound)
-        {
-            NSArray* nameList = [sourceName componentsSeparatedByString:@"*"];
-            cell.textLabel.text = nameList[0];
-            cell.detailTextLabel.text = [NSString stringWithFormat:@"%@    %@",nameList[2], nameList[1]];
-        }
-        else
-        {
-            cell.textLabel.text = sourceName;
-            cell.detailTextLabel.text = @"";
-        }
-
-        if ([@"myEvents" isEqualToString:sourceName])
-        {
-            cell.textLabel.font = [UIFont fontWithName:@"Helvetica-Bold" size:19.0];
-            cell.detailTextLabel.text = NSLocalizedString(@" - All your life stories are here!",nil);
-        }
-        else
-            cell.textLabel.font = [UIFont fontWithName:@"Helvetica" size:17.0];
-        if (indexPath.row == _selectedIndex)
-        {
-            cell.accessoryType = UITableViewCellAccessoryCheckmark;
-            cell.textLabel.textColor = [UIColor blueColor];
-            [self getStatsForEvent:sourceName tableCell:cell];
-        }
- 
-        return cell;
-    }
-    else //this is for FOR_SHARE_MY_EPISODE
+    //this is for FOR_SHARE_MY_EPISODE
     {
         CellIdentifier = @"PeriodCell2";
         NSString* episodeName  = _episodeNameList[indexPath.row];
@@ -181,14 +146,7 @@
 }
 - (NSString *)tableView:(UITableView *)tableView titleForHeaderInSection:(NSInteger)section
 {
-    if(self.requestType == FOR_CHOOSE_ACTIVE)
-    {
-        return NSLocalizedString(@" Set Active from the Downloaded List",nil);
-    }
-    else
-    {
-        return NSLocalizedString(@" Pick Episode to Share",nil);
-    }
+    return NSLocalizedString(@" Pick Episode to Share",nil);
 }
 //change section font
 - (UIView *)tableView:(UITableView *)tableView viewForHeaderInSection:(NSInteger)section {
@@ -223,22 +181,7 @@
 
 - (void)tableView:(UITableView *)tableView didSelectRowAtIndexPath:(NSIndexPath *)indexPath
 {
-    if (self.requestType == FOR_CHOOSE_ACTIVE)
-    {
-        [tableView deselectRowAtIndexPath:indexPath animated:YES];
-        if (_selectedIndex != NSNotFound) {
-            UITableViewCell *cell = [tableView cellForRowAtIndexPath:[NSIndexPath
-                                                                      indexPathForRow:_selectedIndex inSection:0]];
-            cell.accessoryType = UITableViewCellAccessoryNone;
-        }
-        _selectedIndex = indexPath.row;
-        UITableViewCell *cell = [tableView cellForRowAtIndexPath:indexPath];
-        cell.accessoryType = UITableViewCellAccessoryCheckmark;
-        NSString *source = _sources[indexPath.row];
-        [self.delegate sourceChooseViewController:self didSelectSource:source];
-    }
-    
-    else //EPIDSODE_LIST_SECTION:  //then load episode for modify
+    //EPIDSODE_LIST_SECTION:  //then load episode for modify
     {
         if (swipPromptCount >= 1)
         {
@@ -261,6 +204,7 @@
     //NSLog(@"reaching accessoryButtonTappedForRowWithIndexPath: section %d   row %d", indexPath.section, indexPath.row);
 }
 
+//This is called in preference->share episode
 - (void)swipeableTableViewCell:(SWTableViewCell *)cell didTriggerRightUtilityButtonWithIndex:(NSInteger)index {
     ATAppDelegate *appDelegate = (ATAppDelegate *)[[UIApplication sharedApplication] delegate];
     int row = cell.tag;
@@ -287,7 +231,7 @@
         {
             if (![@"myEvents" isEqualToString:appDelegate.sourceName])
             {
-                UIAlertView *alert = [[UIAlertView alloc] initWithTitle:NSLocalizedString(@"Edit is not allowed now!",nil) message:NSLocalizedString(@"Only when myEvents is active can you edit episode",nil) delegate:nil cancelButtonTitle:NSLocalizedString(@"OK",nil) otherButtonTitles:nil];
+                UIAlertView *alert = [[UIAlertView alloc] initWithTitle:NSLocalizedString(@"Edit is not allowed now!",nil) message:NSLocalizedString(@"Only when myEvents is on map can you edit episode",nil) delegate:nil cancelButtonTitle:NSLocalizedString(@"OK",nil) otherButtonTitles:nil];
                 [alert show];
                 return;
             }
@@ -312,6 +256,7 @@
 - (void) inviteFriendButtonAction: (id)sender {
     [self performSegueWithIdentifier:@"invite_friend" sender:nil];
 }
+/*
 -(void) getStatsForEvent:(NSString*)sourceName tableCell:(UITableViewCell*)cell
 {
     ATAppDelegate *appDelegate = (ATAppDelegate *)[[UIApplication sharedApplication] delegate];
@@ -348,6 +293,7 @@
     if ([@"myEvents" isEqualToString:sourceName])
         cell.detailTextLabel.text = [NSString stringWithFormat:NSLocalizedString(@"%@ - Your life stories",nil),cell.detailTextLabel.text];
 }
+ */
 /*
 // Override to support conditional editing of the table view.
 - (BOOL)tableView:(UITableView *)tableView canEditRowAtIndexPath:(NSIndexPath *)indexPath

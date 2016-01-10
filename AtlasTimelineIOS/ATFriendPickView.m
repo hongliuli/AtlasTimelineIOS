@@ -253,7 +253,7 @@ NSString* deleteFriend_wait;
             NSString* dbName = [appDelegate sourceName];
             if (![dbName isEqualToString:@"myEvents"])
             {
-                UIAlertView *alert = [[UIAlertView alloc] initWithTitle:NSLocalizedString(@"Your active content is not myEvents!",nil) message:NSLocalizedString(@"Please set myEvents as active content!",nil) delegate:nil cancelButtonTitle:NSLocalizedString(@"OK",nil) otherButtonTitles:nil];
+                UIAlertView *alert = [[UIAlertView alloc] initWithTitle:NSLocalizedString(@"myEvents is not shown on map!",nil) message:NSLocalizedString(@"Please pick myEvents to show on map!",nil) delegate:nil cancelButtonTitle:NSLocalizedString(@"OK",nil) otherButtonTitles:nil];
                 [alert show];
                 return;
             }
@@ -401,7 +401,7 @@ NSLog(@"============post url = %@", serviceUrl.absoluteString);
     else
     {
         UIAlertView *alert = [[UIAlertView alloc] initWithTitle:NSLocalizedString(@"Share Episode Success!",nil)
-                                                        message: [NSString stringWithFormat:NSLocalizedString(@"Episode [%@], with %i events, has been sent.\n Using ChronicleMap app, your friends can check it at Menu -> Incoming Contents/Episodes!",nil),episodeName,eventCount]
+                                                        message: [NSString stringWithFormat:NSLocalizedString(@"Episode [%@], with %i events, has been sent.\n Using ChronicleMap app, your friends can check it at Menu -> Collection Box!",nil),episodeName,eventCount]
                                                        delegate:nil cancelButtonTitle:NSLocalizedString(@"OK",nil) otherButtonTitles:nil];
         [alert show];
         [self cleanCheckedFriendEmail];
