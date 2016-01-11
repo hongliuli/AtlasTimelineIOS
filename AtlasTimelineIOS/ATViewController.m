@@ -4038,9 +4038,7 @@
     CGRect newFrame = eventListView.frame; // CGRectMake(0,offset,0,0);
     unsigned long numOfCellOnScreen = 0;
     
-    
     NSMutableArray* eventListViewList = nil;
-    
     
     if (switchEventListViewModeToVisibleOnMapFlag == false) //it means eventlistView will show events inside timewheel period
     {
@@ -4048,15 +4046,12 @@
         NSDate* scaleStartDay = [scaleDateDic objectForKey:@"START"];
         NSDate* scaleEndDay = [scaleDateDic objectForKey:@"END"];
         
-        
-        
         if ([self.startDate compare:scaleStartDay] == NSOrderedDescending)
             scaleStartDay = self.startDate;
         if ([self.endDate compare:scaleEndDay] == NSOrderedAscending)
             scaleEndDay = self.endDate;
         //NSLog(@" === scaleStartDate = %@,  scaleEndDay = %@", scaleStartDay, scaleEndDay);
         NSArray* allEventSortedList = appDelegate.eventListSorted;
-        
         
         eventListViewList = [[NSMutableArray alloc] init];
 

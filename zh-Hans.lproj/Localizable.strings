@@ -60,7 +60,7 @@
 "Backup"="备份";
 "Restore"="恢复";
 "Map It"="上地图";
-"Pick an item to show; recover myEvents.."="选择一个内容显示；备份／恢复myEvents..";
+"Pick an item to show; recover myEvents.."="选择内容显示地图上；备份／恢复myEvents..";
 "Backup myEvents to server"="备份myEvents到服务器";
 "Backup Photos (Full)"="完全备份";
 "Backup Photos (Incremental)"="增量备份";
@@ -183,7 +183,7 @@
 "Please enter description."="请输入描述域.";
 "Please pick myEvents to show on map!"="请把 myEvents 显示在地图上!";
 "Please pick myEvents to show on map and try again"="请把 myEvents 显示在地图上，然后再试";
-"Please swipe right"="请用手指左刷";
+"Please swipe left"="请用手指左刷";
 "Please try again!"="请再试试!";
 "Please update from App Store"="请在苹果Ｓｔｏｒｅ更新";
 "iOS 8 does not support left swipe operation, please upgrade to iOS 9 or higher!"="iOS 8 不支持左刷操作，请提升到iOS 9！";

@@ -205,7 +205,7 @@
             </objects>
             <point key="canvasLocation" x="2396" y="-903"/>
         </scene>
-        <!--My Collections-->
+        <!--Collection Box-->
         <scene sceneID="kOg-LO-kc1">
             <objects>
                 <tableViewController id="rd5-Dh-fsi" customClass="ATDownloadTableViewController" sceneMemberID="viewController">
@@ -244,7 +244,7 @@
                             <outlet property="delegate" destination="rd5-Dh-fsi" id="obe-fF-f1h"/>
                         </connections>
                     </tableView>
-                    <navigationItem key="navigationItem" title="My Collections" id="ZLf-zp-6GC"/>
+                    <navigationItem key="navigationItem" title="Collection Box" id="ZLf-zp-6GC"/>
                     <value key="contentSizeForViewInPopover" type="size" width="360" height="420"/>
                     <simulatedStatusBarMetrics key="simulatedStatusBarMetrics"/>
                 </tableViewController>

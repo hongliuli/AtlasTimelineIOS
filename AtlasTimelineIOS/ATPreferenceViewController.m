@@ -188,28 +188,7 @@
     }
 }
 
-//This is delegate, will be called from ATSourceChooseViewController didSelect..
-//not used anymore, instead downloadTableViewController ... is used
-- (void)sourceChooseViewController: (ATSourceChooseViewController *)controller
-                   didSelectSource:(NSString *)source{
-    //########################################
-    // If user select a large period, then map may be slow if there is too many annotations. but I could not do anything to prevent it.
-    //########################################
-    _source = source;
-    self.detailLabel.text = _source ;
-    [ATHelper setSelectedDbFileName:_source];
-    ATAppDelegate *appDelegate = (ATAppDelegate *)[[UIApplication sharedApplication] delegate];
-    [appDelegate emptyEventList];
-    [appDelegate.mapViewController cleanAnnotationToShowImageSet];
-    [appDelegate.mapViewController prepareMapView];
-    [appDelegate.mapViewController refreshEventListView:false];
-    [self.navigationController popViewControllerAnimated:YES];
-    isRemoveSourceForUploadAll = false;
-    [self.tableView reloadData]; //reload so active source name will be display when back to preference view
-    
-    SWRevealViewController* revealController = [self revealViewController];
-    [revealController rightRevealToggle:nil];
-}
+
 //This is delegate, will be called from ATDownloadTableView didSelect..
 - (void)downloadTableViewController: (ATDownloadTableViewController *)controller
                    didSelectSource:(NSString *)source{

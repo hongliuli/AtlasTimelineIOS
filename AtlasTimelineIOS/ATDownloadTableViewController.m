@@ -261,7 +261,7 @@ int swipPromptCount;
 
             break;
         }
-        case 1: //Set Active swipe (restore for myEvents row)
+        case 1: //map it
         {
             if ([selectedAtlasName isEqualToString:[ATConstants defaultSourceName]])
             {
@@ -345,13 +345,17 @@ int swipPromptCount;
     
     if (downloadedData == nil)
     {
-        UIAlertView *alert = [[UIAlertView alloc] initWithTitle:NSLocalizedString(@"Network is unavailable!",nil) message:NSLocalizedString(@"Network may not be available, Please try later!",nil) delegate:nil cancelButtonTitle:NSLocalizedString(@"OK",nil) otherButtonTitles:nil];
-        [alert show];
+        [self displayDownloadErrorAlert];
         return;
     }
         
     NSError* error;
     downloadedJson = [NSJSONSerialization JSONObjectWithData:downloadedData options:kNilOptions error:&error];
+    if (downloadedJson == nil || [downloadedJson count] == 0 ) //this will happen when network is poor. I got this when in IHOP church on 1/10/16 where air condition has been turned on because of hot whether 62+ F
+    {
+        [self displayDownloadErrorAlert];
+        return;
+    }
     
     appDelegate.sourceName = selectedAtlasName; //TODO add 12/30/15 for merge menu, not sure this is right place to add, need test. just the logically I think should add this here
     [ATHelper startReplaceDb:selectedAtlasName :downloadedJson :spinner];
@@ -359,5 +363,10 @@ int swipPromptCount;
     [self.delegate downloadTableViewController:self didSelectSource:selectedAtlasName];
 }
 
+- (void) displayDownloadErrorAlert
+{
+    UIAlertView *alert = [[UIAlertView alloc] initWithTitle:NSLocalizedString(@"Network is unavailable!",nil) message:NSLocalizedString(@"Network may not be available, Please try later!",nil) delegate:nil cancelButtonTitle:NSLocalizedString(@"OK",nil) otherButtonTitles:nil];
+    [alert show];
+}
 
 @end
