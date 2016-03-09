@@ -237,8 +237,8 @@ NSString* selectedPOIEventId;
         descStr = [descStr substringFromIndex:titleEndLocation];
         descToDisplay = [NSString stringWithFormat:@"%@\n%@%@", dateStr,titleStr, descStr ];
         attString=[[NSMutableAttributedString alloc] initWithString:descToDisplay];
-        [attString addAttribute:NSFontAttributeName value:boldFont range:NSMakeRange(dateStrLen, [titleStr length] + 1)];
-        [attString addAttribute:NSFontAttributeName value:regularFont range:NSMakeRange([titleStr length] + 1, [descToDisplay length] - dateStrLen - [titleStr length] -1)];
+        [attString addAttribute:NSFontAttributeName value:boldFont range:NSMakeRange(dateStrLen + 1, [titleStr length] -1)];
+        [attString addAttribute:NSFontAttributeName value:regularFont range:NSMakeRange(dateStrLen + [titleStr length] + 1, [descToDisplay length] - dateStrLen - [titleStr length] -1)];
         [attString addAttribute:NSForegroundColorAttributeName value:greyColor range:NSMakeRange(0, dateStrLen)];
         [attString addAttribute:NSFontAttributeName value:dateFontSize range:NSMakeRange(0, dateStrLen)];
     }
