@@ -29,7 +29,6 @@
 #define EVENT_TYPE_HAS_PHOTO 1
 
 //iPad mini size as standard
-#define EDITOR_PHOTOVIEW_WIDTH 400
 #define EDITOR_PHOTOVIEW_HEIGHT 160
 
 #define PHOTOVIEW_WIDTH 1024
@@ -104,11 +103,11 @@ forRowAtIndexPath: (NSIndexPath*)indexPath
     tapper.cancelsTouchesInView = FALSE;
     [self.view addGestureRecognizer:tapper];
     self.dateTxt.delegate = self;
-    editorPhotoViewWidth = EDITOR_PHOTOVIEW_WIDTH;
+    editorPhotoViewWidth = [ATConstants revealViewEventEditorWidth];
     editorPhotoViewHeight = EDITOR_PHOTOVIEW_HEIGHT;
     
-    if (UI_USER_INTERFACE_IDIOM() == UIUserInterfaceIdiomPad)
-    {
+    //if (UI_USER_INTERFACE_IDIOM() == UIUserInterfaceIdiomPad)
+    //{
         editorPhotoViewWidth = [ATConstants revealViewEventEditorWidth];
         //editorPhotoViewHeight = [ATConstants screenHeight];
         CGRect frame = self.description.frame;
@@ -118,7 +117,7 @@ forRowAtIndexPath: (NSIndexPath*)indexPath
         frame = self.address.frame;
         frame.size.width = editorPhotoViewWidth;
         [self.address setFrame:frame];
-    }
+    //}
     
     UISwipeGestureRecognizer *rightSwiper = [[UISwipeGestureRecognizer alloc] initWithTarget:self action:@selector(swipeRight)];
 	rightSwiper.direction = UISwipeGestureRecognizerDirectionRight;
@@ -281,7 +280,7 @@ forRowAtIndexPath: (NSIndexPath*)indexPath
             
         NSArray* tmpFileList = [[NSFileManager defaultManager] contentsOfDirectoryAtPath:fullPathToFile error:&error];
         if(error != nil) {
-            NSLog(@"Error in reading files: %@", [error localizedDescription]);
+            //NSLog(@"Error in reading files: %@", [error localizedDescription]);
             self.isFirstTimeAddPhoto = true;
             return;
         }

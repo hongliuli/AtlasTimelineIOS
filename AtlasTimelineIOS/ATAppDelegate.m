@@ -90,7 +90,14 @@ UINavigationController* preferenceViewNavController;
     sortedArray = [[dataController fetchAllEventEntities] sortedArrayUsingComparator:^NSComparisonResult(id a, id b) {
         NSDate *first = [(ATEventEntity*)a eventDate];
         NSDate *second = [(ATEventEntity*)b eventDate];
-        return [first compare:second]== NSOrderedAscending;
+        BOOL ret = [first compare:second]== NSOrderedAscending;
+        if ([first compare:second] == NSOrderedSame) //for same date event, compare desc. This is good for itinary planning Day 1.1, Day 1.2 etc
+        {
+            NSString *firstDesc = [(ATEventEntity*)a eventDesc];
+            NSString *secondDesc = [(ATEventEntity*)b eventDesc];
+            ret = [firstDesc compare:secondDesc]== NSOrderedAscending;
+        }
+        return ret;
     }];
     _eventListSorted =[[NSMutableArray alloc] initWithCapacity:100];
     //IMPORTANT: replace appDelegate's managed obj with pure object. without this, ATEventEntity fields will have nil value after pass to caller (changed for iOS7 )

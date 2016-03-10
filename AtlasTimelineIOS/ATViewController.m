@@ -2818,15 +2818,15 @@
     NSMutableArray* eventsInSameDepth = [[NSMutableArray alloc] init];
     
     //Time link logic 1: max time to stop time link witn max depth limit
-    int timeLinkMaxNumberOfDaysBtwTwoEvent = 30; //if time zoom is in day, then max is 30
+    int timeLinkMaxNumberOfDaysBtwTwoEvent = 5; //if time zoom is in day, then max is 30
     if (appDelegate.selectedPeriodInDays >31 && appDelegate.selectedPeriodInDays <= 365)
     {
-        timeLinkMaxNumberOfDaysBtwTwoEvent = 365;
+        timeLinkMaxNumberOfDaysBtwTwoEvent = 5; //TODO 365 for historical
     }
     else if (appDelegate.selectedPeriodInDays > 365 && appDelegate.selectedPeriodInDays <=3600)
-        timeLinkMaxNumberOfDaysBtwTwoEvent = 3650;
+        timeLinkMaxNumberOfDaysBtwTwoEvent = 5; //TODO 3650 for historical events
     else if (appDelegate.selectedPeriodInDays > 3600)
-        timeLinkMaxNumberOfDaysBtwTwoEvent = 36000;
+        timeLinkMaxNumberOfDaysBtwTwoEvent = 5; //TODO 36000 for historical event
     
     //Following is to add points for event in future, and in before depends on direction, the logic is not ideal, hope it works
     //NOTE a senario: if zoom range is not day and focused group is at end, then dashed line for this group will not show
@@ -2981,6 +2981,7 @@
     return MKMapPointForCoordinate(workingCoordinate);
 }
 
+//called by self.mapView addOverlay()
 - (MKOverlayView *)mapView:(MKMapView *)mapView viewForOverlay:(id <MKOverlay>)overlay
 {
     //TODO draw line color according to date distance, use mkPointDateMapForTimeLinOverlay
@@ -3010,7 +3011,6 @@
         alpha = alpha * (-1.0);  //abs() is for int only, color will fail silently if give alpha value negative or great than 1. this fucking function make me crazy
     
     
-    
     UIColor* color = [UIColor colorWithRed:0.9 green:0 blue:0 alpha:alpha];
     if (colorHint <= 0)
         color = [UIColor colorWithRed:0 green:0.9 blue:0 alpha:alpha];
@@ -3020,13 +3020,13 @@
     
     routeLineView.fillColor = color;
     routeLineView.strokeColor = color;
-    routeLineView.lineWidth = 1;
+    routeLineView.lineWidth = 2;
     // /***** following working code no longer need. see comments for events in same depth
     if (lineStyleFlag == TIME_LINK_DASH_LINE_STYLE_FOR_SAME_DEPTH) //for all events in same depth, draw dashed line
     {
         //DashLine render is too slow, get rid of it
         // routeLineView.lineDashPattern = [NSArray arrayWithObjects:[NSNumber numberWithFloat:3],[NSNumber numberWithFloat:10], nil];
-        routeLineView.lineWidth = 1;
+        routeLineView.lineWidth = 2;
         
         if (abs(colorHint) <= 1) //color link to blue only when first depth has same
             routeLineView.strokeColor = [UIColor colorWithRed:0.7 green:0.6 blue:1.0 alpha:0.5];
@@ -4101,11 +4101,17 @@
     else
     {
         NSArray *sortedArray;
-        sortedArray = [eventListInVisibleMapArea sortedArrayUsingComparator:^NSComparisonResult(id a, id b)
-        {
+        sortedArray = [eventListInVisibleMapArea sortedArrayUsingComparator:^NSComparisonResult(id a, id b) {
             NSDate *first = [(ATEventEntity*)a eventDate];
             NSDate *second = [(ATEventEntity*)b eventDate];
-            return [first compare:second]== NSOrderedAscending;
+            BOOL ret = [first compare:second]== NSOrderedDescending;
+            if ([first compare:second] == NSOrderedSame) //for same date event, compare desc. This is good for itinary planning Day 1.1, Day 1.2 etc
+            {
+                NSString *firstDesc = [(ATEventEntity*)a eventDesc];
+                NSString *secondDesc = [(ATEventEntity*)b eventDesc];
+                ret = [firstDesc compare:secondDesc]== NSOrderedDescending;
+            }
+            return ret;
         }];
         
         eventListViewList = (NSMutableArray*)sortedArray;
