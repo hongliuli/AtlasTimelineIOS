@@ -195,6 +195,7 @@
     onlyRunViewDidAppearOnce = FALSE;
     /////switchEventListViewModeToVisibleOnMapFlag = false; //eventListView for timewheel is more reasonable, so make it as default always, even not save to userDefault
     [ATHelper createPhotoDocumentoryPath];
+    [ATHelper createWebCachePhotoDocumentoryPath];
     _directionRouteColorResultSet = @[[UIColor blueColor],[UIColor orangeColor],[UIColor greenColor],[UIColor purpleColor]];
     self.locationManager = [[CLLocationManager alloc] init];
     //add for ios8
@@ -1867,6 +1868,13 @@
             NSString* photoFileName = annotation.uniqueId;
 
             UIImage* img = [ATHelper readPhotoThumbFromFile:photoFileName];
+            if (img == nil)
+            {
+                NSArray* thumbFileUrlList = [ATHelper getPhotoUrlsFromDescText:annotation.description];
+                if (thumbFileUrlList != nil && [thumbFileUrlList count] > 0)
+                    img = [ATHelper readAndCachePhotoThumbFromWeb:photoFileName thumbUrl:thumbFileUrlList[0]];
+                
+            }
             if (img != nil)
             {
                 UIImageView* imgView = [[UIImageView alloc]initWithImage: img];

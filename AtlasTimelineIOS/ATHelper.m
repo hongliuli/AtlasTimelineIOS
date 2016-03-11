@@ -34,7 +34,8 @@
 NSDateFormatter* dateFormaterForMonth;
 NSDateFormatter* dateLiterFormat;
 NSCalendar* calendar;
-
+NSMutableArray* alreadyRequestedThumbList;
+static int maxConcurrentDownload;
 
 UIPopoverController *verifyViewPopover;
 + (NSString *)applicationDocumentsDirectory {
@@ -277,6 +278,15 @@ UIPopoverController *verifyViewPopover;
     [[NSFileManager defaultManager] createDirectoryAtPath:[ATHelper getNewUnsavedEventPhotoPath] withIntermediateDirectories:YES attributes:nil error:&error];
     NSLog(@"Error in createPhotoDocumentoryPath  %@",[error localizedDescription]);
 }
+//call when app start and switch download source. call everytime startup is ok even the path already exists
++ (void) createWebCachePhotoDocumentoryPath
+{
+    NSString* documentsDirectory = [self getWebCachePhotoDocummentoryPath];
+    NSError *error;
+    [[NSFileManager defaultManager] createDirectoryAtPath:documentsDirectory withIntermediateDirectories:YES attributes:nil error:&error];
+    if (error != nil)
+        NSLog(@"Error in createPhotoDocumentoryPath=%@, Error= %@", documentsDirectory,[error localizedDescription]);
+}
 + (NSString*)getRootDocumentoryPath
 {
     NSArray *paths = NSSearchPathForDirectoriesInDomains(NSLibraryDirectory, NSUserDomainMask, YES);
@@ -294,7 +304,14 @@ UIPopoverController *verifyViewPopover;
     }
     return [[self getRootDocumentoryPath] stringByAppendingPathComponent:sourceName];
 }
-
+//   http://www.iosmanual.com/tutorials/how-to-add-bundle-files-in-to-the-project-framework/
++ (NSString*)getPreloadedPhotoBundlePath
+{
+    NSString* targetName = [[[NSBundle mainBundle] infoDictionary] objectForKey:@"CFBundleName"];
+    //NSLog(@"------- mainBundle = %@, target=%@",[[NSBundle mainBundle] bundlePath],targetName);
+    NSString* photoDir = [NSString stringWithFormat:@"PhotosFor%@", targetName ];
+    return [[[NSBundle mainBundle] bundlePath] stringByAppendingPathComponent:photoDir];
+}
 + (NSString*)getNewUnsavedEventPhotoPath
 {
     return  [[self getPhotoDocummentoryPath] stringByAppendingPathComponent:@"newPhotosTmp"];
@@ -310,7 +327,89 @@ UIPopoverController *verifyViewPopover;
                                alpha:a];
     return nil;
 }
-
++ (NSString*)getWebCachePhotoDocummentoryPath
+{
+    
+    NSArray *paths = NSSearchPathForDirectoriesInDomains(NSCachesDirectory, NSUserDomainMask, YES);
+    NSString *cachePath = [paths objectAtIndex:0];
+    BOOL isDir = NO;
+    NSError *error;
+    if (! [[NSFileManager defaultManager] fileExistsAtPath:cachePath isDirectory:&isDir] && isDir == NO) {
+        [[NSFileManager defaultManager] createDirectoryAtPath:cachePath withIntermediateDirectories:NO attributes:nil error:&error];
+    }
+    
+    return cachePath;
+}
++(UIImage*)readAndCachePhotoThumbFromWeb:(NSString*)eventId thumbUrl:(NSString*)thumbUrl
+{
+    if (thumbUrl == nil || [thumbUrl isEqualToString:@""])
+        return nil;
+    UIImage* thumnailImage = [ATHelper getThumbnailImageFromLocal:eventId];
+    if (thumnailImage == nil)
+    {
+        if (alreadyRequestedThumbList == nil)
+            alreadyRequestedThumbList = [[NSMutableArray alloc] init];
+        if ([alreadyRequestedThumbList containsObject:eventId])
+        {
+            //NSLog(@" ====== %@ alrady in request", eventId);
+            return nil;
+        }
+        
+        //// Important to limit max concurrent download to small number, otherwise first run APP will generate too many threads
+        //// which make system slow initially
+        if (maxConcurrentDownload < 10)
+        {
+            maxConcurrentDownload ++;
+            [alreadyRequestedThumbList addObject:eventId];
+            dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0),
+                           ^{
+                               NSURL *imageURL = [NSURL URLWithString:thumbUrl];
+                               NSData *imageData = [NSData dataWithContentsOfURL:imageURL];
+                               double len = [imageData length];
+                               if (imageData == nil || len < 50)
+                               {
+                                   [alreadyRequestedThumbList removeObject:eventId];
+                                   return;
+                               }
+                               if (len > 70000)
+                               {
+                                   /*
+                                    * For file from sina, I find a way to get thumbnail image. But for wenxucity where 看风景 saved
+                                    *  to flickr and I do not know thumbnail file, so have to download large one and resize here.ett
+                                    * For 看风景 case, a better way maybe have a batch to resize all and deliver thumbnails in APP
+                                    */
+                                   UIImage* photo = [UIImage imageWithData:imageData];
+                                   photo = [ATHelper imageResizeWithImage:photo scaledToSize:CGSizeMake(THUMB_WIDTH, THUMB_HEIGHT)];
+                                   imageData = UIImageJPEGRepresentation(photo, JPEG_QUALITY);
+                               }
+                               NSString *thumbnailFile = [[ATHelper getWebCachePhotoDocummentoryPath] stringByAppendingPathComponent:eventId];
+                               BOOL ret = [imageData writeToFile:thumbnailFile atomically:NO];
+                               NSError* error;
+                               [imageData writeToFile:thumbnailFile options:NSDataWritingAtomic error:&error];
+                               maxConcurrentDownload --;
+                               if (!ret)
+                                   NSLog(@" ---------- writing fail ...%@", [error localizedDescription]);
+                           });
+        }
+        
+    }
+    return thumnailImage;
+    
+}
+//thumbnail may be in two differenct local location
+// 1. bundled with App
+// 2. dynamically downloaded and cached
++ (UIImage*) getThumbnailImageFromLocal:(NSString*) fname
+{
+    NSString *thumbnailFile = [[ATHelper getWebCachePhotoDocummentoryPath] stringByAppendingPathComponent:fname];
+    UIImage* img = [UIImage imageWithContentsOfFile:thumbnailFile];
+    if (img == nil)
+    {
+        NSString *thumbnailFile = [[ATHelper getPreloadedPhotoBundlePath] stringByAppendingPathComponent:fname];
+        img = [UIImage imageWithContentsOfFile:thumbnailFile];
+    }
+    return img;
+}
 +(UIImage*)readPhotoFromFile:(NSString*)photoFileName eventId:photoDir
 {
     if ([photoFileName hasPrefix: NEW_NOT_SAVED_FILE_PREFIX]) //see EventEditor doneSelectPicture: where new added photos are temparirayly saved
@@ -419,6 +518,35 @@ UIPopoverController *verifyViewPopover;
         }
     }
     return returnStr;
+}
+
+//find photo web url xxxx in desc text : ...[[xxxx]]...
+//Currently I only use the first one and convert to use as thumbnail,
+//Later I want to have multiple urls for multiple files save to cache directory, no need to backup to Dropbox
++ (NSArray*) getPhotoUrlsFromDescText: (NSString*)descTxt
+{
+    NSString *str = [NSMutableString stringWithString:descTxt];
+    NSMutableArray* returnPhotoUrlList = nil;
+    NSInteger loc = [str rangeOfString:@"[["].location;
+    while ( loc != NSNotFound) {
+        str = [str substringFromIndex:loc +2 ];
+        NSInteger loc2 = [str rangeOfString:@"]]"].location;
+        if (loc2 != NSNotFound)
+        {
+            NSString* urlStr = [str substringToIndex:loc2];
+            if ([urlStr rangeOfString:@"http"].location != NSNotFound && [urlStr rangeOfString:@" "].location == NSNotFound) //must have http literature, must NOT have space
+            {
+                if (returnPhotoUrlList == nil)
+                    returnPhotoUrlList = [[NSMutableArray alloc] init];
+                [returnPhotoUrlList addObject:urlStr];
+            }
+            str = [str substringFromIndex:loc2];
+            loc = [str rangeOfString:@"[["].location;
+        }
+        else
+            break;
+    }
+    return returnPhotoUrlList;
 }
 
 + (NSString*) clearMakerFromDescText: (NSString*)desc :(NSString*)markerName

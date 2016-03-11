@@ -752,10 +752,12 @@ forRowAtIndexPath: (NSIndexPath*)indexPath
 
     ent.eventType = self.eventType;
     //see doneSelectPicture() which will set if there is a picture
-    if ([self.photoScrollView.photoList count] > 0 || [photoNewAddedList count] > 0) //1 means has photo so mapView will show thumbnail
-        ent.eventType = 1;
+    if ([self.photoScrollView.photoList count] > 0
+        || [photoNewAddedList count] > 0
+        || [ATHelper getPhotoUrlsFromDescText:ent.eventDesc] != nil) //means has photo so mapView will show thumbnail
+        ent.eventType = EVENT_TYPE_HAS_PHOTO;
     else
-        ent.eventType = 0;
+        ent.eventType = EVENT_TYPE_NO_PHOTO;
     
     //else
         //imageToBeWritten = nil; //if no photo taken this time, no need write to file again

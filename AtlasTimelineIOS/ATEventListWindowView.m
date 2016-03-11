@@ -261,8 +261,15 @@ NSString* selectedPOIEventId;
     if (evt.eventType == EVENT_TYPE_HAS_PHOTO && isAtLeast7) //excusionPaths is available only after 7
     {
         CGRect imageFrame = CGRectMake(0, 0, [ATConstants eventListViewPhotoWidht] - 2,[ATConstants eventListViewPhotoHeight] - 5);
-        cell.photoImage.image = [ATHelper readPhotoThumbFromFile:evt.uniqueId];
+        UIImage* img = [ATHelper readPhotoThumbFromFile:evt.uniqueId];
+        if (img == nil)
+        {
+            NSArray* thumbFileUrlList = [ATHelper getPhotoUrlsFromDescText:evt.eventDesc];
+            if (thumbFileUrlList != nil && [thumbFileUrlList count] > 0)
+                img = [ATHelper readAndCachePhotoThumbFromWeb:evt.uniqueId thumbUrl:thumbFileUrlList[0]];
+        }
         
+        cell.photoImage.image = img;
         UIBezierPath * imgRect = [UIBezierPath bezierPathWithRect:imageFrame];
         cell.eventDescView.textContainer.exclusionPaths = @[imgRect];
     }

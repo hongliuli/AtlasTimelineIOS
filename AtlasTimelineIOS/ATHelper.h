@@ -33,6 +33,7 @@
 
 + (UIColor *) colorWithHexString: (NSString *) stringToConvert;
 + (NSString*) getMarkerNameFromDescText: (NSString*)descTxt;
++ (NSArray*) getPhotoUrlsFromDescText: (NSString*)descTxt;
 + (NSString*) clearMakerFromDescText: (NSString*)desc :(NSString*)markerName;
 + (NSString*) clearMakerAllFromDescText: (NSString*)desc;
 + (NSArray*) getEventListWithUniqueIds: (NSArray*)uniqueIds;
@@ -48,10 +49,14 @@
 
 // file/photos related
 + (void) createPhotoDocumentoryPath;
++ (void) createWebCachePhotoDocumentoryPath;
 + (NSString*) getRootDocumentoryPath;
++ (NSString*)getPreloadedPhotoBundlePath; //previously named getBundlePath()
++ (NSString*)getWebCachePhotoDocummentoryPath;
 + (NSString*)getPhotoDocummentoryPath;
 + (NSString*)getNewUnsavedEventPhotoPath;
 + (UIImage*)imageResizeWithImage:(UIImage*)image scaledToSize:(CGSize)newSize;
++ (UIImage*)readAndCachePhotoThumbFromWeb:(NSString*)eventId thumbUrl:(NSString*)thumbUrl;
 + (UIImage*)readPhotoFromFile:(NSString*)photoFileName eventId:photoDir;
 + (UIImage*)readPhotoThumbFromFile:(NSString*)eventId;
 
