@@ -355,9 +355,9 @@ UIPopoverController *verifyViewPopover;
         return nil;
     UIImage* localThumbImage = nil;
     if (thumbPhotoId != nil)
-    {
         localThumbImage = [ATHelper getThumbnailImageFromLocal:thumbPhotoId];
-    }
+        
+
     UIImage* returnImage = localThumbImage;
 
     NSString* fullWebPhotoPath = [ATHelper convertWebUrlToFullPhotoPath:photoUrl];

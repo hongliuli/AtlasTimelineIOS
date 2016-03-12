@@ -3274,7 +3274,11 @@
     
     NSString* thumbNailFileName = nil;
     if (self.eventEditor.photoScrollView.photoList != nil && [self.eventEditor.photoScrollView.photoList count]>0)
+    {
         thumbNailFileName = self.eventEditor.photoScrollView.photoList[0];
+        if ([thumbNailFileName hasPrefix:@"/var/mobile/Containers/"])
+            thumbNailFileName = nil; //if first photo is web photo, do not create thumbNail
+    }
     else
         thumbNailFileName = newAddedList[1]; //TODO for adding demo event the firsttime
     /*

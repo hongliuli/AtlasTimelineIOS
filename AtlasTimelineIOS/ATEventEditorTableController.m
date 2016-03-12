@@ -299,6 +299,8 @@ forRowAtIndexPath: (NSIndexPath*)indexPath
                 self.isFirstTimeAddPhoto = false;
                 tmpFileList = [tmpFileList arrayByAddingObject:fullWebPhotoPath];
             }
+            else
+                [ATHelper fetchAndCachePhotoFromWeb:webPhototUrl thumbPhotoId:nil]; //TODO if webPhotoUrl has no photo, this will be called evvery time start eventeidito for this event, but nothing we can do
         }
         
         self.photoScrollView.photoList = [NSMutableArray arrayWithArray:tmpFileList];
