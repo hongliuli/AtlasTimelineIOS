@@ -266,7 +266,7 @@ NSString* selectedPOIEventId;
         {
             NSArray* thumbFileUrlList = [ATHelper getPhotoUrlsFromDescText:evt.eventDesc];
             if (thumbFileUrlList != nil && [thumbFileUrlList count] > 0)
-                img = [ATHelper readAndCachePhotoThumbFromWeb:evt.uniqueId thumbUrl:thumbFileUrlList[0]];
+                img = [ATHelper fetchAndCachePhotoFromWeb:thumbFileUrlList[0] thumbPhotoId:evt.uniqueId];
         }
         
         cell.photoImage.image = img;

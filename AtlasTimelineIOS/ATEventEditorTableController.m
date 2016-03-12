@@ -260,8 +260,8 @@ forRowAtIndexPath: (NSIndexPath*)indexPath
     lblShareCount.text = [NSString stringWithFormat:NSLocalizedString(@"%d photo(s)",nil), self.photoScrollView.selectedAsShareIndexSet.count ];
 }
  
-//called by mapView after know eventId
-- (void) createPhotoScrollView:(NSString *)photoDirName
+//called by mapView after know eventId. descText contains photo url from web, so need to pass in
+- (void) createPhotoScrollView:(NSString *)photoDirName  eventDesc:(NSString*)descText
 {
     self.photoDescChangedFlag = false;
     self.photoScrollView = [[ATPhotoScrollView alloc] initWithFrame:CGRectMake(0,5,editorPhotoViewWidth,editorPhotoViewHeight)];
@@ -282,14 +282,26 @@ forRowAtIndexPath: (NSIndexPath*)indexPath
         if(error != nil) {
             //NSLog(@"Error in reading files: %@", [error localizedDescription]);
             self.isFirstTimeAddPhoto = true;
-            return;
+            tmpFileList = [[NSArray alloc] init];
         }
         if ([tmpFileList count] == 0)
             self.isFirstTimeAddPhoto = true;
         else
             self.isFirstTimeAddPhoto = false;
         
-       self.photoScrollView.photoList = [NSMutableArray arrayWithArray:tmpFileList];
+        NSArray* webPhotoList = [ATHelper getPhotoUrlsFromDescText:descText];
+        for (NSString* webPhototUrl in webPhotoList)
+        {
+            NSString* fullWebPhotoPath = [ATHelper convertWebUrlToFullPhotoPath:webPhototUrl];
+            
+            if ([[NSFileManager defaultManager] fileExistsAtPath:fullWebPhotoPath isDirectory:nil])
+            {
+                self.isFirstTimeAddPhoto = false;
+                tmpFileList = [tmpFileList arrayByAddingObject:fullWebPhotoPath];
+            }
+        }
+        
+        self.photoScrollView.photoList = [NSMutableArray arrayWithArray:tmpFileList];
         //Sort photo list. The sort will be saved to dropbox as a file together with photo description
         NSString *photoMetaFilePath = [[[ATHelper getPhotoDocummentoryPath] stringByAppendingPathComponent:self.eventId] stringByAppendingPathComponent:PHOTO_META_FILE_NAME];
         

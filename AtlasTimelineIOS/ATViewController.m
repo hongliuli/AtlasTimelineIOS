@@ -1872,7 +1872,7 @@
             {
                 NSArray* thumbFileUrlList = [ATHelper getPhotoUrlsFromDescText:annotation.description];
                 if (thumbFileUrlList != nil && [thumbFileUrlList count] > 0)
-                    img = [ATHelper readAndCachePhotoThumbFromWeb:photoFileName thumbUrl:thumbFileUrlList[0]];
+                    img = [ATHelper fetchAndCachePhotoFromWeb:thumbFileUrlList[0] thumbPhotoId:photoFileName];
                 
             }
             if (img != nil)
@@ -2660,7 +2660,7 @@
     
     [ATEventEditorTableController setEventId:ann.uniqueId];
     //if (ann.eventType == EVENT_TYPE_HAS_PHOTO)
-    [self.eventEditor createPhotoScrollView: ann.uniqueId ];
+    [self.eventEditor createPhotoScrollView: ann.uniqueId eventDesc:ann.description ];
 }
 
 - (void) startPOIEditor:(MKAnnotationView*)view
@@ -2741,7 +2741,7 @@
         self.eventEditor.eventData = nil;
     
     [ATEventEditorTableController setEventId:ann.uniqueId];
-    [self.eventEditor createPhotoScrollView: ann.uniqueId ];
+    [self.eventEditor createPhotoScrollView: ann.uniqueId eventDesc:ann.description];
 }
 
 //always start from focusedEvent

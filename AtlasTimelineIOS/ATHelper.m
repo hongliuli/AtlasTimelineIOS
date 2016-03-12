@@ -34,7 +34,7 @@
 NSDateFormatter* dateFormaterForMonth;
 NSDateFormatter* dateLiterFormat;
 NSCalendar* calendar;
-NSMutableArray* alreadyRequestedThumbList;
+NSMutableArray* alreadyRequestedWebPhotoList;
 static int maxConcurrentDownload;
 
 UIPopoverController *verifyViewPopover;
@@ -287,6 +287,13 @@ UIPopoverController *verifyViewPopover;
     if (error != nil)
         NSLog(@"Error in createPhotoDocumentoryPath=%@, Error= %@", documentsDirectory,[error localizedDescription]);
 }
++ (NSString*)convertWebUrlToFullPhotoPath:(NSString*)photoUrl
+{
+    NSString* retStr = [photoUrl stringByReplacingOccurrencesOfString: @"/" withString:@"_"];
+    retStr = [retStr stringByReplacingOccurrencesOfString: @"%" withString:@"_"];
+    return [[ATHelper getWebCachePhotoDocummentoryPath] stringByAppendingPathComponent:retStr];
+}
+
 + (NSString*)getRootDocumentoryPath
 {
     NSArray *paths = NSSearchPathForDirectoriesInDomains(NSLibraryDirectory, NSUserDomainMask, YES);
@@ -340,16 +347,25 @@ UIPopoverController *verifyViewPopover;
     
     return cachePath;
 }
-+(UIImage*)readAndCachePhotoThumbFromWeb:(NSString*)eventId thumbUrl:(NSString*)thumbUrl
+
+//#### thumbPhotoId is eventId, if its nil, means not for thumbnail
++(UIImage*)fetchAndCachePhotoFromWeb:(NSString*)photoUrl thumbPhotoId:(NSString*)thumbPhotoId
 {
-    if (thumbUrl == nil || [thumbUrl isEqualToString:@""])
+    if (photoUrl == nil || [photoUrl isEqualToString:@""])
         return nil;
-    UIImage* thumnailImage = [ATHelper getThumbnailImageFromLocal:eventId];
-    if (thumnailImage == nil)
+    UIImage* localThumbImage = nil;
+    if (thumbPhotoId != nil)
     {
-        if (alreadyRequestedThumbList == nil)
-            alreadyRequestedThumbList = [[NSMutableArray alloc] init];
-        if ([alreadyRequestedThumbList containsObject:eventId])
+        localThumbImage = [ATHelper getThumbnailImageFromLocal:thumbPhotoId];
+    }
+    UIImage* returnImage = localThumbImage;
+
+    NSString* fullWebPhotoPath = [ATHelper convertWebUrlToFullPhotoPath:photoUrl];
+    if (![[NSFileManager defaultManager] fileExistsAtPath:fullWebPhotoPath isDirectory:nil])
+    {
+        if (alreadyRequestedWebPhotoList == nil)
+            alreadyRequestedWebPhotoList = [[NSMutableArray alloc] init];
+        if ([alreadyRequestedWebPhotoList containsObject:photoUrl])
         {
             //NSLog(@" ====== %@ alrady in request", eventId);
             return nil;
@@ -360,41 +376,70 @@ UIPopoverController *verifyViewPopover;
         if (maxConcurrentDownload < 10)
         {
             maxConcurrentDownload ++;
-            [alreadyRequestedThumbList addObject:eventId];
+            [alreadyRequestedWebPhotoList addObject:photoUrl];
             dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0),
                            ^{
-                               NSURL *imageURL = [NSURL URLWithString:thumbUrl];
+                               NSURL *imageURL = [NSURL URLWithString:photoUrl];
                                NSData *imageData = [NSData dataWithContentsOfURL:imageURL];
                                double len = [imageData length];
                                if (imageData == nil || len < 50)
                                {
-                                   [alreadyRequestedThumbList removeObject:eventId];
+                                   [alreadyRequestedWebPhotoList removeObject:photoUrl];
                                    return;
                                }
-                               if (len > 70000)
+                               
+                               //-----Save original file after resize if too big
+                               if (len > 500000) //if image data is 0.5M or more, resize it
                                {
-                                   /*
-                                    * For file from sina, I find a way to get thumbnail image. But for wenxucity where 看风景 saved
-                                    *  to flickr and I do not know thumbnail file, so have to download large one and resize here.ett
-                                    * For 看风景 case, a better way maybe have a batch to resize all and deliver thumbnails in APP
-                                    */
-                                   UIImage* photo = [UIImage imageWithData:imageData];
-                                   photo = [ATHelper imageResizeWithImage:photo scaledToSize:CGSizeMake(THUMB_WIDTH, THUMB_HEIGHT)];
-                                   imageData = UIImageJPEGRepresentation(photo, JPEG_QUALITY);
+                                   UIImage * newPhoto = [[UIImage alloc] initWithData:imageData];
+                                   int imageWidth = RESIZE_WIDTH;
+                                   int imageHeight = RESIZE_HEIGHT;
+                                   
+                                   if (newPhoto.size.height > newPhoto.size.width)
+                                   {
+                                       imageWidth = RESIZE_HEIGHT;
+                                       imageHeight = RESIZE_WIDTH;
+                                   }
+                                   UIImage *newImage = newPhoto;
+                                   imageData = nil;
+                                   if (newPhoto.size.height > imageHeight || newPhoto.size.width > imageWidth)
+                                   {
+                                       newImage = [ATHelper imageResizeWithImage:newPhoto scaledToSize:CGSizeMake(imageWidth, imageHeight)];
+                                   }
+                                   //NSLog(@"widh=%f, height=%f",newPhoto.size.width, newPhoto.size.height);
+                                   imageData = UIImageJPEGRepresentation(newImage, 1.0);
                                }
-                               NSString *thumbnailFile = [[ATHelper getWebCachePhotoDocummentoryPath] stringByAppendingPathComponent:eventId];
-                               BOOL ret = [imageData writeToFile:thumbnailFile atomically:NO];
+
                                NSError* error;
-                               [imageData writeToFile:thumbnailFile options:NSDataWritingAtomic error:&error];
-                               maxConcurrentDownload --;
-                               if (!ret)
-                                   NSLog(@" ---------- writing fail ...%@", [error localizedDescription]);
+                               [imageData writeToFile:fullWebPhotoPath options:NSDataWritingAtomic error:&error];
+                               
+                               //-----Now ready to save thumbnail if not have already
+                               if (thumbPhotoId != nil && localThumbImage == nil)
+                               {
+                                   if (len > 70000)
+                                   {
+                                       /*
+                                        * to avoid pull thumbnail take to long to show in tmpLbl, eventDesc should have small photos from web, and usually better put small file the first [[..photoUrl..]]
+                                        */
+                                       UIImage* photo = [UIImage imageWithData:imageData];
+                                       photo = [ATHelper imageResizeWithImage:photo scaledToSize:CGSizeMake(THUMB_WIDTH, THUMB_HEIGHT)];
+                                       imageData = UIImageJPEGRepresentation(photo, JPEG_QUALITY);
+                                   }
+                                   NSString *thumbnailFile = [[ATHelper getWebCachePhotoDocummentoryPath] stringByAppendingPathComponent:thumbPhotoId];
+                                   
+                                   BOOL ret = [imageData writeToFile:thumbnailFile options:NSDataWritingAtomic error:&error];
+                                   maxConcurrentDownload --;
+                                   if (!ret)
+                                       NSLog(@" ---------- writing fail ...%@", [error localizedDescription]);
+                               }
                            });
         }
-        
     }
-    return thumnailImage;
-    
+    else if (thumbPhotoId == nil)
+    {
+       returnImage = [UIImage imageWithContentsOfFile:fullWebPhotoPath];
+    }
+    return returnImage;
 }
 //thumbnail may be in two differenct local location
 // 1. bundled with App
@@ -416,7 +461,7 @@ UIPopoverController *verifyViewPopover;
     {
         photoFileName = [[ATHelper getNewUnsavedEventPhotoPath] stringByAppendingPathComponent:photoFileName];
     }
-    else
+    else if (![photoFileName hasPrefix:@"/var/mobile/Containers/"]) //if not web photo saved in app container cache directory
     {
         photoFileName = [[[ATHelper getPhotoDocummentoryPath] stringByAppendingPathComponent:photoDir] stringByAppendingPathComponent:photoFileName];
     }

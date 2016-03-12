@@ -53,10 +53,11 @@
 + (NSString*) getRootDocumentoryPath;
 + (NSString*)getPreloadedPhotoBundlePath; //previously named getBundlePath()
 + (NSString*)getWebCachePhotoDocummentoryPath;
++ (NSString*)convertWebUrlToFullPhotoPath:(NSString*)webPhotoUrl;
 + (NSString*)getPhotoDocummentoryPath;
 + (NSString*)getNewUnsavedEventPhotoPath;
 + (UIImage*)imageResizeWithImage:(UIImage*)image scaledToSize:(CGSize)newSize;
-+ (UIImage*)readAndCachePhotoThumbFromWeb:(NSString*)eventId thumbUrl:(NSString*)thumbUrl;
++ (UIImage*)fetchAndCachePhotoFromWeb:(NSString*)photoUrl thumbPhotoId:(NSString*)thumbPhotoId;
 + (UIImage*)readPhotoFromFile:(NSString*)photoFileName eventId:photoDir;
 + (UIImage*)readPhotoThumbFromFile:(NSString*)eventId;
 
