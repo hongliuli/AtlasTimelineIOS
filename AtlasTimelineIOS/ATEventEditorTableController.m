@@ -40,6 +40,7 @@
 #define DATE_TEXT_FROM_STORYBOARD_999 999
 #define ADDED_PHOTOSCROLL_TAG_900 900
 #define NEWEVENT_DESC_PLACEHOLD NSLocalizedString(@"Write notes here",nil)
+#define NEWEVENT_DESC_PLACEHOLD_VIEW_MODE NSLocalizedString(@"Switch to [myEvents] to create your own event:\n        Tap on Menu:\n        -> Collection Box\n        -> Left swip the 1st row [myEvents]\n        -> Map It",nil)
 #define NEW_NOT_SAVED_FILE_PREFIX @"NEW"
 
 #define PHOTO_META_FILE_NAME @"MetaFileForOrderAndDesc"
@@ -105,6 +106,22 @@ forRowAtIndexPath: (NSIndexPath*)indexPath
     self.dateTxt.delegate = self;
     editorPhotoViewWidth = [ATConstants revealViewEventEditorWidth];
     editorPhotoViewHeight = EDITOR_PHOTOVIEW_HEIGHT;
+    
+    if ([ATHelper isViewMode])
+    {
+        self.saveButton.enabled = false; //TODO should be false always even not view mode, then other action activate it, but not working yet
+        self.deleteButton.enabled = false;
+        self.description.editable = false;
+        self.description.dataDetectorTypes = UIDataDetectorTypeLink;
+        self.address.editable = false;
+        self.datePicker.enabled = false;
+    }
+    else
+    {
+        self.description.editable = true;
+        self.address.editable = true;
+        self.datePicker.enabled = true;
+    }
     
     //if (UI_USER_INTERFACE_IDIOM() == UIUserInterfaceIdiomPad)
     //{
@@ -183,7 +200,8 @@ forRowAtIndexPath: (NSIndexPath*)indexPath
         ATAppDelegate *appDelegate = (ATAppDelegate *)[[UIApplication sharedApplication] delegate];
         if (!appDelegate.isForPOIEditorFlag)
         {
-            [customView addSubview:photoBtn];
+            if (![ATHelper isViewMode])
+                [customView addSubview:photoBtn];
             [customView addSubview:lblTotalCount];
             [customView addSubview:lblNewAddedCount];
         }
@@ -227,8 +245,7 @@ forRowAtIndexPath: (NSIndexPath*)indexPath
         if (UI_USER_INTERFACE_IDIOM() == UIUserInterfaceIdiomPad)
             [customView addSubview:sizeButton];
         
-        ATAppDelegate *appDelegate = (ATAppDelegate *)[[UIApplication sharedApplication] delegate];
-        if ([appDelegate.sourceName isEqual:@"myEvents"]) //can create episode on myEvents only
+        if (![ATHelper isViewMode]) //can create episode on myEvents only
         {
             UIButton *episodeButton = [UIButton buttonWithType:UIButtonTypeCustom];
             episodeButton.frame = CGRectMake(200, 0, 40, 30);
@@ -238,14 +255,14 @@ forRowAtIndexPath: (NSIndexPath*)indexPath
                 [episodeButton setImage:[UIImage imageNamed:@"add-to-episode-folder.png"] forState:UIControlStateNormal];
             [episodeButton addTarget:self action:@selector(addToEpisodeAction:) forControlEvents:UIControlEventTouchUpInside];
             [customView addSubview:episodeButton];
-        }
-        UIButton *markerPicker = [UIButton buttonWithType:UIButtonTypeCustom];
-        markerPicker.frame = CGRectMake(70, 0, 30, 30);
-        [markerPicker setImage:[UIImage imageNamed:@"marker_star.png"] forState:UIControlStateNormal];
-        [markerPicker setAlpha:0.8];
-        [markerPicker addTarget:self action:@selector(markerPickerAction:) forControlEvents:UIControlEventTouchUpInside];
-        [customView addSubview:markerPicker];
         
+            UIButton *markerPicker = [UIButton buttonWithType:UIButtonTypeCustom];
+            markerPicker.frame = CGRectMake(70, 0, 30, 30);
+            [markerPicker setImage:[UIImage imageNamed:@"marker_star.png"] forState:UIControlStateNormal];
+            [markerPicker setAlpha:0.8];
+            [markerPicker addTarget:self action:@selector(markerPickerAction:) forControlEvents:UIControlEventTouchUpInside];
+            [customView addSubview:markerPicker];
+        }
         lblShareCount = [[UILabel alloc] initWithFrame:CGRectMake(285, -25, 100, 40)];
         lblShareCount.font = [UIFont fontWithName:@"Helvetica" size:10];
         lblShareCount.backgroundColor = [UIColor clearColor];
@@ -525,6 +542,9 @@ forRowAtIndexPath: (NSIndexPath*)indexPath
                     NSString* photoFullPath = [[[ATHelper getPhotoDocummentoryPath] stringByAppendingPathComponent:self.eventId] stringByAppendingPathComponent:photoForShareName];
                     if ([photoForShareName hasPrefix:NEW_NOT_SAVED_FILE_PREFIX]) //in case selected a unsaved image for share
                         photoFullPath = [[ATHelper getNewUnsavedEventPhotoPath] stringByAppendingPathComponent:photoForShareName];
+                    else if ([ATHelper isWebPhoto:photoForShareName])
+                        photoFullPath = photoForShareName;
+                        
                     UIImage* img = [UIImage imageWithContentsOfFile:photoFullPath];
                     [activityItems addObject:img];
                 }

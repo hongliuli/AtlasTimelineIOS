@@ -72,6 +72,7 @@
 #define EDITOR_PHOTOVIEW_WIDTH 190
 #define EDITOR_PHOTOVIEW_HEIGHT 160
 #define NEWEVENT_DESC_PLACEHOLD NSLocalizedString(@"Write notes here",nil)
+#define NEWEVENT_DESC_PLACEHOLD_VIEW_MODE NSLocalizedString(@"Switch to [myEvents] to create your own event:\n        Tap on Menu:\n        -> Collection Box\n        -> Left swip the 1st row [myEvents]\n        -> Map It",nil)
 #define NEW_NOT_SAVED_FILE_PREFIX @"NEW"
 
 #define TIME_LINK_DASH_LINE_STYLE_FOR_SAME_DEPTH 1
@@ -1477,6 +1478,8 @@
     ATAppDelegate *appDelegate = (ATAppDelegate *)[[UIApplication sharedApplication] delegate];
     pa.eventDate = appDelegate.focusedDate;
     pa.description=NEWEVENT_DESC_PLACEHOLD;
+    if ([ATHelper isViewMode])
+        pa.description = NEWEVENT_DESC_PLACEHOLD_VIEW_MODE;
     pa.address = locatedAt;
     [_mapView addAnnotation:pa];
     if (newAddedPin != nil)
@@ -2647,6 +2650,12 @@
     }
     
     self.eventEditor.description.text = ann.description;
+    if ([ATHelper isViewMode])
+    {
+        if ([ann.description hasPrefix:NEWEVENT_DESC_PLACEHOLD_VIEW_MODE])
+            self.eventEditor.description.textColor = [UIColor redColor];
+        self.eventEditor.description.text = [ATHelper stripMetadataFromEventDesc:ann.description];
+    }
     self.eventEditor.address.text=ann.address;
     self.eventEditor.dateTxt.text = [NSString stringWithFormat:@"%@",
                                      [dateFormater stringFromDate:ann.eventDate]];
@@ -3276,7 +3285,7 @@
     if (self.eventEditor.photoScrollView.photoList != nil && [self.eventEditor.photoScrollView.photoList count]>0)
     {
         thumbNailFileName = self.eventEditor.photoScrollView.photoList[0];
-        if ([thumbNailFileName hasPrefix:@"/var/mobile/Containers/"])
+        if ([ATHelper isWebPhoto:thumbNailFileName])
             thumbNailFileName = nil; //if first photo is web photo, do not create thumbNail
     }
     else

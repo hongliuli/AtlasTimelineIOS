@@ -461,12 +461,20 @@ UIPopoverController *verifyViewPopover;
     {
         photoFileName = [[ATHelper getNewUnsavedEventPhotoPath] stringByAppendingPathComponent:photoFileName];
     }
-    else if (![photoFileName hasPrefix:@"/var/mobile/Containers/"]) //if not web photo saved in app container cache directory
+    else if (![ATHelper isWebPhoto:photoFileName]) //if not web photo saved in app container cache directory
     {
         photoFileName = [[[ATHelper getPhotoDocummentoryPath] stringByAppendingPathComponent:photoDir] stringByAppendingPathComponent:photoFileName];
     }
     return [UIImage imageWithContentsOfFile:photoFileName];
     
+}
+
++ (BOOL)isWebPhoto:(NSString*)photoName
+{
+    if (photoName != nil && [photoName hasPrefix:@"/var/mobile/Containers/"])
+        return true;
+    else
+        return false;
 }
 
 +(UIImage*)readPhotoThumbFromFile:(NSString*)eventId
@@ -813,6 +821,16 @@ UIPopoverController *verifyViewPopover;
     return [eventDate isEqualToDate:date]; //NOTE: poi event always has 1/1/0001 as event date
 }
 
+//modify event is possible only when sourceDb is myEvents
++ (BOOL) isViewMode
+{
+    ATAppDelegate *appDelegate = (ATAppDelegate *)[[UIApplication sharedApplication] delegate];
+    if ([appDelegate.sourceName isEqual:@"myEvents"])
+        return false;
+    else
+        return true;
+}
+
 + (NSArray*) createdPoiListFromString:(NSString*)poiListString
 {
     NSMutableArray* eventList = [[NSMutableArray alloc] initWithCapacity:400];
@@ -910,6 +928,20 @@ UIPopoverController *verifyViewPopover;
     }];
     return ret;
     
+}
+
++ (NSString*)stripMetadataFromEventDesc:(NSString*) eventDesc
+{
+    NSString* retDesc = eventDesc;
+    NSArray* photoUrlList = [ATHelper getPhotoUrlsFromDescText:eventDesc];
+    if (photoUrlList != nil)
+    {
+        for (NSString* urlStr in photoUrlList)
+        {
+            retDesc = [retDesc stringByReplacingOccurrencesOfString: [NSString stringWithFormat:@"[[%@]]", urlStr] withString:@""];
+        }
+    }
+    return retDesc;
 }
 
 //############ look at reader version's:

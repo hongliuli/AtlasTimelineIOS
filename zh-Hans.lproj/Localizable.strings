@@ -230,6 +230,7 @@
 "Start App here ..."="启动相关APP。。。";
 "Support Us"="支持我们";
 "Swipe time wheel, the events in the selected period will be:\n  - listed on the left\n  - colored darker on map\nIf switch map mode to [By Map], swipe map and the events occur on screen will be listed instead.\n(Note: red/green dots above the time wheel indicate the existence of events in that period)"="刷动时间轮，在时间轴上被选事件就会:\n  - 出现在左边列表\n  - 在地图上变为深红色\n如果切换到 [按地图列表], 出现在左边列表中的事件就是刷动地图而出现在屏幕上的事件.\n(注: 时间轮上方的小红点小绿点代表该时间段有事件)";
+"Switch to [myEvents] to create your own event:\n        Tap on Menu:\n        -> Collection Box\n        -> Left swip the 1st row [myEvents]\n        -> Map It"="切换到[myEvents]才能创建自己的事件:\n        点击菜单:\n        -> 收藏箱\n        -> 左刷第一行[myEvents]\n        -> 上地图";
 "Sync %i events to %@ on server"="同步 %i 个事件到服务器的[%@]";
 "Tap (+) or double-tab here to zoom in"="点击 (+) 或双击这里来放大时间范围";
 "Tap (-) or double-tab here to zoom out"="点击 (-) 或双击这里来缩小时间范围";

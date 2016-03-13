@@ -10,6 +10,7 @@
 #import "ATEventEditorTableController.h"
 #import "ATConstants.h"
 #import "ATAppDelegate.h"
+#import "ATHelper.h"
 
 #define NOT_THUMBNAIL -1;
 
@@ -90,6 +91,9 @@ UIView *descEditorContentView;
     fixedSpace.width = 10;
     
     NSArray *items = [NSArray arrayWithObjects: doneButton, fixedSpace, setThumbnailButton, fixedSpace, setShareButton, fixedSpace, setEditButton,fixedSpace, fixedSpace, deleteButton, nil];
+    if ([ATHelper isViewMode])
+        items = [NSArray arrayWithObjects: doneButton, fixedSpace, setShareButton, nil];
+    
     ATAppDelegate *appDelegate = (ATAppDelegate *)[[UIApplication sharedApplication] delegate];
     if (appDelegate.isForPOIEditorFlag)
         items = [NSArray arrayWithObjects: doneButton, nil];

@@ -45,7 +45,9 @@
 + (BOOL) isAtLeastIOS8;
 + (BOOL) isPOIEvent:(ATEventDataStruct*)event;
 + (BOOL) isPOIEventByDate:(NSDate*)eventDate;
++ (BOOL) isViewMode; //if sourceDb is not myEvents, then view mode
 + (NSArray*) createdPoiListFromString:(NSString*)poiListString;
++ (NSString*)stripMetadataFromEventDesc:(NSString*) eventDesc;
 
 // file/photos related
 + (void) createPhotoDocumentoryPath;
@@ -60,6 +62,7 @@
 + (UIImage*)fetchAndCachePhotoFromWeb:(NSString*)photoUrl thumbPhotoId:(NSString*)thumbPhotoId;
 + (UIImage*)readPhotoFromFile:(NSString*)photoFileName eventId:photoDir;
 + (UIImage*)readPhotoThumbFromFile:(NSString*)eventId;
++ (BOOL)isWebPhoto:(NSString*)photoName;
 
 //tutorial tost
 + (void)startTutorialToasts:(UIView*)parentView style:(CSToastStyle*)style nextToToast:(void (^)(UIView*, CSToastStyle*))callbackBlock;
