@@ -416,31 +416,46 @@ UIPopoverController *verifyViewPopover;
                                //-----Now ready to save thumbnail if not have already
                                if (thumbPhotoId != nil && localThumbImage == nil)
                                {
-                                   if (len > 70000)
-                                   {
-                                       /*
-                                        * to avoid pull thumbnail take to long to show in tmpLbl, eventDesc should have small photos from web, and usually better put small file the first [[..photoUrl..]]
-                                        */
-                                       UIImage* photo = [UIImage imageWithData:imageData];
-                                       photo = [ATHelper imageResizeWithImage:photo scaledToSize:CGSizeMake(THUMB_WIDTH, THUMB_HEIGHT)];
-                                       imageData = UIImageJPEGRepresentation(photo, JPEG_QUALITY);
-                                   }
-                                   NSString *thumbnailFile = [[ATHelper getWebCachePhotoDocummentoryPath] stringByAppendingPathComponent:thumbPhotoId];
-                                   
-                                   BOOL ret = [imageData writeToFile:thumbnailFile options:NSDataWritingAtomic error:&error];
-                                   maxConcurrentDownload --;
-                                   if (!ret)
-                                       NSLog(@" ---------- writing fail ...%@", [error localizedDescription]);
+                                   [ATHelper writeWebThumbnail:imageData thumbnailName:thumbPhotoId];
                                }
+                               maxConcurrentDownload --;
                            });
         }
     }
-    else if (thumbPhotoId == nil)
+    else //has big file already
     {
-       returnImage = [UIImage imageWithContentsOfFile:fullWebPhotoPath];
+        UIImage* img = [UIImage imageWithContentsOfFile:fullWebPhotoPath];
+        if (thumbPhotoId == nil)
+            returnImage = img;
+        else if (localThumbImage == nil)//has big file, but no thumbnail yet (this may happenif create an event with photo url and first enter event editor before tmpLbl/eventListView
+        {
+            NSData* imageData = [NSData dataWithContentsOfFile:fullWebPhotoPath];
+            [ATHelper writeWebThumbnail:imageData thumbnailName:thumbPhotoId];
+        }
     }
     return returnImage;
 }
+
++ (void) writeWebThumbnail:(NSData*)imageData thumbnailName:(NSString*)thumbPhotoId
+{
+    double len = [imageData length];
+    if (len > 70000)
+    {
+        /*
+         * to avoid pull thumbnail take to long to show in tmpLbl, eventDesc should have small photos from web, and usually better put small file the first [[..photoUrl..]]
+         */
+        UIImage* photo = [UIImage imageWithData:imageData];
+        photo = [ATHelper imageResizeWithImage:photo scaledToSize:CGSizeMake(THUMB_WIDTH, THUMB_HEIGHT)];
+        imageData = UIImageJPEGRepresentation(photo, JPEG_QUALITY);
+    }
+    NSString *thumbnailFile = [[ATHelper getWebCachePhotoDocummentoryPath] stringByAppendingPathComponent:thumbPhotoId];
+    NSError* error;
+    BOOL ret = [imageData writeToFile:thumbnailFile options:NSDataWritingAtomic error:&error];
+
+    if (!ret)
+        NSLog(@" ---------- writing web thumbnail fail ...%@", [error localizedDescription]);
+}
+
 //thumbnail may be in two differenct local location
 // 1. bundled with App
 // 2. dynamically downloaded and cached
