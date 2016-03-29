@@ -136,25 +136,6 @@
     UISwipeGestureRecognizer *rightSwiper = [[UISwipeGestureRecognizer alloc] initWithTarget:self action:@selector(swipeRight)];
 	rightSwiper.direction = UISwipeGestureRecognizerDirectionRight;
 	[self.view addGestureRecognizer:rightSwiper];
-
-    NSUserDefaults* userDefault = [NSUserDefaults standardUserDefaults];
-    NSString *userId = [userDefault objectForKey:[ATConstants UserEmailKeyName]];
-    if (userId == nil) //user has not logged in yet means user has never restored myEvents since download the app
-    {
-        [self displayRestoreBackupTip];
-    }
-}
-
-- (void) displayRestoreBackupTip
-{
-    UIAlertController* alert = [UIAlertController alertControllerWithTitle:@"Tips: Backup/Restore your event data:"
-                                                                   message:@"Collection Box -> Left swipe on myEvents -> Tap Restore to recover previously saved myEvents data, or tap Backup to save current myEvents to cloud"
-                                                            preferredStyle:UIAlertControllerStyleAlert];
-    
-    UIAlertAction* defaultAction = [UIAlertAction actionWithTitle:@"OK" style:UIAlertActionStyleDefault handler:^(UIAlertAction * action) {}];
-    
-    [alert addAction:defaultAction];
-    [self presentViewController:alert animated:YES completion:nil];
 }
 
 - (void)swipeRight {
@@ -871,9 +852,48 @@
         }
     }
     else if (indexPath.row == ROW_INBOX)
-        [self performSegueWithIdentifier:@"download" sender:nil];
+    {
+        NSUserDefaults* userDefault = [NSUserDefaults standardUserDefaults];
+        NSString *userId = [userDefault objectForKey:[ATConstants UserEmailKeyName]];
+        if (userId == nil) //user has not logged in yet means user has never restored myEvents since download the app
+        {
+            [self displayLoginForInbox];
+        }
+        else
+            [self performSegueWithIdentifier:@"download" sender:nil];
+        
+    }
     
 }
+
+- (void) displayLoginForInbox
+{
+    UIAlertController* alert = [UIAlertController alertControllerWithTitle:NSLocalizedString(@"Login for more services:",nil)
+                                                                   message:NSLocalizedString(@"1. Backup/Restore myEvents\n2.  Check   shared   episodes ",nil)
+                                                            preferredStyle:UIAlertControllerStyleAlert];
+    
+    UIAlertAction* loginAction = [UIAlertAction actionWithTitle:NSLocalizedString(@"Login Now",nil) style:UIAlertActionStyleDefault handler:^(UIAlertAction * action) {
+        Boolean successFlag = [ATHelper checkUserEmailAndSecurityCode:self];
+        if (!successFlag)
+        {
+            //if user not login, then network not availbe case will be alert
+            return;
+        }
+        else
+        {
+            [logoutButton setTitle:NSLocalizedString(@"Logout",nil) forState:UIControlStateNormal];
+            [self performSegueWithIdentifier:@"download" sender:nil];
+        }
+    }];
+    UIAlertAction* loginLaterAction = [UIAlertAction actionWithTitle:NSLocalizedString(@"Login Later",nil) style:UIAlertActionStyleDefault handler:^(UIAlertAction * action) {
+        [self performSegueWithIdentifier:@"download" sender:nil];
+    }];
+    
+    [alert addAction:loginAction ];
+    [alert addAction:loginLaterAction];
+    [self presentViewController:alert animated:YES completion:nil];
+}
+
 -(void) handleLoginEmailSection:(UITableView*)tableView :(NSIndexPath *)indexPath
 {
     //also see prepareForSeque() where pass values

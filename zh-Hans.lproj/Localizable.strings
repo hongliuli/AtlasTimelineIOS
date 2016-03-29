@@ -74,8 +74,8 @@
 "change unsaved"="需要保存";
 "Check Your Email!"="检查你的电子邮件!";
 "Chronicle Map"="霞客行";
-"Tips: Backup/Restore your event data:"="小窍门: 备份／恢复 myEvents 数据";
-"Collection Box -> Left swipe on myEvents -> Tap Restore to recover previously saved myEvents data, or tap Backup to save current myEvents to cloud"="收藏箱 －》点击［恢复］从服务器下载备份的 myEvents，或点击［备份］上传当前 myEvents";
+"Login for more services:"="登录后可以：";
+"1. Backup/Restore myEvents\n2. Check N"="1. 备份／恢复 myEvents\n2.   查收分享给你的行程  ";
 "Complete"="完成";
 "Confirm to delete the event"="确信删除该事件";
 "Confirm to replace %@ contents in your device!"="确信替换在设备上所有的 %@事件!";
@@ -149,6 +149,9 @@
 "%@ is already your friend"="%@ 已经是你的朋友";
 "[%@] %@\n\n Map Location:%@      (Organized with ChronicleMap.com)"="[%@] %@\n\n 地图位置:%@      (由ChronicleMap.com提供)";
 "Login to access server"="登录访问服务器";
+"Login"="登录";
+"Login Now"="现在就登录";
+"Login Later"="暂不登录";
 "Logout"="退出";
 "Long-press on a map location."="在地图上长按你选好的位置.";
 "Make sure you entered correct Security Code received in you email"="请确信正确地输入了安全代码";
@@ -181,6 +184,7 @@
 "Please Enter Valid Email Address."="请输入有效电子邮件地址.";
 "Please enter the security code you received in your email!"="请输入你在邮件中收到的安全代码!";
 "Please enter description."="请输入描述域.";
+"Please login first!"="登录后才能删除！";
 "Please pick myEvents to show on map!"="请把 myEvents 显示在地图上!";
 "Please pick myEvents to show on map and try again"="请把 myEvents 显示在地图上，然后再试";
 "Please swipe left"="请用手指左刷";

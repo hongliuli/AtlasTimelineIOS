@@ -42,7 +42,7 @@ int swipPromptCount;
 {
     [super viewDidLoad];
     swipPromptCount = 0;
-    NSUserDefaults* userDefault = [NSUserDefaults standardUserDefaults];
+
     /*********  here is test for test *****/
    // [userDefault removeObjectForKey:[ATConstants UserEmailKeyName]];
    // [userDefault removeObjectForKey:[ATConstants UserSecurityCodeKeyName]];
@@ -51,7 +51,7 @@ int swipPromptCount;
 
     localList = [[NSMutableArray alloc] initWithArray:[ATHelper listFileAtPath:[ATHelper applicationDocumentsDirectory]]];
 
-    
+    NSUserDefaults* userDefault = [NSUserDefaults standardUserDefaults];
     NSString *userId = [userDefault objectForKey:[ATConstants UserEmailKeyName]];
     NSString *securityCode = [userDefault objectForKey:[ATConstants UserSecurityCodeKeyName]];
     
@@ -79,9 +79,8 @@ int swipPromptCount;
         if (item != nil && [item length]>0)
             [filteredList addObject:libraryList[i]];
     }
-    
+    //Note: server sorted by create_date already by proc getLibraryList
     [filteredList removeObject:[ATConstants defaultSourceName]]; //"myEvents" should be always at top after sort
-    filteredList = [[filteredList sortedArrayUsingSelector:@selector(localizedCaseInsensitiveCompare:)] mutableCopy];
     [filteredList insertObject:[ATConstants defaultSourceName] atIndex:0];
 
     spinner = [[UIActivityIndicatorView alloc]
@@ -256,6 +255,16 @@ int swipPromptCount;
                                                  cancelButtonTitle:NSLocalizedString(@"Cancel",nil)
                                                  otherButtonTitles:NSLocalizedString(@"Continue",nil),nil];
                 alert.tag = DELETE_INCOMING_ON_SERVER_CONFIRM;
+                NSUserDefaults* userDefault = [NSUserDefaults standardUserDefaults];
+                NSString *userId = [userDefault objectForKey:[ATConstants UserEmailKeyName]];
+                if (userId == nil)
+                {
+                    alert = [[UIAlertView alloc]initWithTitle: NSLocalizedString(@"Please login first!",nil)
+                                                                   message: @""
+                                                                  delegate: self
+                                                         cancelButtonTitle:NSLocalizedString(@"Cancel",nil)
+                                                         otherButtonTitles:nil,nil];
+                }
                 [alert show];
             }
 
