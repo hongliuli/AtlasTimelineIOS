@@ -34,7 +34,8 @@
 NSDateFormatter* dateFormaterForMonth;
 NSDateFormatter* dateLiterFormat;
 NSCalendar* calendar;
-NSMutableArray* alreadyRequestedWebPhotoList;
+NSMutableArray* webPhotoDownloadQueue;
+NSTimer* _timerProcessWebPhotoDownloadQueye;
 static int maxConcurrentDownload;
 
 UIPopoverController *verifyViewPopover;
@@ -363,63 +364,28 @@ UIPopoverController *verifyViewPopover;
     NSString* fullWebPhotoPath = [ATHelper convertWebUrlToFullPhotoPath:photoUrl];
     if (![[NSFileManager defaultManager] fileExistsAtPath:fullWebPhotoPath isDirectory:nil])
     {
-        if (alreadyRequestedWebPhotoList == nil)
-            alreadyRequestedWebPhotoList = [[NSMutableArray alloc] init];
-        if ([alreadyRequestedWebPhotoList containsObject:photoUrl])
+        if (webPhotoDownloadQueue == nil)
+            webPhotoDownloadQueue = [[NSMutableArray alloc] init];
+        if (![webPhotoDownloadQueue containsObject:photoUrl])
         {
-            //NSLog(@" ====== %@ alrady in request", eventId);
-            return nil;
+            [webPhotoDownloadQueue addObject:photoUrl];
         }
         
-        //// Important to limit max concurrent download to small number, otherwise first run APP will generate too many threads
-        //// which make system slow initially
-        if (maxConcurrentDownload < 10)
+        if (_timerProcessWebPhotoDownloadQueye == nil)
+        {   //this timer never expire once started, and only started once here
+            _timerProcessWebPhotoDownloadQueye = [NSTimer scheduledTimerWithTimeInterval:1.0
+                                                                     target:self
+                                                                   selector:@selector(startCheckAndProcessDownloadQueue:)
+                                                                   userInfo:nil
+                                                                    repeats:YES];
+            maxConcurrentDownload = 0;
+            [_timerProcessWebPhotoDownloadQueye fire];
+        }
+        //in case it became invalidated, fire it again (no place to invalidate it, but to be defensive programing here
+        if (![_timerProcessWebPhotoDownloadQueye isValid])
         {
-            maxConcurrentDownload ++;
-            [alreadyRequestedWebPhotoList addObject:photoUrl];
-            dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0),
-                           ^{
-                               NSURL *imageURL = [NSURL URLWithString:photoUrl];
-                               NSData *imageData = [NSData dataWithContentsOfURL:imageURL];
-                               double len = [imageData length];
-                               if (imageData == nil || len < 50)
-                               {
-                                   [alreadyRequestedWebPhotoList removeObject:photoUrl];
-                                   return;
-                               }
-                               
-                               //-----Save original file after resize if too big
-                               if (len > 500000) //if image data is 0.5M or more, resize it
-                               {
-                                   UIImage * newPhoto = [[UIImage alloc] initWithData:imageData];
-                                   int imageWidth = RESIZE_WIDTH;
-                                   int imageHeight = RESIZE_HEIGHT;
-                                   
-                                   if (newPhoto.size.height > newPhoto.size.width)
-                                   {
-                                       imageWidth = RESIZE_HEIGHT;
-                                       imageHeight = RESIZE_WIDTH;
-                                   }
-                                   UIImage *newImage = newPhoto;
-                                   imageData = nil;
-                                   if (newPhoto.size.height > imageHeight || newPhoto.size.width > imageWidth)
-                                   {
-                                       newImage = [ATHelper imageResizeWithImage:newPhoto scaledToSize:CGSizeMake(imageWidth, imageHeight)];
-                                   }
-                                   //NSLog(@"widh=%f, height=%f",newPhoto.size.width, newPhoto.size.height);
-                                   imageData = UIImageJPEGRepresentation(newImage, 1.0);
-                               }
-
-                               NSError* error;
-                               [imageData writeToFile:fullWebPhotoPath options:NSDataWritingAtomic error:&error];
-                               
-                               //-----Now ready to save thumbnail if not have already
-                               if (thumbPhotoId != nil && localThumbImage == nil)
-                               {
-                                   [ATHelper writeWebThumbnail:imageData thumbnailName:thumbPhotoId];
-                               }
-                               maxConcurrentDownload --;
-                           });
+            maxConcurrentDownload = 0;
+            [_timerProcessWebPhotoDownloadQueye fire];
         }
     }
     else //has big file already
@@ -435,6 +401,72 @@ UIPopoverController *verifyViewPopover;
     }
     return returnImage;
 }
+
+//once started, will keep on runing by check if there is to be downloaded in the queue
++ (void) startCheckAndProcessDownloadQueue:(NSTimer*)_timer
+{
+    //// Important to limit max concurrent download to small number, otherwise first run APP will generate too many threads
+    //// which make system slow initially
+    //if (maxConcurrentDownload < 10)
+    if (maxConcurrentDownload > 0)
+        return; //continues process queue after previous batch finish
+    
+    NSInteger queueLen = [webPhotoDownloadQueue count];
+    if (queueLen > 10)
+        queueLen = 10;
+    NSMutableArray* itemsToBeProcessedThisTime = [[NSMutableArray alloc] init];
+    for (int i = 0; i< queueLen; i++)
+    {
+        [itemsToBeProcessedThisTime addObject:webPhotoDownloadQueue[i]];
+    }
+    [webPhotoDownloadQueue removeObjectsInArray:itemsToBeProcessedThisTime];
+    for (int i = 0; i< queueLen; i++)
+    {
+        maxConcurrentDownload ++;
+        NSString* photoUrl = itemsToBeProcessedThisTime[i];
+        dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0),
+                       ^{
+                           NSURL *imageURL = [NSURL URLWithString:photoUrl];
+                           NSData *imageData = [NSData dataWithContentsOfURL:imageURL];
+                           double len = [imageData length];
+                           maxConcurrentDownload --;
+                           if (imageData == nil || len < 50)
+                           {
+                               NSLog(@"      --- web return nil or < 50: %@", photoUrl);
+                               return;
+                           }
+                           
+                           NSLog(@"--- web return size is: %f for url: %@", len, photoUrl);
+                           //-----Save original file after resize if too big
+                           if (len > 500000) //if image data is 0.5M or more, resize it
+                           {
+                               UIImage * newPhoto = [[UIImage alloc] initWithData:imageData];
+                               int imageWidth = RESIZE_WIDTH;
+                               int imageHeight = RESIZE_HEIGHT;
+                               
+                               if (newPhoto.size.height > newPhoto.size.width)
+                               {
+                                   imageWidth = RESIZE_HEIGHT;
+                                   imageHeight = RESIZE_WIDTH;
+                               }
+                               UIImage *newImage = newPhoto;
+                               imageData = nil;
+                               if (newPhoto.size.height > imageHeight || newPhoto.size.width > imageWidth)
+                               {
+                                   newImage = [ATHelper imageResizeWithImage:newPhoto scaledToSize:CGSizeMake(imageWidth, imageHeight)];
+                               }
+                               //NSLog(@"widh=%f, height=%f",newPhoto.size.width, newPhoto.size.height);
+                               imageData = UIImageJPEGRepresentation(newImage, 1.0);
+                           }
+                           
+                           NSString* fullWebPhotoPath = [ATHelper convertWebUrlToFullPhotoPath:photoUrl];
+                           NSError* error;
+                           [imageData writeToFile:fullWebPhotoPath options:NSDataWritingAtomic error:&error];
+                           
+                       });
+    }
+}
+
 
 + (void) writeWebThumbnail:(NSData*)imageData thumbnailName:(NSString*)thumbPhotoId
 {

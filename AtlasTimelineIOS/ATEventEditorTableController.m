@@ -283,6 +283,11 @@ forRowAtIndexPath: (NSIndexPath*)indexPath
 //called by mapView after know eventId. descText contains photo url from web, so need to pass in
 - (void) createPhotoScrollView:(NSString *)photoDirName  eventDesc:(NSString*)descText
 {
+    if (_timerRefreshWebPhoto != nil)
+    {
+        [_timerRefreshWebPhoto invalidate];
+        _timerRefreshWebPhoto = nil; //have to do this every time start a eventeditor, make sure a new timer will be instanced
+    }
     descriptionWithMetadata = descText;
     self.photoDescChangedFlag = false;
     self.photoScrollView = [[ATPhotoScrollView alloc] initWithFrame:CGRectMake(0,5,editorPhotoViewWidth,editorPhotoViewHeight)];
@@ -446,7 +451,7 @@ forRowAtIndexPath: (NSIndexPath*)indexPath
 
 - (void) refreshPhotoListViewWithTimer:(NSTimer*)_timer
 {
-    NSLog(@"----- refresh photo list view timer fired");
+    //NSLog(@"############----- refresh photo list view timer callback start");
     assumeNoMoreWebPhotoToDownloadCount ++;
     NSArray* webPhotoList = [ATHelper getPhotoUrlsFromDescText:descriptionWithMetadata];
     BOOL hasNewDownloadedPhoto = false;
@@ -466,10 +471,12 @@ forRowAtIndexPath: (NSIndexPath*)indexPath
         }
     }
     if (hasNewDownloadedPhoto)
+    {
         [self.photoScrollView.horizontalTableView reloadData];
+    }
     else
     { //a not so-perfect assume: if no photo downloaded in 3 seconds for 3 times, then assume no more photo to download, so invalidate timer
-        if (assumeNoMoreWebPhotoToDownloadCount >= 5)
+        if (assumeNoMoreWebPhotoToDownloadCount >= 999) //may not neccessary to have it here, because I am going to disable timer when view didDisappear
         {
             [_timerRefreshWebPhoto invalidate];
             _timerRefreshWebPhoto = nil;
