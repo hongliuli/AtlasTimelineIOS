@@ -290,9 +290,15 @@ UIPopoverController *verifyViewPopover;
 }
 + (NSString*)convertWebUrlToFullPhotoPath:(NSString*)photoUrl
 {
+    NSString *retStr = [ATHelper convertWebUrlToFileName:photoUrl];
+    return [[ATHelper getWebCachePhotoDocummentoryPath] stringByAppendingPathComponent:retStr];
+}
+
++ (NSString*)convertWebUrlToFileName:(NSString*)photoUrl
+{
     NSString* retStr = [photoUrl stringByReplacingOccurrencesOfString: @"/" withString:@"_"];
     retStr = [retStr stringByReplacingOccurrencesOfString: @"%" withString:@"_"];
-    return [[ATHelper getWebCachePhotoDocummentoryPath] stringByAppendingPathComponent:retStr];
+    return retStr;
 }
 
 + (NSString*)getRootDocumentoryPath
@@ -623,7 +629,7 @@ UIPopoverController *verifyViewPopover;
 //find photo web url xxxx in desc text : ...[[xxxx]]...
 //Currently I only use the first one and convert to use as thumbnail,
 //Later I want to have multiple urls for multiple files save to cache directory, no need to backup to Dropbox
-+ (NSArray*) getPhotoUrlsFromDescText: (NSString*)descTxt
++ (NSArray*) getWebPhotoListFromDescText: (NSString*)descTxt
 {
     NSString *str = [NSMutableString stringWithString:descTxt];
     NSMutableArray* returnPhotoUrlList = nil;
@@ -634,7 +640,7 @@ UIPopoverController *verifyViewPopover;
         if (loc2 != NSNotFound)
         {
             NSString* urlStr = [str substringToIndex:loc2];
-            if ([urlStr rangeOfString:@"http"].location != NSNotFound && [urlStr rangeOfString:@" "].location == NSNotFound) //must have http literature, must NOT have space
+            if ([urlStr rangeOfString:@"http"].location != NSNotFound) //must have http literature, must NOT have space
             {
                 if (returnPhotoUrlList == nil)
                     returnPhotoUrlList = [[NSMutableArray alloc] init];
@@ -647,6 +653,35 @@ UIPopoverController *verifyViewPopover;
             break;
     }
     return returnPhotoUrlList;
+}
++ (NSArray*) getPhotoUrlsFromDescText: (NSString*)descTxt
+{
+    NSMutableArray* retWebPhotoUrlList = nil;
+    NSArray* webPhotoList = [ATHelper getWebPhotoListFromDescText:descTxt];
+    for (NSString* photoItem in webPhotoList)
+    {
+        if (retWebPhotoUrlList == nil)
+            retWebPhotoUrlList = [[NSMutableArray alloc] init];
+        NSArray* photoArr = [photoItem componentsSeparatedByString:@"\n"];
+        [retWebPhotoUrlList addObject:photoArr[0]];
+    }
+    return retWebPhotoUrlList;
+}
++ (NSDictionary*) getPhotoDescFromDescText: (NSString*)descTxt
+{
+    NSMutableDictionary* retWebPhotoDescMap = nil;
+    NSArray* webPhotoList = [ATHelper getWebPhotoListFromDescText:descTxt];
+    for (NSString* photoItem in webPhotoList)
+    {
+        NSArray* photoArr = [photoItem componentsSeparatedByString:@"\n"];
+        if ([photoArr count] > 1)
+        {
+            if (retWebPhotoDescMap == nil)
+                retWebPhotoDescMap = [[NSMutableDictionary alloc] init];
+            [retWebPhotoDescMap setObject:photoArr[1] forKey:[ATHelper convertWebUrlToFullPhotoPath:photoArr[0]]];
+        }
+    }
+    return retWebPhotoDescMap;
 }
 
 + (NSString*) clearMakerFromDescText: (NSString*)desc :(NSString*)markerName

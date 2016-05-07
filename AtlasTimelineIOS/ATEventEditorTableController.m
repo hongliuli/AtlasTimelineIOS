@@ -356,17 +356,32 @@ forRowAtIndexPath: (NSIndexPath*)indexPath
         NSString *photoMetaFilePath = [[[ATHelper getPhotoDocummentoryPath] stringByAppendingPathComponent:self.eventId] stringByAppendingPathComponent:PHOTO_META_FILE_NAME];
         
         //photoFileMetaMap will be nil if no file ???
+        NSDictionary* filePhotoDescMap = nil;
         photoFilesMetaMap = [NSMutableDictionary dictionaryWithContentsOfFile:photoMetaFilePath];
         if (photoFilesMetaMap != nil)
         {
             self.photoScrollView.photoSortedListFromMetaFile = (NSMutableArray*)[photoFilesMetaMap objectForKey:PHOTO_META_SORT_LIST_KEY];
-            self.photoScrollView.photoDescMap = [photoFilesMetaMap objectForKey:PHOTO_META_DESC_MAP_KEY];
+            filePhotoDescMap = [photoFilesMetaMap objectForKey:PHOTO_META_DESC_MAP_KEY];
         }
+        NSDictionary* webPhotoDescMap = [ATHelper getPhotoDescFromDescText:descText];
+        
+        NSMutableDictionary* finalPhotoDescMap = nil;
+        if (filePhotoDescMap != nil)
+        {
+            finalPhotoDescMap = [filePhotoDescMap mutableCopy];
+            if (webPhotoDescMap != nil)
+                [finalPhotoDescMap addEntriesFromDictionary:webPhotoDescMap];
+        }
+        else if (webPhotoDescMap != nil)
+            finalPhotoDescMap = [webPhotoDescMap mutableCopy];
+        
+        self.photoScrollView.photoDescMap = finalPhotoDescMap;
+        
         //Although photoSortedNameList should have all filenames in order, to be safe, still read filename from directory then sort accordingly
         if (self.photoScrollView.photoSortedListFromMetaFile != nil)
         {
             NSMutableArray* newList = [[NSMutableArray alloc] initWithCapacity:[self.photoScrollView.photoList count]];
-            int tmpCnt = [self.photoScrollView.photoSortedListFromMetaFile count];
+            NSInteger tmpCnt = [self.photoScrollView.photoSortedListFromMetaFile count];
             for (int i = 0; i < tmpCnt; i++)
             {
                 NSString* fileName = self.photoScrollView.photoSortedListFromMetaFile[i];
