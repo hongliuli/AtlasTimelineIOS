@@ -1015,7 +1015,7 @@ UIPopoverController *verifyViewPopover;
 + (NSString*)stripMetadataFromEventDesc:(NSString*) eventDesc
 {
     NSString* retDesc = eventDesc;
-    NSArray* photoUrlList = [ATHelper getPhotoUrlsFromDescText:eventDesc];
+    NSArray* photoUrlList = [ATHelper getWebPhotoListFromDescText:eventDesc];
     if (photoUrlList != nil)
     {
         for (NSString* urlStr in photoUrlList)
