@@ -45,6 +45,13 @@ UINavigationController* preferenceViewNavController;
     _dateFormater = [[NSDateFormatter alloc] init];
     //_dateFormater.dateStyle = NSDateFormatterMediumStyle;
     [_dateFormater setDateFormat:@"MM/dd/yyyy GG"];
+    NSDate* testDate = [[NSDate alloc] init];
+    testDate = [ATHelper getYearStartDate:testDate];
+    if (testDate == nil)
+    {
+        //IMPORTANT: if user device Reginal Format is set to some language such as Netherlands, our code will crash
+        [_dateFormater setLocale:[[NSLocale alloc] initWithLocaleIdentifier:@"en_US"]];
+    }
     return _dateFormater;
 }
 - (NSString *)localizedAD {
