@@ -18,6 +18,7 @@
 #import "ATInAppPurchaseViewController.h"
 #import "ATOptionsTableViewController.h"
 #import "SWRevealViewController.h"
+#import "ATDropboxHelper.h"
 
 #define EVENT_TYPE_NO_PHOTO 0
 #define EVENT_TYPE_HAS_PHOTO 1
@@ -46,9 +47,9 @@
 #define DOWNLOAD_REPLACE_MY_SOURCE_TO_MYEVENTS_ALERT 100
 #define DOWNLOAD_MYEVENTS_CONFIRM 101
 
-#define PHOTO_META_FILE_NAME @"MetaFileForOrderAndDesc"
 #define PHOTO_ALREAD_IN_LOCAL_SKIP_DOWNLOAD -1;
 #define PHOTO_NOT_IN_LOCAL_START_DOWNLOAD 1
+#define PHOTO_META_FILE_NAME @"MetaFileForOrderAndDesc"
 
 @interface ATPreferenceViewController ()
 
@@ -104,6 +105,8 @@
     UIProgressView* progressUploadView;
     int progressUploadTotalCount;
     int progressUploadPhotoCount;
+    
+    ATDropboxHelper* dropboxHelper;
 }
 
 - (id)initWithStyle:(UITableViewStyle)style
@@ -134,12 +137,16 @@
     [self refreshDisplayStatusAndData];
     
     UISwipeGestureRecognizer *rightSwiper = [[UISwipeGestureRecognizer alloc] initWithTarget:self action:@selector(swipeRight)];
-	rightSwiper.direction = UISwipeGestureRecognizerDirectionRight;
-	[self.view addGestureRecognizer:rightSwiper];
+    rightSwiper.direction = UISwipeGestureRecognizerDirectionRight;
+    [self.view addGestureRecognizer:rightSwiper];
+    
+    if (dropboxHelper == nil)
+        dropboxHelper = [[ATDropboxHelper alloc] init];
+    dropboxHelper.preferenceViewController = self;
 }
 
 - (void)swipeRight {
-	SWRevealViewController *revealController = [self revealViewController];
+    SWRevealViewController *revealController = [self revealViewController];
     [revealController rightRevealToggle:nil];
 }
 
@@ -172,7 +179,7 @@
 
 //This is delegate, will be called from ATDownloadTableView didSelect..
 - (void)downloadTableViewController: (ATDownloadTableViewController *)controller
-                   didSelectSource:(NSString *)source{
+                    didSelectSource:(NSString *)source{
     //########################################
     // If user select a large period, then map may be slow if there is too many annotations. but I could not do anything to prevent it.
     //########################################
@@ -361,7 +368,7 @@
             progressUploadView.hidden = false;
             
             isRemoveSourceForUploadAll = true; //so if /ChronicleMap/myEvent not on dropbox yet, delete fail will know the case
-            [[self myRestClient] deletePath:[NSString stringWithFormat:@"/ChronicleMap/%@", [ATHelper getSelectedDbFileName]]];
+            [dropboxHelper deletePath:[NSString stringWithFormat:@"/ChronicleMap/%@", [ATHelper getSelectedDbFileName]]];
             UIAlertView *alert = [[UIAlertView alloc] initWithTitle:NSLocalizedString(@"Photo upload started and [New] number is decreasing.\n If number reach 0 then full back up is done.\n If number stop at non-zero, then tap [Photo Backup] row to continue.",nil) message:@"" delegate:nil cancelButtonTitle:NSLocalizedString(@"OK",nil) otherButtonTitles:nil];
             [alert show];
         }
@@ -381,7 +388,7 @@
         showDownloadAllLoadMetadataErrorAlert = true;
         totalDownloadFromDropboxSuccessCount = 0;
         progressDownloadEventCount = 0;
-
+        
         progressDownloadOveralView.hidden = false;
         progressDownloadDetailView.hidden = false;
         
@@ -429,7 +436,7 @@
     //local path has to exist for loadFile to save. But local path may not exist after re-install app so need do it here
     if (![[NSFileManager defaultManager] fileExistsAtPath:[localFullPath stringByAppendingPathComponent:currentEventId]])
         [[NSFileManager defaultManager] createDirectoryAtPath:[localFullPath stringByAppendingPathComponent:currentEventId] withIntermediateDirectories:YES attributes:nil error:nil];
-    [[self myRestClient] loadMetadata:[NSString stringWithFormat:@"/ChronicleMap/%@/%@", [ATHelper getSelectedDbFileName], currentEventId]]; //then see loadedMetadata delegate where we start download file
+    [dropboxHelper loadMetadata:[NSString stringWithFormat:@"/ChronicleMap/%@/%@", [ATHelper getSelectedDbFileName], currentEventId]]; //then see loadedMetadata delegate where we start download file
     
     //NSLog(@"---------- spinner stop %d", downloadAlreadyExistCount);
     //[spinner stopAnimating];
@@ -705,16 +712,16 @@
     if (section == SECTION_CONTENT_MANAGE)
     {
         /**** TODO **** add refersh button for later implement auto synch. Also see unused smartDownloadMyEvents() function
-        //Show full sync button only when:
-        //  1. not logged in yet
-        //  2. current active contents is myEvents
-        UIButton* refreshBtn =[UIButton buttonWithType:UIButtonTypeCustom];
-        [refreshBtn setImage:[UIImage imageNamed:@"Refresh-icon.png"] forState:UIControlStateNormal];
-        [refreshBtn addTarget:self action:@selector(fullSyncMyEvents:) forControlEvents:UIControlEventTouchUpInside];
-        refreshBtn.frame = CGRectMake(10, -10, 40, 40);
-        //TODO if not login, and first time, and ....... see document
-        [customView addSubview:refreshBtn];
-        ******/
+         //Show full sync button only when:
+         //  1. not logged in yet
+         //  2. current active contents is myEvents
+         UIButton* refreshBtn =[UIButton buttonWithType:UIButtonTypeCustom];
+         [refreshBtn setImage:[UIImage imageNamed:@"Refresh-icon.png"] forState:UIControlStateNormal];
+         [refreshBtn addTarget:self action:@selector(fullSyncMyEvents:) forControlEvents:UIControlEventTouchUpInside];
+         refreshBtn.frame = CGRectMake(10, -10, 40, 40);
+         //TODO if not login, and first time, and ....... see document
+         [customView addSubview:refreshBtn];
+         ******/
         NSUInteger loc = [_source rangeOfString:@"*"].location;
         NSString* namePart = _source;
         if (loc != NSNotFound)
@@ -921,7 +928,7 @@
     
     NSString* atlasName = @"myEvents";
     
-    //TODO need pass LUT (last upload time) to server 
+    //TODO need pass LUT (last upload time) to server
     NSURL* serviceUrl = [NSURL URLWithString:[NSString stringWithFormat:@"%@/downloadjsoncontents?user_id=%@&security_code=%@&atlas_name=%@",[ATConstants ServerURL], userId, securityCode, atlasName]];
     
     NSData* downloadedData = [NSData dataWithContentsOfURL:serviceUrl];
@@ -1000,7 +1007,7 @@
             progressUploadTotalCount = dbNewPhotoCount + dbDeletedPhotoCount;
         }
         if (dbNewPhotoCount > 0) //will process both queue
-            [[self myRestClient] createFolder:@"/ChronicleMap"]; //createFolder success/alreadyExist delegate will start the chain action, which will include delete Queue
+            [dropboxHelper createFolder:@"/ChronicleMap"]; //createFolder success/alreadyExist delegate will start the chain action, which will include delete Queue
         else if (dbDeletedPhotoCount > 0) //bypass process createFolder, only delete file for more efficient
             [self processEmptyDeletedPhotoQueue];
         
@@ -1138,12 +1145,12 @@
  */
 
 //this is createFolder delegate, important of my chain action
-- (void)restClient:(DBRestClient*)client createdFolder:(DBMetadata*)folder{
+- (void) createdFolderCallback:(DBMetadata*)folder{
     //NSLog(@"+++++ Folder success Meta Data Path %@; filename %@; hasDirectory %d;",[folder path], [folder filename], [folder isDirectory]);
     if ( [@"/ChronicleMap" isEqualToString:[folder path]])
     {
         NSString *destDir = [ NSString stringWithFormat:@"/ChronicleMap/%@",  [ATHelper getSelectedDbFileName] ];
-        [[self myRestClient ] createFolder:destDir]; //chain action 1: create "source" directory if not so
+        [dropboxHelper createFolder:destDir]; //chain action 1: create "source" directory if not so
     }
     else if ([[folder filename] isEqualToString:[ATHelper getSelectedDbFileName]])
     {
@@ -1159,22 +1166,24 @@
         if ([[NSFileManager defaultManager] fileExistsAtPath:localPhotoPath])
         {
             if (![PHOTO_META_FILE_NAME isEqualToString:currentPhotoName])
-                [[self myRestClient] uploadFile: currentPhotoName toPath:[folder path] withParentRev:nil fromPath:localPhotoPath];
+                [dropboxHelper uploadFile: currentPhotoName toPath:[folder path] withParentRev:nil fromPath:localPhotoPath];
             else //use loadRevisions is the only way I can avoid creating mutiple revision when upload same file again and again
-                [[self myRestClient] loadRevisionsForFile:[NSString stringWithFormat:@"%@/%@",[folder path], PHOTO_META_FILE_NAME] limit:1];
+                [dropboxHelper loadRevisionsForFile:[NSString stringWithFormat:@"%@/%@",[folder path], PHOTO_META_FILE_NAME] limit:1];
         }
     }
 }
 
-- (void)restClient:(DBRestClient*)client loadedRevisions:(NSArray *)revisions forFile:(NSString *)path
+
+- (void) loadedRevisionsCallback:(NSArray *)revisions forFile:(NSString *)path
 {
     DBMetadata *file = revisions[0];
     NSString *localPhotoPath = [ATHelper getPhotoDocummentoryPath];
     localPhotoPath = [[localPhotoPath stringByAppendingPathComponent:currentEventId] stringByAppendingPathComponent:PHOTO_META_FILE_NAME];
-    [[self myRestClient] uploadFile: PHOTO_META_FILE_NAME toPath:[path stringByDeletingLastPathComponent] withParentRev:file.rev fromPath:localPhotoPath]; //path included file nm, need special treat
+    [dropboxHelper uploadFile: PHOTO_META_FILE_NAME toPath:[path stringByDeletingLastPathComponent] withParentRev:file.rev fromPath:localPhotoPath]; //path included file nm, need special treat
     
 }
-- (void)restClient:(DBRestClient*)client loadRevisionsFailedWithError:(NSError *)error
+
+- (void) loadRevisionsFailedWithErrorCallback:(NSError *)error
 {
     //If file not exist before
     NSString *localPhotoPath = [ATHelper getPhotoDocummentoryPath];
@@ -1182,12 +1191,13 @@
     if ([[NSFileManager defaultManager] fileExistsAtPath:localPhotoPath])
     {
         NSString* pathFileStr = (NSString*)[error.userInfo objectForKey:@"path"];
-        [[self myRestClient] uploadFile:PHOTO_META_FILE_NAME toPath:[pathFileStr stringByDeletingLastPathComponent] withParentRev:nil fromPath:localPhotoPath];
+        [dropboxHelper uploadFile:PHOTO_META_FILE_NAME toPath:[pathFileStr stringByDeletingLastPathComponent] withParentRev:nil fromPath:localPhotoPath];
     }
 }
 
+
 // Folder is the metadata for the newly created folder
-- (void)restClient:(DBRestClient*)client createFolderFailedWithError:(NSError*)error{
+- (void) createFolderFailedWithErrorCallback:(NSError*)error{
     //if error is folder alrady exist, then continues our chain action
     [spinner stopAnimating];
     if ([self dropboxFolderAlreadyExist:error])
@@ -1195,7 +1205,7 @@
         if ( [@"/ChronicleMap" isEqualToString:(NSString*)[error.userInfo objectForKey:@"path"]]) //TODO
         {
             NSString *destDir = [ NSString stringWithFormat:@"/ChronicleMap/%@",  [ATHelper getSelectedDbFileName]];
-            [[self myRestClient ] createFolder:destDir]; //delegate come back with following if
+            [dropboxHelper createFolder:destDir]; //delegate come back with following if
         }
         else if ([[NSString stringWithFormat:@"/ChronicleMap/%@", [ATHelper getSelectedDbFileName]] isEqualToString:(NSString*)[error.userInfo objectForKey:@"path"]])
         {
@@ -1210,9 +1220,9 @@
                 NSString* remotePath = (NSString*)[error.userInfo objectForKey:@"path"];
                 NSString* remotePathFile = [NSString stringWithFormat:@"%@/%@",remotePath,PHOTO_META_FILE_NAME];
                 if (![PHOTO_META_FILE_NAME isEqualToString:currentPhotoName])
-                    [[self myRestClient] uploadFile: currentPhotoName toPath:remotePath withParentRev:nil fromPath:localPhotoPath];
+                    [dropboxHelper uploadFile: currentPhotoName toPath:remotePath withParentRev:nil fromPath:localPhotoPath];
                 else
-                    [[self myRestClient] loadRevisionsForFile:remotePathFile limit:1];
+                    [dropboxHelper loadRevisionsForFile:remotePathFile limit:1];
             }
         }
     }
@@ -1245,7 +1255,7 @@
         currentEventId = tmpArray[0];
         currentPhotoName = tmpArray[1];
         //part of chain action: createFolder delegate will do uploadFile to dropbox when success or fail with 403 (folder already exist
-        [[self myRestClient] createFolder:[ NSString stringWithFormat:@"%@/%@", destDir, tmpArray[0] ]];
+        [dropboxHelper createFolder:[ NSString stringWithFormat:@"%@/%@", destDir, tmpArray[0] ]];
     }
     else
     {
@@ -1276,12 +1286,12 @@
             currentEventId = tmpArray[0];
             currentPhotoName = tmpArray[1];
             //part of chain action: createFolder delegate will do uploadFile to dropbox when success or fail with 403 (folder already exist
-            [[self myRestClient] deletePath:[ NSString stringWithFormat:@"%@/%@/%@", destDir, tmpArray[0], tmpArray[1] ]];
+            [dropboxHelper deletePath:[ NSString stringWithFormat:@"%@/%@/%@", destDir, tmpArray[0], tmpArray[1] ]];
         }
         else
         {
             currentEventId = file;
-            [[self myRestClient] deletePath:[ NSString stringWithFormat:@"%@/%@", destDir, file ]];
+            [dropboxHelper deletePath:[ NSString stringWithFormat:@"%@/%@", destDir, file ]];
         }
     }
     else if (uploadSuccessExcludeThumbnailCount > 0 || deleteCount > 0)
@@ -1301,7 +1311,7 @@
 }
 
 //delegate called by upload to dropbox
-- (void)restClient:(DBRestClient*)client uploadedFile:(NSString*)destPath
+- (void) uploadedFileCallback:(NSString*)destPath
               from:(NSString*)srcPath metadata:(DBMetadata*)metadata {
     [[self getDataController] emptyNewPhotoQueue:[NSString stringWithFormat:@"%@/%@" ,currentEventId, currentPhotoName]];
     int dbNewPhotoCount = [[self getDataController] getNewPhotoQueueSizeExcludeThumbNail];
@@ -1316,7 +1326,7 @@
     [self startProcessNewPhotoQueueChainAction]; //start upload next file until
 }
 
-- (void)restClient:(DBRestClient*)client uploadFileFailedWithError:(NSError*)error {
+- (void) uploadFileFailedWithErrorCallback:(NSError*)error {
     [spinner stopAnimating];
     UIAlertView *alert = [[UIAlertView alloc]initWithTitle: NSLocalizedString(@"Could not copy file to Dropbox",nil)
                                                    message: NSLocalizedString(@"May be the network is not available",nil)
@@ -1373,14 +1383,15 @@
     }
     return hasFileToUpload;
 }
-- (void)restClient:(DBRestClient*)client deletedPath:(NSString *)path
+
+- (void) deletedPathCallback:(NSString *)path
 {
     if (isRemoveSourceForUploadAll)
     {
         if (![self prepareUploadAllToDropbox])
             return; //return if no file to upload
         NSString *destDir = [ NSString stringWithFormat:@"/ChronicleMap/%@",  [ATHelper getSelectedDbFileName] ];
-        [[self myRestClient ] createFolder:destDir]; //this will start chain action for copy all in the queue to dropbox
+        [dropboxHelper  createFolder:destDir]; //this will start chain action for copy all in the queue to dropbox
         isRemoveSourceForUploadAll = false;
         return;
     }
@@ -1396,7 +1407,7 @@
     }
     [self processEmptyDeletedPhotoQueue];
 }
-- (void)restClient:(DBRestClient*)client deletePathFailedWithError:(NSError*)error
+- (void) deletePathFailedWithErrorCallback:(NSError*)error
 {
     if ([self dropboxDeleteFileNotExist:error]) //if not in dropbox, continues the chain. Dropbox can cleaned anyway if user select
     {
@@ -1405,7 +1416,7 @@
             if (![self prepareUploadAllToDropbox])
                 return; //return if no file to upload
             NSString *destDir = [ NSString stringWithFormat:@"/ChronicleMap/%@",  [ATHelper getSelectedDbFileName] ];
-            [[self myRestClient ] createFolder:destDir]; //this will start chain action for copy all to dropbox
+            [dropboxHelper createFolder:destDir]; //this will start chain action for copy all to dropbox
             isRemoveSourceForUploadAll = false;
             return;
         }
@@ -1430,7 +1441,7 @@
 }
 
 //following loadedMetadata delegate is for copy from dropbox to device. When it come here after loadMetaData() called with eventId
-- (void)restClient:(DBRestClient*)client loadedMetadata:(DBMetadata*)metadata
+- (void) loadedMetadataCallback:(DBMetadata*)metadata
 {
     if (metadata.isDirectory) {
         if (metadata.contents == nil || [metadata.contents count] == 0)
@@ -1452,7 +1463,7 @@
             
             if (![[NSFileManager defaultManager] fileExistsAtPath:localPhotoPath]){
                 //NSLog(@"    --- local %@ already=%d  success=%d   fail=%d",[localPhotoPath substringFromIndex:85], downloadAlreadyExistCount,downloadFromDropboxSuccessCount,downloadFromDropboxFailCount);
-                [[self myRestClient] loadFile:[NSString stringWithFormat:@"%@/%@", currentEventMetapath, file.filename ] intoPath:localPhotoPath];
+                [dropboxHelper loadFile:[NSString stringWithFormat:@"%@/%@", currentEventMetapath, file.filename ] intoPath:localPhotoPath];
                 progressDownloadTotalNumberOfPhotosInOneEvent ++;
             }
             else
@@ -1466,11 +1477,11 @@
     }
 }
 
-- (void)restClient:(DBRestClient*)client loadMetadataFailedWithError:(NSError*)error
+- (void) loadMetadataFailedWithErrorCallback:(NSError*)error
 {
     /*
-    UIAlertView *alert = [[UIAlertView alloc] initWithTitle:NSLocalizedString(@"loadMetaFail",nil) message:error.description delegate:nil cancelButtonTitle:NSLocalizedString(@"OK",nil) otherButtonTitles:nil];
-    [alert show];
+     UIAlertView *alert = [[UIAlertView alloc] initWithTitle:NSLocalizedString(@"loadMetaFail",nil) message:error.description delegate:nil cancelButtonTitle:NSLocalizedString(@"OK",nil) otherButtonTitles:nil];
+     [alert show];
      */
     [self dequeueEventIdAndStartDownloadPhotos];
     if (showDownloadAllLoadMetadataErrorAlert)
@@ -1490,7 +1501,7 @@
             }
             return;
         }
-
+        
         UIAlertView *alert = [[UIAlertView alloc]initWithTitle: NSLocalizedString(@"Could not import from Dropbox",nil)
                                                        message: NSLocalizedString(@"May be the network is not available",nil)
                                                       delegate: self
@@ -1501,13 +1512,14 @@
         [alert show];
     }
 }
-- (void)restClient:(DBRestClient*)client loadedFile:(NSString*)localPath
-       contentType:(NSString*)contentType metadata:(DBMetadata*)metadata {
+
+- (void) loadedFileCallback:(NSString*)localPath
+                contentType:(NSString*)contentType metadata:(DBMetadata*)metadata {
     if (![localPath hasSuffix:@"thumbnail" ])
     {
         photoFromDropboxCell.textLabel.text = [NSString stringWithFormat:NSLocalizedString(@"Downloading .. %d success, %d warnings",nil), totalDownloadFromDropboxSuccessCount, downloadFromDropboxFailCount];
     }
-	//[self promptCopyFromDropboxStatus];
+    //[self promptCopyFromDropboxStatus];
     downloadFromDropboxSuccessCount++;
     progressDownloadPhotoCount ++;
     progressDownloadDetailView.progress = (float)progressDownloadPhotoCount/(float)progressDownloadTotalNumberOfPhotosInOneEvent;
@@ -1515,15 +1527,15 @@
         [self dequeueEventIdAndStartDownloadPhotos];
 }
 
-- (void)restClient:(DBRestClient*)client loadFileFailedWithError:(NSError*)error {
+- (void) loadFileFailedWithErrorCallback:(NSError*)error {
     downloadFromDropboxFailCount++;
     if (downloadFromDropboxSuccessCount + downloadAlreadyExistCount + downloadFromDropboxFailCount >= downloadFromDropboxStartCount)
         [self dequeueEventIdAndStartDownloadPhotos];
     photoFromDropboxCell.textLabel.text = [NSString stringWithFormat:NSLocalizedString(@"Downloading ... %d success, %d warnings",nil), totalDownloadFromDropboxSuccessCount, downloadFromDropboxFailCount];
     //[self promptCopyFromDropboxStatus];
     /*
-    UIAlertView *alert = [[UIAlertView alloc] initWithTitle:NSLocalizedString(@"loadFileFail",nil) message:error.description delegate:nil cancelButtonTitle:NSLocalizedString(@"OK",nil) otherButtonTitles:nil];
-    [alert show];
+     UIAlertView *alert = [[UIAlertView alloc] initWithTitle:NSLocalizedString(@"loadFileFail",nil) message:error.description delegate:nil cancelButtonTitle:NSLocalizedString(@"OK",nil) otherButtonTitles:nil];
+     [alert show];
      */
 }
 
@@ -1551,12 +1563,5 @@
     [self.navigationController pushViewController:helpView animated:true];
 }
 
-- (DBRestClient *)myRestClient {
-    if (!self._restClient) {
-        self._restClient =
-        [[DBRestClient alloc] initWithSession:[DBSession sharedSession]];
-        self._restClient.delegate = self;
-    }
-    return self._restClient;
-}
+
 @end
