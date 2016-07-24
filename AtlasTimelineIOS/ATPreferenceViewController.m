@@ -619,7 +619,6 @@
         }
     }
     else if (section == SECTION_MISC)
-        
     {
         switch (row) {
             case ROW_OPTIONS:
@@ -764,7 +763,12 @@
     }
     if (section == SECTION_SYNC_MYEVENTS_PHOTO_TO_DROPBOX)
     {
-        label.text = NSLocalizedString(@"Backup/Restore Photos to Dropbox",nil);
+        UIImage *img = [UIImage imageNamed:@"Dropbox-icon"];
+        UIImageView *icon = [[UIImageView alloc] initWithImage:img];
+        [icon setFrame:CGRectMake(5, 0, 30, 30)];
+        [customView addSubview:icon];
+        label.text = NSLocalizedString(@"Backup Photos to Dropbox",nil);
+        [label setFrame:CGRectMake(10, 0, tableView.bounds.size.width, 30)];
     }
     if (section == SECTION_MISC)
     {

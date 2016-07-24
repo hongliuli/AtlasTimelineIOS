@@ -57,7 +57,10 @@
 
 - (void)restClient:(DBRestClient*)client loadedRevisions:(NSArray *)revisions forFile:(NSString *)path
 {
-    [self.preferenceViewController loadedRevisionsCallback:revisions forFile:path];
+    if (self.preferenceViewController != nil)
+        [self.preferenceViewController loadedRevisionsCallback:revisions forFile:path];
+    else
+        [self.editorController loadedRevisionsCallback:revisions forFile:path];
     
 }
 
@@ -68,7 +71,10 @@
 
 - (void)restClient:(DBRestClient*)client loadRevisionsFailedWithError:(NSError *)error
 {
-    [self.preferenceViewController loadRevisionsFailedWithErrorCallback:error];
+    if (self.preferenceViewController != nil)
+        [self.preferenceViewController loadRevisionsFailedWithErrorCallback:error];
+    else
+        [self.editorController loadRevisionsFailedWithErrorCallback:error];
 }
 
 // Folder is the metadata for the newly created folder
@@ -89,20 +95,32 @@
 //following loadedMetadata delegate is for copy from dropbox to device. When it come here after loadMetaData() called with eventId
 - (void)restClient:(DBRestClient*)client loadedMetadata:(DBMetadata*)metadata
 {
-    [self.preferenceViewController loadedMetadataCallback:metadata];
+    if (self.preferenceViewController != nil)
+        [self.preferenceViewController loadedMetadataCallback:metadata];
+    else
+        [self.editorController loadedMetadataCallback:metadata];
 }
 
 - (void)restClient:(DBRestClient*)client loadMetadataFailedWithError:(NSError*)error
 {
-    [self.preferenceViewController loadMetadataFailedWithErrorCallback:error];
+    if (self.preferenceViewController != nil)
+        [self.preferenceViewController loadMetadataFailedWithErrorCallback:error];
+    else
+        [self.editorController loadMetadataFailedWithErrorCallback:error];
 }
 - (void)restClient:(DBRestClient*)client loadedFile:(NSString*)localPath
        contentType:(NSString*)contentType metadata:(DBMetadata*)metadata {
-    [self.preferenceViewController loadedFileCallback:localPath contentType:contentType metadata:metadata];
+    if (self.preferenceViewController != nil)
+        [self.preferenceViewController loadedFileCallback:localPath contentType:contentType metadata:metadata];
+    else
+        [self.editorController loadedFileCallback:localPath contentType:contentType metadata:metadata];
 }
 
 - (void)restClient:(DBRestClient*)client loadFileFailedWithError:(NSError*)error {
-    [self.preferenceViewController loadFileFailedWithErrorCallback:error];
+    if (self.preferenceViewController != nil)
+        [self.preferenceViewController loadFileFailedWithErrorCallback:error];
+    else
+        [self.editorController loadFileFailedWithErrorCallback:error];
 }
 
 //delegate called by upload to dropbox

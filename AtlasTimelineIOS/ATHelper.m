@@ -996,8 +996,13 @@ UIPopoverController *verifyViewPopover;
             [eventList addObject:evt];
             
             //Should call following in background (there is no photos for secondary poi
+            
+            /*** 5/12/2016 use web photo idea to dynamically download photo
+             *** in poi event file, add these [[https://dl.dropboxusercontent.com/u/87265216/<event_id>.jpg]]
+             
             if (evt.eventType != POI_DISPLAY_TYPE_ORANGE)
                 [self writePoiProfilePhotoToFileFromWeb:evt.uniqueId];
+             */
         }
     }
     

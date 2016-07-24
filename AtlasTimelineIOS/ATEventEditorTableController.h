@@ -10,6 +10,7 @@
 #import "ATEventAnnotation.h"
 #import "ATViewImagePickerController.h"
 #import "ATPhotoScrollView.h"
+#import <DropboxSDK/DropboxSDK.h>
 
 @protocol EventEditorDelegate ;
 
@@ -66,6 +67,13 @@
 + (void)setEventId:(NSString*)eventId;
 + (int) selectedPhotoIdx;
 + (void) setSelectedPhotoIdx:(int)idx;
+
+- (void) loadedMetadataCallback:(DBMetadata*)metadata;
+- (void) loadMetadataFailedWithErrorCallback:(NSError*)error;
+- (void) loadedFileCallback:(NSString*)localPath contentType:(NSString*)contentType metadata:(DBMetadata*)metadata;
+- (void) loadFileFailedWithErrorCallback:(NSError*)error;
+- (void) loadedRevisionsCallback:(NSArray *)revisions forFile:(NSString *)path;
+- (void) loadRevisionsFailedWithErrorCallback:(NSError *)error;
 
 @end
 

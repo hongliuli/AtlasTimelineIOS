@@ -17,6 +17,7 @@
 #import <QuartzCore/QuartzCore.h>
 #import <Social/Social.h>
 #import "SWRevealViewController.h"
+#import "ATDropboxHelper.h"
 
 #define JPEG_QUALITY 1.0
 #define THUMB_JPEG_QUALITY 0.3
@@ -83,6 +84,11 @@ NSMutableDictionary *photoFilesMetaMap;
 NSString* descriptionWithMetadata;
 NSTimer* _timerRefreshWebPhoto;
 int assumeNoMoreWebPhotoToDownloadCount;
+ATDropboxHelper* dropboxHelper;
+UIButton *refreshFromDropboxBtn;
+
+NSInteger totalInDropbox;
+UIProgressView* progressDownloadDetailView;
 
 #pragma mark UITableViewDelegate
 /*
@@ -142,6 +148,45 @@ forRowAtIndexPath: (NSIndexPath*)indexPath
     UISwipeGestureRecognizer *rightSwiper = [[UISwipeGestureRecognizer alloc] initWithTarget:self action:@selector(swipeRight)];
 	rightSwiper.direction = UISwipeGestureRecognizerDirectionRight;
 	[self.view addGestureRecognizer:rightSwiper];
+    if (dropboxHelper == nil)
+        dropboxHelper = [[ATDropboxHelper alloc] init];
+    dropboxHelper.editorController = self;
+    
+    markerPickerTitleList = [[NSMutableArray alloc] init];
+    markerPickerImageNameList = [[NSMutableArray alloc] init];
+    [markerPickerTitleList addObject:@"Default"];
+    [markerPickerTitleList addObject:@"Star"];
+    [markerPickerTitleList addObject:@"Eat/Food"];
+    [markerPickerTitleList addObject:@"Hotel/Bed"];
+    [markerPickerTitleList addObject:@"Transportation"];
+    [markerPickerTitleList addObject:@"Air Port"];
+    [markerPickerTitleList addObject:@"Scenary/View"];
+    [markerPickerTitleList addObject:@"Historical"];
+    [markerPickerTitleList addObject:@"Art/Museum"];
+    [markerPickerTitleList addObject:@"Party"];
+    [markerPickerTitleList addObject:@"Uncertain"];
+    [markerPickerTitleList addObject:@"Information"];
+    [markerPickerTitleList addObject:@"Hiking"];
+    [markerPickerTitleList addObject:@"Wildlife"];
+    [markerPickerTitleList addObject:@"School"];
+    [markerPickerTitleList addObject:@"Hospital"];
+    
+    [markerPickerImageNameList addObject:@"marker_selected.png"];
+    [markerPickerImageNameList addObject:@"marker_star.png"];
+    [markerPickerImageNameList addObject:@"marker_food.png"];
+    [markerPickerImageNameList addObject:@"marker_bed.png"];
+    [markerPickerImageNameList addObject:@"marker_bus.png"];
+    [markerPickerImageNameList addObject:@"marker_airport.png"];
+    [markerPickerImageNameList addObject:@"marker_view.png"];
+    [markerPickerImageNameList addObject:@"marker_historical.png"];
+    [markerPickerImageNameList addObject:@"marker_art.png"];
+    [markerPickerImageNameList addObject:@"marker_party.png"];
+    [markerPickerImageNameList addObject:@"marker_question.png"];
+    [markerPickerImageNameList addObject:@"marker_info.png"];
+    [markerPickerImageNameList addObject:@"marker_hiking.png"];
+    [markerPickerImageNameList addObject:@"marker_wildlife.png"];
+    [markerPickerImageNameList addObject:@"marker_school.png"];
+    [markerPickerImageNameList addObject:@"marker_hospital.png"];
 }
 
 - (void)swipeRight {
@@ -225,13 +270,9 @@ forRowAtIndexPath: (NSIndexPath*)indexPath
         customView = [[UIView alloc] initWithFrame:CGRectMake(0.0, 0.0, 300.0, 40.0)];
         
         //Label in the view
-        UILabel* label = [[UILabel alloc] initWithFrame:CGRectMake(10, 0, 100, 40)];
-        label.backgroundColor = [UIColor clearColor];
-        label.text = NSLocalizedString(@"Addr:",nil);
-        [customView addSubview:label];
         
         UIButton *shareButton = [UIButton buttonWithType:UIButtonTypeCustom];
-        shareButton.frame = CGRectMake(260, 0, 30, 30);
+        shareButton.frame = CGRectMake(200, 0, 30, 30);
         [shareButton setImage:[UIImage imageNamed:@"share.png"] forState:UIControlStateNormal];
         [shareButton addTarget:self action:@selector(shareButtonAction:) forControlEvents:UIControlEventTouchUpInside];
         [customView addSubview:shareButton];
@@ -251,7 +292,7 @@ forRowAtIndexPath: (NSIndexPath*)indexPath
         if (![ATHelper isViewMode]) //can create episode on myEvents only
         {
             UIButton *episodeButton = [UIButton buttonWithType:UIButtonTypeCustom];
-            episodeButton.frame = CGRectMake(200, 0, 40, 30);
+            episodeButton.frame = CGRectMake(260, 0, 40, 30);
             if ([self.delegate isInEpisode])
                 [episodeButton setImage:[UIImage imageNamed:@"add-to-episode-folder-reverse.png"] forState:UIControlStateNormal];
             else
@@ -260,11 +301,26 @@ forRowAtIndexPath: (NSIndexPath*)indexPath
             [customView addSubview:episodeButton];
         
             UIButton *markerPicker = [UIButton buttonWithType:UIButtonTypeCustom];
-            markerPicker.frame = CGRectMake(70, 0, 30, 30);
-            [markerPicker setImage:[UIImage imageNamed:@"marker_star.png"] forState:UIControlStateNormal];
+            markerPicker.frame = CGRectMake(10, 0, 30, 30);
+            
+            NSString* markerName = [ATHelper getMarkerNameFromDescText: self.description.text];
+            NSString* markerImageName = [NSString stringWithFormat:@"marker_%@.png", markerName];
+            if (markerName == nil)
+                markerImageName = @"marker_selected.png";
+            [markerPicker setImage:[UIImage imageNamed:markerImageName] forState:UIControlStateNormal];
+            
             [markerPicker setAlpha:0.8];
             [markerPicker addTarget:self action:@selector(markerPickerAction:) forControlEvents:UIControlEventTouchUpInside];
+            if (refreshFromDropboxBtn == nil)
+            {
+                refreshFromDropboxBtn = [UIButton buttonWithType:UIButtonTypeCustom];
+                [refreshFromDropboxBtn setImage:[UIImage imageNamed:@"Dropbox-icon.png"] forState:UIControlStateNormal];
+                refreshFromDropboxBtn.frame = CGRectMake(60, 0, 30, 30);
+                [refreshFromDropboxBtn addTarget:self action:@selector(refreshFromDropboxAction:) forControlEvents:UIControlEventTouchUpInside];
+            }
+            
             [customView addSubview:markerPicker];
+            [customView addSubview:refreshFromDropboxBtn];
         }
         lblShareCount = [[UILabel alloc] initWithFrame:CGRectMake(285, -25, 100, 40)];
         lblShareCount.font = [UIFont fontWithName:@"Helvetica" size:10];
@@ -645,8 +701,18 @@ forRowAtIndexPath: (NSIndexPath*)indexPath
             emailSubject = [NSString stringWithFormat:@"%@...",[emailSubject substringToIndex:50]];
         [activityController setValue:emailSubject forKey:@"subject"];
     
-        [self presentViewController:activityController
-                       animated:YES completion:nil];
+        
+        if (UI_USER_INTERFACE_IDIOM() == UIUserInterfaceIdiomPhone) {
+            [self presentViewController:activityController animated:YES completion:nil];
+        }
+        //if iPad (need this change because event editor is not popopver as Flickr version
+        else {
+            // Change Rect to position Popover
+            UIPopoverController *popup = [[UIPopoverController alloc] initWithContentViewController:activityController];
+            [popup presentPopoverFromRect:CGRectMake(self.view.frame.size.width/2, self.view.frame.size.height/4, 0, 0)inView:self.view permittedArrowDirections:UIPopoverArrowDirectionAny animated:YES];
+        }
+        
+        
         
     }
     else
@@ -659,45 +725,150 @@ forRowAtIndexPath: (NSIndexPath*)indexPath
         [alert show];
     }
 }
+
+- (void)refreshFromDropboxAction:(id)sender {
+    UIAlertController* alert = [UIAlertController alertControllerWithTitle:@"Restore photos from Dropbox"
+                                                                   message:@"Tip: Photos can be backup to Dropbox in top right menu -> Photo Backup"
+                                                            preferredStyle:UIAlertControllerStyleAlert];
+    
+    UIAlertAction* action1 = [UIAlertAction actionWithTitle:@"Continue" style:UIAlertActionStyleDefault handler:^(UIAlertAction * action) {
+        [self startRestoreFromDropbox];
+    }];
+    UIAlertAction* action2 = [UIAlertAction actionWithTitle:@"Cancel" style:UIAlertActionStyleDefault handler:^(UIAlertAction * action) {}];
+    
+    [alert addAction:action1];
+    [alert addAction:action2];
+    [self presentViewController:alert animated:YES completion:nil];
+}
+
+-(void) startRestoreFromDropbox
+{
+    if (![[DBSession sharedSession] isLinked]) {
+        [[DBSession sharedSession] linkFromController:self];
+        return;
+    }
+    //if local path does not exist, loadFile will not write
+    NSString* localFullPath = [ATHelper getPhotoDocummentoryPath];
+    if (![[NSFileManager defaultManager] fileExistsAtPath:localFullPath])
+        [[NSFileManager defaultManager] createDirectoryAtPath:localFullPath withIntermediateDirectories:YES attributes:nil error:nil];
+    
+    ATEventDataStruct *ent = self.eventData;
+    //local path has to exist for loadFile to save. But local path may not exist after re-install app so need do it here
+    if (![[NSFileManager defaultManager] fileExistsAtPath:[localFullPath stringByAppendingPathComponent:ent.uniqueId]])
+        [[NSFileManager defaultManager] createDirectoryAtPath:[localFullPath stringByAppendingPathComponent:ent.uniqueId] withIntermediateDirectories:YES attributes:nil error:nil];
+    
+    [dropboxHelper loadMetadata:[NSString stringWithFormat:@"/ChronicleMap/%@/%@", [ATHelper getSelectedDbFileName], ent.uniqueId]];
+}
+
+-(void) startFlashingbutton
+{
+    if (refreshFromDropboxBtn) return;
+    refreshFromDropboxBtn.alpha = 1.0f;
+    [UIView animateWithDuration:0.12
+                          delay:0.0
+                        options:UIViewAnimationOptionCurveEaseInOut |
+     UIViewAnimationOptionRepeat |
+     UIViewAnimationOptionAutoreverse |
+     UIViewAnimationOptionAllowUserInteraction
+                     animations:^{
+                         refreshFromDropboxBtn.alpha = 0.0f;
+                     }
+                     completion:^(BOOL finished){
+                         refreshFromDropboxBtn.alpha = 1.0f;
+                     }];
+}
+
+//following loadedMetadata delegate is for copy from dropbox to device. When it come here after loadMetaData() called with eventId
+- (void) loadedMetadataCallback:(DBMetadata*)metadata
+{
+    if (metadata.isDirectory) {
+        if (metadata.contents == nil || [metadata.contents count] == 0)
+        {
+            return;
+        }
+        NSMutableArray* photoNameQueueForCurrentEventIdFromDropbox = [[NSMutableArray alloc] initWithArray:metadata.contents];
+        totalInDropbox = [metadata.contents count];
+        NSString* currentEventMetapath = metadata.path;
+        BOOL noMoreDownloadFlag = true;
+        //Following loop will be block waiting if has photo
+        for (DBMetadata* file in photoNameQueueForCurrentEventIdFromDropbox)
+        {
+            NSString* partialPath = [currentEventMetapath substringFromIndex:14]; //metadata.path is "/ChronicleMap/myEvents/eventid"
+            NSString* localPhotoPath = [[[ATHelper getRootDocumentoryPath]  stringByAppendingPathComponent:partialPath] stringByAppendingPathComponent:file.filename];
+            
+            if (![[NSFileManager defaultManager] fileExistsAtPath:localPhotoPath]){
+                //NSLog(@"    --- local %@ already=%d  success=%d   fail=%d",[localPhotoPath substringFromIndex:85], downloadAlreadyExistCount,downloadFromDropboxSuccessCount,downloadFromDropboxFailCount);
+                [dropboxHelper loadFile:[NSString stringWithFormat:@"%@/%@", currentEventMetapath, file.filename ] intoPath:localPhotoPath];
+                noMoreDownloadFlag = false;
+            }
+        }
+        if (noMoreDownloadFlag)
+        {
+            UIAlertView *alert = [[UIAlertView alloc]initWithTitle: NSLocalizedString(@"No more photos to restore from Dropbox",nil)
+                                                           message: NSLocalizedString(@"",nil)
+                                                          delegate: self
+                                                 cancelButtonTitle:NSLocalizedString(@"OK",nil)
+                                                 otherButtonTitles:nil,nil];
+            
+            
+            [alert show];
+        }
+        
+    }
+}
+
+- (void) loadMetadataFailedWithErrorCallback:(NSError*)error
+{
+    NSInteger errorCode = error.code;
+    if (errorCode == 404)
+    {
+        UIAlertView *alert = [[UIAlertView alloc]initWithTitle: NSLocalizedString(@"No photos to restore",nil)
+                                                       message: NSLocalizedString(@"There is no photo for this event",nil)
+                                                      delegate: self
+                                             cancelButtonTitle:NSLocalizedString(@"OK",nil)
+                                             otherButtonTitles:nil,nil];
+        
+        
+        [alert show];
+    }
+    else
+    {
+        UIAlertView *alert = [[UIAlertView alloc]initWithTitle: NSLocalizedString(@"Could not import from Dropbox",nil)
+                                                       message: NSLocalizedString(@"May be the network is not available",nil)
+                                                      delegate: self
+                                             cancelButtonTitle:NSLocalizedString(@"OK",nil)
+                                             otherButtonTitles:nil,nil];
+        
+        
+        [alert show];
+    }
+}
+
+
+- (void) loadedFileCallback:(NSString*)localPath
+                contentType:(NSString*)contentType metadata:(DBMetadata*)metadata {
+    //TODO refresh photo view
+    NSLog(@"-------- loadedFile ----%@", localPath);
+    self.isFirstTimeAddPhoto = false;
+    if ([localPath rangeOfString:@"thumbnail"].location == NSNotFound
+        && [localPath rangeOfString:@"MetaFileForOrderAndDesc"].location == NSNotFound
+        && ![self.photoScrollView.photoList containsObject:localPath])
+        [self.photoScrollView.photoList addObject:localPath];
+    else
+        totalInDropbox --;
+
+    [self.photoScrollView.horizontalTableView reloadData];
+    [self updatePhotoCountLabelForRestoreFromDropbox];
+    [self startFlashingbutton];
+}
+
+- (void) loadFileFailedWithErrorCallback:(NSError*)error
+{
+    NSLog(@"############## loadFileError ----%@", error.description);
+}
+
 - (void)markerPickerAction:(id)sender {
 
-    
-    markerPickerTitleList = [[NSMutableArray alloc] init];
-    markerPickerImageNameList = [[NSMutableArray alloc] init];
-    [markerPickerTitleList addObject:@"Default"];
-    [markerPickerTitleList addObject:@"Star"];
-    [markerPickerTitleList addObject:@"Eat/Food"];
-    [markerPickerTitleList addObject:@"Hotel/Bed"];
-    [markerPickerTitleList addObject:@"Transportation"];
-    [markerPickerTitleList addObject:@"Air Port"];
-    [markerPickerTitleList addObject:@"Scenary/View"];
-    [markerPickerTitleList addObject:@"Historical"];
-    [markerPickerTitleList addObject:@"Art/Museum"];
-    [markerPickerTitleList addObject:@"Party"];
-    [markerPickerTitleList addObject:@"Uncertain"];
-    [markerPickerTitleList addObject:@"Information"];
-    [markerPickerTitleList addObject:@"Hiking"];
-    [markerPickerTitleList addObject:@"Wildlife"];
-    [markerPickerTitleList addObject:@"School"];
-    [markerPickerTitleList addObject:@"Hospital"];
-    
-    [markerPickerImageNameList addObject:@"marker_selected.png"];
-    [markerPickerImageNameList addObject:@"marker_star.png"];
-    [markerPickerImageNameList addObject:@"marker_food.png"];
-    [markerPickerImageNameList addObject:@"marker_bed.png"];
-    [markerPickerImageNameList addObject:@"marker_bus.png"];
-    [markerPickerImageNameList addObject:@"marker_airport.png"];
-    [markerPickerImageNameList addObject:@"marker_view.png"];
-    [markerPickerImageNameList addObject:@"marker_historical.png"];
-    [markerPickerImageNameList addObject:@"marker_art.png"];
-    [markerPickerImageNameList addObject:@"marker_party.png"];
-    [markerPickerImageNameList addObject:@"marker_question.png"];
-    [markerPickerImageNameList addObject:@"marker_info.png"];
-    [markerPickerImageNameList addObject:@"marker_hiking.png"];
-    [markerPickerImageNameList addObject:@"marker_wildlife.png"];
-    [markerPickerImageNameList addObject:@"marker_school.png"];
-    [markerPickerImageNameList addObject:@"marker_hospital.png"];
-    
     markerPickerSelectedItemName = [ATHelper getMarkerNameFromDescText:self.description.text];
     markerPickerView = [[UIPickerView alloc] initWithFrame:CGRectMake(0, 215, 360, 440)];
     markerPickerView.delegate = self;
@@ -1174,6 +1345,15 @@ forRowAtIndexPath: (NSIndexPath*)indexPath
     }
     else
         lblNewAddedCount.hidden = false;
+}
+
+- (void)updatePhotoCountLabelForRestoreFromDropbox
+{
+    //Change total/new added photos count
+    lblTotalCount.text = [NSString stringWithFormat:@"%d/%d", [self.photoScrollView.photoList count], totalInDropbox];
+    CGRect frame = [lblTotalCount frame];
+    frame.size.width = 80;
+    [lblTotalCount setFrame:frame];
 }
 
 - (void)viewDidUnload {

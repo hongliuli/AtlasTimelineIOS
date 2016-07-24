@@ -196,7 +196,14 @@ NSString* selectedPOIEventId;
         
         UIImageView* iconView = (UIImageView*) [cellPoi viewWithTag:9999]; //modify that from parent
         [iconView setFrame:CGRectMake(2, 2, poiImageWidth, poiImageHeight)];
-        [iconView setImage:[ATHelper readPhotoFromFile:evt.uniqueId eventId:evt.uniqueId]];
+        UIImage* img = [ATHelper readPhotoFromFile:evt.uniqueId eventId:evt.uniqueId];
+        if (img == nil)
+        {
+            NSArray* thumbFileUrlList = [ATHelper getPhotoUrlsFromDescText:evt.eventDesc];
+            if (thumbFileUrlList != nil && [thumbFileUrlList count] > 0)
+                img = [ATHelper fetchAndCachePhotoFromWeb:thumbFileUrlList[0] thumbPhotoId:evt.uniqueId];
+        }
+        [iconView setImage:img];
         //[iconView setImage:[ATHelper readPhotoThumbFromFile:evt.uniqueId]];
         return cellPoi;
     }
