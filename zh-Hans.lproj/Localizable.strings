@@ -62,10 +62,10 @@
 "Map It"="上地图";
 "Pick an item to show; recover myEvents.."="选择内容显示地图上；备份／恢复myEvents..";
 "Backup myEvents to server"="备份myEvents到服务器";
-"Backup Photos (Full)"="完全备份";
+"Full Dump Photos"="完全备份相片";
 "Backup Photos (Incremental)"="增量备份";
 "Backup/Restore myEvents data"="备份/恢复myEvents数据";
-"Backup/Restore Photos to Dropbox"="备份/恢复照片到Dropbox";
+"Backup Photos to Dropbox"="备份/恢复照片到Dropbox";
 "By Map"="按地图列表";
 "By Time"="按期间列表";
 "Cancel"="取消";
@@ -162,6 +162,7 @@
 "Network may not be available, Please try later!"=" 网络不通，请稍后再试!";
 "Network is needed the first time access this POI group"="第一次选择这些POI需要网路下载";
 "No"="不";
+"No more photos to restore from Dropbox"="再没有相片可以下载";
 "No photos to export to your Dropbox!"="没有照片可上载到你的Dropbox!";
 "Not login"="没有登录";
 "Not Now"="下次再说";
@@ -206,7 +207,9 @@
 "Replace photos on Dropbox for %@"="替换Dropbox中%@的照片";
 "Reset to Default"="复位到缺省设置";
 "Restore Finish!"="恢复照片文件结束！";
-"Restore Photos"="恢复照片";
+"Restore photos from Dropbox"="从Dropbox恢复相片";
+"Tip: Photos in this app can be backup to Dropbox:/ChronicleMap/ directory in Menu -> Photo Backup"="小窍门：该app 的相片可以用［菜单 -> 相片备份］备份到Dropbox:/ChronicleMap/ 目录下";
+"Full Restore Photos"="完全恢复照片";
 "Restore Purchase"="恢复购买";
 "Save failed"="保存失败";
 "Save"="存储";
@@ -236,9 +239,11 @@
 "Swipe time wheel, the events in the selected period will be:\n  - listed on the left\n  - colored darker on map\nIf switch map mode to [By Map], swipe map and the events occur on screen will be listed instead.\n(Note: red/green dots above the time wheel indicate the existence of events in that period)"="刷动时间轮，在时间轴上被选事件就会:\n  - 出现在左边列表\n  - 在地图上变为深红色\n如果切换到 [按地图列表], 出现在左边列表中的事件就是刷动地图而出现在屏幕上的事件.\n(注: 时间轮上方的小红点小绿点代表该时间段有事件)";
 "Switch to [myEvents] to create your own event:\n        Tap on Menu:\n        -> Collection Box\n        -> Left swip the 1st row [myEvents]\n        -> Map It"="切换到[myEvents]才能创建自己的事件:\n        点击菜单:\n        -> 收藏箱\n        -> 左刷第一行[myEvents]\n        -> 上地图";
 "Sync %i events to %@ on server"="同步 %i 个事件到服务器的[%@]";
+"Synch newly added/deleted photos to Dropbox:/ChronicleMap/ directory.\n\n(These photos on Dropbox can be restored to Chronicle Map app installed on any device.)"="把最近加入或删掉的相片同步到你的 Dropbox:/ChronicleMap/ 目录。\n\n这些同步到 Dropbox 上的相片，可以恢复到安装在任何手机／iPad上的 ChronicleMap app.";
 "Tap (+) or double-tab here to zoom in"="点击 (+) 或双击这里来放大时间范围";
 "Tap (-) or double-tab here to zoom out"="点击 (-) 或双击这里来缩小时间范围";
 "Tip: Green dots - events in this period is on screen."="小窍门: 绿点表明这个时间段的事件正在地图上可见 .";
+"Tip:"="小窍门:";
 "Temporary network problem, Please try again!"="网络暂时有问题，请稍后再试!";
 "The access to Address Book has previously been denied"="访问通讯录曾被拒绝";
 "The correct date format is MM/dd/yyyy Era (such as %@)"="正确日期格式：MM/dd/yyyy Era (例如 %@)";
@@ -260,7 +265,7 @@
 "Verify Failed!"="验证代码失败!";
 "Video Tutorial and FAQ"="教程和 FAQ";
 "Wrong Date Format"="错误日期格式";
-"WARNING: All photoes on your dropbox:/ChronicleMap/%@ will be deleted and replaced by %d photos from this device!"="警告: 在你的 Dropbox:/ChoronicleMap/%@ 中的所有照片将被删除，而被设备APP上的%d 照片所代替!";
+"WARNING: All photoes on your dropbox:/ChronicleMap/%@ will be deleted and replaced by %d photos from this device!"="警告: 在你的 Dropbox:/ChoronicleMap/%@ 中的所有照片将被删除，而被设备APP上的%d 张照片所代替!";
 "WARNING: Export will replace existing %@ event data on server."="警告: 上载将替换服务器上的 %@ 事件数据.";
 "WARNING: Local %@'s %@ events will be replaced!"="警告: 设备上 %@ 的 %@ 事件将被代替!";
 "Warning: Photo change(s) are not saved."="警告: 相片修改没有被保存";
@@ -285,6 +290,7 @@
 "%@ - Your life stories"="%@ - 你的人生故事";
 "Update %@.."="更新 %@..";
 "Update %@"="更新 %@";
+"USE WITH CARE: Dump is only useful when copy all photos to another Dropbox account."="小心: 只有当你想拷贝全部相片到另一个Dropbox账号时，才使用这个选项";
 "Verify"="验证代码";
 "View photos: Tap a photo in event editor to view photo in large size. Things can be done in this view:\n  - Add description to each photo\n  - Order photo display sequence\n    \nPick photos to attach to event sharing\n  - Delete the photo (The real deletion happen when save event change)"="点击编辑器中的照片，显示大照片。这时可做这些功能：\n  - 为每张照片添加描述文字\n  - 排序照片\n  － 选择分享照片\n  - 选择要删除的照片";
 "Zoom to Week (Default is Month)"="缩放到星期 (缺省是月)";

@@ -40,7 +40,7 @@
 #define ROW_PURCHASE 2
 #define ROW_RESTORE_PURCHASE 3
 #define IN_APP_PURCHASED @"IN_APP_PURCHASED"
-#define RESTORE_PHOTO_TITLE NSLocalizedString(@"Restore Photos",nil)
+#define RESTORE_PHOTO_TITLE NSLocalizedString(@"Full Restore Photos",nil)
 
 #define FOR_SHARE_MY_EVENTS 1
 
@@ -653,10 +653,23 @@
     {
         switch (row) {
             case ROW_SYNC_TO_DROPBOX:
-                cell.textLabel.text = NSLocalizedString(@"Backup Photos (Incremental)",nil);
+            {
+                ATDataController* dataController = [[ATDataController alloc] initWithDatabaseFileName:[ATHelper getSelectedDbFileName]];
+                int numberOfNewPhotos = [dataController getNewPhotoQueueSizeExcludeThumbNail];
+                int numberOfDeletedPhoto = [dataController getDeletedPhotoQueueSize];
+                cell.textLabel.text = [NSString stringWithFormat:NSLocalizedString(@"Photo Backup - New:%d  Del:%d",nil),numberOfNewPhotos,numberOfDeletedPhoto ];
+                PhotoToDropboxCell = cell;
+                if (progressUploadView == nil)
+                {
+                    progressUploadView = [[UIProgressView alloc] initWithFrame:CGRectMake(30, 38, 200, 30)];
+                    [cell.contentView addSubview:progressUploadView];
+                    progressUploadView.hidden = true;
+                }
+                progressUploadView.progress = 0.0f;
                 break;
+            }
             case ROW_SYNC_TO_DROPBOX_ALL:
-                cell.textLabel.text = NSLocalizedString(@"Backup Photos (Full)",nil);
+                cell.textLabel.text = NSLocalizedString(@"Full Dump Photos",nil); //Backup Photos (Full)
                 break;
             case ROW_SYNC_FROM_DROPBOX:
                 cell.textLabel.text = RESTORE_PHOTO_TITLE;
@@ -671,27 +684,11 @@
                 }
                 progressDownloadOveralView.progress = 0.0f;
                 progressDownloadDetailView.progress = 0.0f;
+                photoFromDropboxCell = cell;
                 break;
             default:
                 break;
         }
-        if (row == ROW_SYNC_TO_DROPBOX )
-        {
-            ATDataController* dataController = [[ATDataController alloc] initWithDatabaseFileName:[ATHelper getSelectedDbFileName]];
-            int numberOfNewPhotos = [dataController getNewPhotoQueueSizeExcludeThumbNail];
-            int numberOfDeletedPhoto = [dataController getDeletedPhotoQueueSize];
-            cell.textLabel.text = [NSString stringWithFormat:NSLocalizedString(@"Photo Backup - New:%d  Del:%d",nil),numberOfNewPhotos,numberOfDeletedPhoto ];
-            PhotoToDropboxCell = cell;
-            if (progressUploadView == nil)
-            {
-                progressUploadView = [[UIProgressView alloc] initWithFrame:CGRectMake(30, 38, 200, 30)];
-                [cell.contentView addSubview:progressUploadView];
-                progressUploadView.hidden = true;
-            }
-            progressUploadView.progress = 0.0f;
-        }
-        if (row == ROW_SYNC_FROM_DROPBOX)
-            photoFromDropboxCell = cell;
     }
     cell.textLabel.font = [UIFont fontWithName:@"Helvetica-italic" size:16];//no effect to chinese
     return cell;
@@ -995,33 +992,30 @@
     long row = indexPath.row;
     if (row == ROW_SYNC_TO_DROPBOX)
     {
-        if (![[DBSession sharedSession] isLinked]) {
-            [[DBSession sharedSession] linkFromController:self];
-            return;
-        }
-        int dbNewPhotoCount = [[self getDataController] getNewPhotoQueueSizeExcludeThumbNail];
-        int dbDeletedPhotoCount = [[self getDataController] getDeletedPhotoQueueSize];
-        //set cell count again (already done in celFor...) here, is to refresh count after user clicked this row and already synched
-        UITableViewCell *cell = [super tableView:tableView cellForRowAtIndexPath:indexPath];
-        cell.textLabel.text = [NSString stringWithFormat:NSLocalizedString(@"Photo Backup - New:%d  Del:%d",nil),dbNewPhotoCount,dbDeletedPhotoCount ];
-        if (dbNewPhotoCount + dbDeletedPhotoCount > 0)
-        {
-            [spinner startAnimating]; //stop when chain complete or any error
-            progressUploadView.hidden = false;
-            progressUploadTotalCount = dbNewPhotoCount + dbDeletedPhotoCount;
-        }
-        if (dbNewPhotoCount > 0) //will process both queue
-            [dropboxHelper createFolder:@"/ChronicleMap"]; //createFolder success/alreadyExist delegate will start the chain action, which will include delete Queue
-        else if (dbDeletedPhotoCount > 0) //bypass process createFolder, only delete file for more efficient
-            [self processEmptyDeletedPhotoQueue];
         
-        [UIApplication sharedApplication].idleTimerDisabled = YES;
-        UIAlertView *alert = [[UIAlertView alloc]initWithTitle: NSLocalizedString(@"Photo backup has started!",nil)
-                                                       message: NSLocalizedString(@"Photos will be uploaded to your Dropbox account one by one, please watch for the decreasing number.\n\nThe upload is done if number is decreased to 0. (Please repeat the operation if backup is interrupted)",nil)
-                                                      delegate: self
-                                             cancelButtonTitle:NSLocalizedString(@"OK",nil)
-                                             otherButtonTitles:nil,nil];
-        [alert show];
+        NSUserDefaults* userDefault = [NSUserDefaults standardUserDefaults];
+        NSString* promptFlag = [userDefault objectForKey:@"REMIND_BACKUP_RESTORE_INSTRUCTION"];
+        if (promptFlag == nil)
+        {
+            UIAlertController* alert = [UIAlertController alertControllerWithTitle:NSLocalizedString(@"Tip:", nil)
+                                    message:NSLocalizedString(@"Synch newly added/deleted photos to Dropbox:/ChronicleMap/ directory.\n\n(These photos on Dropbox can be restored to Chronicle Map app installed on any device.)",nil)
+                                    preferredStyle:UIAlertControllerStyleAlert];
+            
+            UIAlertAction* action1 = [UIAlertAction actionWithTitle:@"OK" style:UIAlertActionStyleDefault handler:^(UIAlertAction * action) {
+                [self startIncrementalBackup:tableView :indexPath];
+            }];
+            UIAlertAction* action2 = [UIAlertAction actionWithTitle:@"Don't Remind Me" style:UIAlertActionStyleDefault handler:^(UIAlertAction * action) {
+                [userDefault setObject:@"dummy" forKey:@"REMIND_BACKUP_RESTORE_INSTRUCTION"];
+                [self startIncrementalBackup:tableView :indexPath];
+            }];
+            
+            [alert addAction:action1];
+            [alert addAction:action2];
+            [self presentViewController:alert animated:YES completion:nil];
+            
+        }
+        else
+            [self startIncrementalBackup:tableView :indexPath];
         
     }
     else if (row == ROW_SYNC_TO_DROPBOX_ALL)
@@ -1065,12 +1059,20 @@
         }
         else
         {
+            uploadAllToDropboxAlert = [[UIAlertView alloc]initWithTitle: [NSString stringWithFormat:NSLocalizedString(@"USE WITH CARE: Dump is only useful when copy all photos to another Dropbox account.",nil)]
+                                                                message: [NSString stringWithFormat:NSLocalizedString(@"WARNING: All photoes on your dropbox:/ChronicleMap/%@ will be deleted and replaced by %d photos from this device!",nil),_source, totalPhotoCountInDevice]
+                                                               delegate: self
+                                                      cancelButtonTitle:NSLocalizedString(@"Cancel",nil)
+                                                      otherButtonTitles:NSLocalizedString(@"Yes, Continue",nil),nil];
+            [uploadAllToDropboxAlert show];
+            /*
             uploadAllToDropboxAlert = [[UIAlertView alloc]initWithTitle: [NSString stringWithFormat:NSLocalizedString(@"Replace photos on Dropbox for %@",nil), [ATHelper getSelectedDbFileName]]
                                                                 message: [NSString stringWithFormat:NSLocalizedString(@"WARNING: All photoes on your dropbox:/ChronicleMap/%@ will be deleted and replaced by %d photos from this device!",nil),_source, totalPhotoCountInDevice]
                                                                delegate: self
                                                       cancelButtonTitle:NSLocalizedString(@"Cancel",nil)
                                                       otherButtonTitles:NSLocalizedString(@"Yes, Continue",nil),nil];
             [uploadAllToDropboxAlert show];
+             */
         }
     }
     else if (row == ROW_SYNC_FROM_DROPBOX)
@@ -1116,6 +1118,37 @@
             [downloadAllFromDropboxAlert show];
         }
     }
+}
+
+- (void) startIncrementalBackup:(UITableView*)tableView  :(NSIndexPath *)indexPath
+{
+    if (![[DBSession sharedSession] isLinked]) {
+        [[DBSession sharedSession] linkFromController:self];
+        return;
+    }
+    int dbNewPhotoCount = [[self getDataController] getNewPhotoQueueSizeExcludeThumbNail];
+    int dbDeletedPhotoCount = [[self getDataController] getDeletedPhotoQueueSize];
+    //set cell count again (already done in celFor...) here, is to refresh count after user clicked this row and already synched
+    UITableViewCell *cell = [super tableView:tableView cellForRowAtIndexPath:indexPath];
+    cell.textLabel.text = [NSString stringWithFormat:NSLocalizedString(@"Photo Backup - New:%d  Del:%d",nil),dbNewPhotoCount,dbDeletedPhotoCount ];
+    if (dbNewPhotoCount + dbDeletedPhotoCount > 0)
+    {
+        [spinner startAnimating]; //stop when chain complete or any error
+        progressUploadView.hidden = false;
+        progressUploadTotalCount = dbNewPhotoCount + dbDeletedPhotoCount;
+    }
+    if (dbNewPhotoCount > 0) //will process both queue
+        [dropboxHelper createFolder:@"/ChronicleMap"]; //createFolder success/alreadyExist delegate will start the chain action, which will include delete Queue
+    else if (dbDeletedPhotoCount > 0) //bypass process createFolder, only delete file for more efficient
+        [self processEmptyDeletedPhotoQueue];
+    
+    [UIApplication sharedApplication].idleTimerDisabled = YES;
+    UIAlertView *alert = [[UIAlertView alloc]initWithTitle: NSLocalizedString(@"Photo backup has started!",nil)
+                                                   message: NSLocalizedString(@"Photos will be uploaded to your Dropbox account one by one, please watch for the decreasing number.\n\nThe upload is done if number is decreased to 0. (Please repeat the operation if backup is interrupted)",nil)
+                                                  delegate: self
+                                         cancelButtonTitle:NSLocalizedString(@"OK",nil)
+                                         otherButtonTitles:nil,nil];
+    [alert show];
 }
 
 //1) smart download, 2)if has local change, do merge then upload

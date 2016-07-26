@@ -727,14 +727,14 @@ forRowAtIndexPath: (NSIndexPath*)indexPath
 }
 
 - (void)refreshFromDropboxAction:(id)sender {
-    UIAlertController* alert = [UIAlertController alertControllerWithTitle:@"Restore photos from Dropbox"
-                                                                   message:@"Tip: Photos can be backup to Dropbox in top right menu -> Photo Backup"
+    UIAlertController* alert = [UIAlertController alertControllerWithTitle:NSLocalizedString(@"Restore photos from Dropbox",nil)
+                                                                   message:NSLocalizedString(@"Tip: Photos in this app can be backup to Dropbox:/ChronicleMap/ directory in Menu -> Photo Backup",nil)
                                                             preferredStyle:UIAlertControllerStyleAlert];
     
-    UIAlertAction* action1 = [UIAlertAction actionWithTitle:@"Continue" style:UIAlertActionStyleDefault handler:^(UIAlertAction * action) {
+    UIAlertAction* action1 = [UIAlertAction actionWithTitle:NSLocalizedString(@"Continue", nil) style:UIAlertActionStyleDefault handler:^(UIAlertAction * action) {
         [self startRestoreFromDropbox];
     }];
-    UIAlertAction* action2 = [UIAlertAction actionWithTitle:@"Cancel" style:UIAlertActionStyleDefault handler:^(UIAlertAction * action) {}];
+    UIAlertAction* action2 = [UIAlertAction actionWithTitle:NSLocalizedString(@"Cancel",nil) style:UIAlertActionStyleDefault handler:^(UIAlertAction * action) {}];
     
     [alert addAction:action1];
     [alert addAction:action2];
@@ -782,26 +782,31 @@ forRowAtIndexPath: (NSIndexPath*)indexPath
 - (void) loadedMetadataCallback:(DBMetadata*)metadata
 {
     if (metadata.isDirectory) {
+        BOOL noMoreDownloadFlag = true;
         if (metadata.contents == nil || [metadata.contents count] == 0)
         {
-            return;
+            noMoreDownloadFlag = true;
         }
-        NSMutableArray* photoNameQueueForCurrentEventIdFromDropbox = [[NSMutableArray alloc] initWithArray:metadata.contents];
-        totalInDropbox = [metadata.contents count];
-        NSString* currentEventMetapath = metadata.path;
-        BOOL noMoreDownloadFlag = true;
-        //Following loop will be block waiting if has photo
-        for (DBMetadata* file in photoNameQueueForCurrentEventIdFromDropbox)
+        else
         {
-            NSString* partialPath = [currentEventMetapath substringFromIndex:14]; //metadata.path is "/ChronicleMap/myEvents/eventid"
-            NSString* localPhotoPath = [[[ATHelper getRootDocumentoryPath]  stringByAppendingPathComponent:partialPath] stringByAppendingPathComponent:file.filename];
+            NSMutableArray* photoNameQueueForCurrentEventIdFromDropbox = [[NSMutableArray alloc] initWithArray:metadata.contents];
+            totalInDropbox = [metadata.contents count];
+            NSString* currentEventMetapath = metadata.path;
             
-            if (![[NSFileManager defaultManager] fileExistsAtPath:localPhotoPath]){
-                //NSLog(@"    --- local %@ already=%d  success=%d   fail=%d",[localPhotoPath substringFromIndex:85], downloadAlreadyExistCount,downloadFromDropboxSuccessCount,downloadFromDropboxFailCount);
-                [dropboxHelper loadFile:[NSString stringWithFormat:@"%@/%@", currentEventMetapath, file.filename ] intoPath:localPhotoPath];
-                noMoreDownloadFlag = false;
+            //Following loop will be block waiting if has photo
+            for (DBMetadata* file in photoNameQueueForCurrentEventIdFromDropbox)
+            {
+                NSString* partialPath = [currentEventMetapath substringFromIndex:14]; //metadata.path is "/ChronicleMap/myEvents/eventid"
+                NSString* localPhotoPath = [[[ATHelper getRootDocumentoryPath]  stringByAppendingPathComponent:partialPath] stringByAppendingPathComponent:file.filename];
+                
+                if (![[NSFileManager defaultManager] fileExistsAtPath:localPhotoPath]){
+                    //NSLog(@"    --- local %@ already=%d  success=%d   fail=%d",[localPhotoPath substringFromIndex:85], downloadAlreadyExistCount,downloadFromDropboxSuccessCount,downloadFromDropboxFailCount);
+                    [dropboxHelper loadFile:[NSString stringWithFormat:@"%@/%@", currentEventMetapath, file.filename ] intoPath:localPhotoPath];
+                    noMoreDownloadFlag = false;
+                }
             }
         }
+        
         if (noMoreDownloadFlag)
         {
             UIAlertView *alert = [[UIAlertView alloc]initWithTitle: NSLocalizedString(@"No more photos to restore from Dropbox",nil)
