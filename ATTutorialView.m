@@ -67,8 +67,8 @@ NSMutableArray* appStoreUrlList;
                 [appStoreUrlList addObject:appDetail[1]];
             }
         }
-        [appNameList addObject:NSLocalizedString(@"More ...",nil)];
-        [appStoreUrlList addObject:NSLocalizedString(@"http://www.chroniclemap.com/resources/allapplist.html",nil)]; //TODO have chinese url
+        //[appNameList addObject:NSLocalizedString(@"More ...",nil)];
+        //[appStoreUrlList addObject:NSLocalizedString(@"http://www.chroniclemap.com/resources/allapplist.html",nil)]; //TODO have chinese url
     }
 
     if ([appNameList count] > 0)
