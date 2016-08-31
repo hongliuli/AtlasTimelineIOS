@@ -178,6 +178,8 @@
     
     CSToastStyle *tutorialStyle;
     int prevZoomLevel;
+    
+    CGPoint startingTouchLocation;
 }
 
 @synthesize mapView = _mapView;
@@ -1653,6 +1655,10 @@
     currentTapTouchKey = 0;
     currentTapTouchMove = false;
     UITouch *touch = [touches anyObject];
+    
+    /// Set starting touch. this is for 3d touch enabled devices since 6s, see touchesMoved method below
+    startingTouchLocation = [touch locationInView:self.mapView];
+    
     NSNumber* annViewKey = [NSNumber numberWithLong:touch.view.tag];
     if ([annViewKey intValue] > 0) //tag is set in viewForAnnotation when instance tmpLbl
         currentTapTouchKey = [annViewKey intValue];
@@ -1661,6 +1667,9 @@
 //Only tap to start event editor, when swipe map and happen to swipe on photo, do not start event editor
 - (void)touchesMoved:(NSSet *)touches withEvent:(UIEvent *)event{
     UITouch *touch = [touches anyObject];
+    CGPoint pt = [touch locationInView:self.mapView];
+    if (pt.x == startingTouchLocation.x && pt.y == startingTouchLocation.y)
+        return;
     NSNumber* annViewKey = [NSNumber numberWithLong:touch.view.tag];
     if ([annViewKey intValue] > 0 && [annViewKey intValue] == currentTapTouchKey)
         currentTapTouchMove = true;
